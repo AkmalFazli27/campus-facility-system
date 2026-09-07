@@ -1,7 +1,7 @@
 # PRD — Sistem Reservasi & Pelaporan Fasilitas Kampus
 
 > **Mata kuliah:** PPK 2026 — Project Sebelum UTS
-> **Stack yang disepakati:** React.js (Vite) + Node.js/Express + MySQL + PDF Export
+> **Stack yang disepakati:** Next.js 15 (App Router, fullstack) + MySQL + PDF Export
 > **Tim:** 4 orang (placeholder)
 > **Deadline pengumpulan:** 11 Oktober 2026, 12.00 WIB via Kulon (1 file Word + link Google Drive source/SQL)
 > **Presentasi UTS:** 10 menit presentasi + 10–15 menit tanya jawab — materi: latar belakang, fitur utama, demo sistem, kendala
@@ -80,7 +80,7 @@ Validasi waktu reservasi (jam 07.00–20.00, slot 30 menit, kelipatan 30 menit) 
 - Tidak ada reservasi bentrok yang bisa lolos approve.
 - Validasi slot & jam operasional tidak bisa di-bypass dari client (dibuktikan via direct API call).
 - Semua anggota memiliki commit bermakna di GitHub/GitLab.
-- Struktur folder memenuhi ketentuan: `/public`, `/app`, `/views`, `/config` (dipetakan ke struktur React+Express di §14).
+- Struktur folder memenuhi ketentuan: `/public`, `/app`, `/views`, `/config` (dipetakan ke struktur Next.js fullstack di §14).
 - Dokumen Word pengumpulan lengkap & link Drive/API dapat dijalankan sesuai petunjuk.
 
 ---
@@ -118,28 +118,31 @@ Validasi waktu reservasi (jam 07.00–20.00, slot 30 menit, kelipatan 30 menit) 
 
 ## 6. Arsitektur & Tech Stack
 
-Keputusan tim: **React.js + MySQL**. Karena React tidak berbicara langsung ke MySQL, arsitektur yang dipakai:
+Keputusan tim: **Next.js 15 (App Router, fullstack) + MySQL**. Satu aplikasi Next.js melayani halaman dan API sekaligus (single port), menghilangkan pemisahan Vite (`:5173`) + Express (`:5000`):
 
 ```
-[ Browser: React + Vite ] --HTTPS/JSON--> [ Express API ] --mysql2/promise--> [ MySQL 8 ]
-         |                                      |
-         +-- validasi client                    +-- validasi server (otoritatif)
-         +-- React Router, hooks                +-- JWT httpOnly cookie / Bearer (dipilih saat setup)
-                                                +-- bcrypt, zod/joi, multer, pdfkit
+[ Browser ] --HTTP--> [ Next.js App Router (port 3000) ] --mysql2/promise--> [ MySQL 8 ]
+                        |--- app/**/page.tsx + components/   (tampilan, Client/Server Components)
+                        |--- app/api/**/route.ts              (controller/API, Route Handlers, runtime nodejs)
+                        |--- lib/services/*                  (logika proses: slot, konflik, PDF)
+                        |--- lib/db.ts + config/             (koneksi DB)
+                        |--- middleware.ts                   (auth + RBAC di edge/server)
 ```
 
 **Stack rinci:**
 
-- Frontend: React 18 + Vite + React Router + fetch/axios + date-fns/dayjs (zona Asia/Jakarta)
-- Backend: Node.js 20 LTS + Express 5 + mysql2/promise (atau Prisma/Knex — putuskan di setup, default `mysql2` agar mapping ke `/config/database.js` eksplisit)
-- DB: MySQL 8
-- Auth: JWT (httpOnly cookie) atau session — diputuskan Anggota 1 saat setup; PRD mengasumsikan JWT httpOnly cookie.
-- Upload foto: `multer` → `public/uploads` (MVP) atau S3-compatible (opsional)
-- Export PDF: `pdfkit`
-- Validasi: `zod` atau `joi` (server), validasi form React (client)
+- Framework: Next.js 15 + React 19 + App Router + TypeScript + date-fns/dayjs (zona Asia/Jakarta)
+- Styling: Tailwind CSS v4 (CSS-first, tanpa `tailwind.config.js`): dep `tailwindcss` + `@tailwindcss/postcss`, plugin di `postcss.config.mjs`, `@import "tailwindcss";` di `app/globals.css` yang diimpor root layout
+- Komponen UI: shadcn/ui (style `new-york`, base `neutral`, CSS variables): dep `clsx` + `tailwind-merge` + `class-variance-authority` + `lucide-react`; util `cn()` di `lib/utils.ts`; komponen awal: button, card, badge, input, label, textarea, select, dialog, table, tabs, calendar, popover, skeleton, sonner
+- Data-fetching hybrid: baca via Server Components, mutasi via Route Handlers `app/api/*` (REST, tetap bisa di-test via curl/Postman)
+- DB: MySQL 8 via `mysql2/promise` pool di `lib/db.ts` (query parameterized; tanpa ORM agar sesuai deadline dan mapping `/config` eksplisit)
+- Auth: JWT manual (httpOnly cookie) via `jose` + `bcryptjs` — diputuskan Anggota 1 saat setup; PRD mengasumsikan JWT httpOnly cookie. Wajib `export const runtime = 'nodejs'` di route yang memakai DB/auth/PDF (bukan edge).
+- Upload foto: `request.formData()` di Route Handler → `public/uploads` (nama file uuid, MVP) — pengganti `multer`
+- Export PDF: `pdfkit` di Route Handler `.../export/route.ts`
+- Validasi: `zod` dipakai di Client Components (UX) dan Route Handlers (otoritatif)
 - Tooling: ESLint, Prettier, dotenv
 
-> Catatan pemenuhan ketentuan tugas: mapping struktur ada di §14.
+> Catatan pemenuhan ketentuan tugas: mapping struktur ada di §14. Folder literal `/public`, `/config`, `/views` tetap dipertahankan di root; folder `app/` milik Next.js dipetakan sebagai gabungan views + controller.
 
 ---
 
@@ -314,8 +317,8 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 
 ## 10. Non-Functional Requirements
 
-- **Validasi ganda:** semua form penting divalidasi di React (UX) dan Express (otoritatif).
-- **Keamanan:** bcrypt (cost 10–12), JWT httpOnly cookie, RBAC di middleware, rate limit login, CORS whitelist `CLIENT_URL`.
+- **Validasi ganda:** semua form penting divalidasi di Client Components (UX) dan Route Handlers (otoritatif).
+- **Keamanan:** bcryptjs (cost 10–12), JWT httpOnly cookie via `jose`, RBAC di `middleware.ts`, rate limit login di Route Handler, tanpa CORS (single origin `:3000`).
 - **Zona waktu:** Asia/Jakarta untuk semua tampilan & validasi.
 - **Performa:** list fasilitas & ketersediaan < 500ms untuk 100 fasilitas (tanpa foto) di lokal; pagination bila >50.
 - **Upload:** max 5 MB, mime whitelist, nama file aman (uuid), serve via `public/uploads`.
@@ -451,7 +454,7 @@ Index: `INDEX(facility_id, status)`, `INDEX(reporter_id)`
 
 ## 13. Kontrak API (REST)
 
-Base URL: `http://localhost:5000/api` (dev). Semua response JSON `{ success, data|error, message }`. Error memakai HTTP status yang tepat.
+Base URL: `http://localhost:3000/api` (dev, single port Next.js). Semua response JSON `{ success, data|error, message }`. Error memakai HTTP status yang tepat. Semua Route Handler yang menyentuh DB/auth/upload/PDF wajib `export const runtime = 'nodejs'`.
 
 ### Auth
 
@@ -517,56 +520,82 @@ GET /admin/recap/occupancy/export?from=&to=&facility_id=&location=  -> applicati
 GET /admin/recap/damage/export?from=&to=&facility_id=&location=     -> application/pdf
 ```
 
-Semua endpoint terproteksi memakai middleware `authenticate` + `authorize(role)`. Validasi payload memakai `zod`/`joi`.
+Semua endpoint terproteksi memakai `middleware.ts` (`authenticate` + `authorize(role)`) + pengecekan ulang role di Route Handler. Validasi payload memakai `zod`.
 
 ---
 
 ## 14. Struktur Folder (memenuhi ketentuan tugas)
 
-Ketentuan tugas mewajibkan minimal `/public`, `/app` (model/controller), `/views`, `/config`. Untuk React+Express, dipetakan sebagai monorepo:
+Ketentuan tugas mewajibkan minimal `/public`, `/app` (model/controller), `/views`, `/config`. Untuk Next.js fullstack, dipetakan sebagai berikut — folder `app/` milik Next.js adalah gabungan views + controller, sedangkan folder literal `/config`, `/views`, `/public` tetap dipertahankan di root agar lolos pemeriksaan literal dosen:
 
 ```
-campus-facility-system/          # root repo
+campus-facility-system/          # root repo (Next.js app)
+├── app/                         # ← App Router = views + controller (pengganti /app Express + /views + client/)
+│   ├── globals.css              # Tailwind v4 (`@import "tailwindcss"`) + token @theme (placeholder; theme custom ditunda)
+│   ├── layout.tsx               # root layout (impor globals.css)
+│   ├── (public)/                # grup route publik
+│   │   ├── page.tsx             # landing `/`
+│   │   ├── facilities/page.tsx  # US01-US02 (Server Component, bisa SSR)
+│   │   └── facilities/[id]/page.tsx  # detail + slot + CTA reservasi/lapor
+│   ├── (auth)/login/page.tsx
+│   ├── (auth)/register/page.tsx
+│   ├── reservations/page.tsx    # US05 (user)
+│   ├── reports/page.tsx         # US07 (user)
+│   ├── officer/queue/page.tsx   # US08 tab reservasi + laporan
+│   ├── admin/
+│   │   ├── facilities/page.tsx  # US16 CRUD
+│   │   ├── users/page.tsx       # US13-US15
+│   │   └── recap/page.tsx       # US17 preview + Export PDF
+│   └── api/                     # ← Route Handlers = controller (REST, pengganti Express routes)
+│       ├── auth/register/route.ts
+│       ├── auth/login/route.ts
+│       ├── auth/logout/route.ts
+│       ├── auth/me/route.ts
+│       ├── facilities/route.ts
+│       ├── facilities/[id]/route.ts
+│       ├── facilities/[id]/availability/route.ts
+│       ├── reservations/route.ts
+│       ├── reservations/[id]/route.ts
+│       ├── officer/reservations/route.ts
+│       ├── officer/reservations/[id]/approve/route.ts
+│       ├── reports/route.ts
+│       ├── officer/reports/route.ts
+│       └── admin/recap/.../export/route.ts
+├── components/                  # komponen tampilan (Client Components)
+│   ├── ui/                      # hasil shadcn CLI (button, card, badge, …) — milik A1, tambah hanya via CLI
+│   └── custom/                  # SlotGrid, Filters, dan komponen rakitan tim
+├── lib/                         # logika proses + koneksi (pengganti app/services + app/validators Express)
+│   ├── db.ts                    # mysql2 pool (re-export dari config/)
+│   ├── auth.ts                  # sign/verify JWT (jose) + getSession
+│   ├── utils.ts                 # cn() shadcn (clsx + tailwind-merge) — jangan digabung ke helpers/
+│   ├── validations/             # zod schemas (auth, reservation, report, facility)
+│   ├── services/
+│   │   ├── reservationService.ts  # validateSlot + checkConflict (dipakai create & approve)
+│   │   ├── reportService.ts
+│   │   └── pdfService.ts        # pdfkit
+│   └── helpers/                 # slot helpers, fmt, timezone Asia/Jakarta
+├── components.json              # konfigurasi shadcn (new-york, neutral, css-variables, alias @/components + @/lib/utils)
+├── middleware.ts                # auth + RBAC per role (pengganti middlewares/auth Express)
 ├── public/                      # ← wajib: aset publik + uploads
 │   ├── uploads/                 # foto laporan (gitignored, kecuali .gitkeep)
 │   └── assets/
-├── client/                      # React (Vite)
-│   ├── src/
-│   │   ├── components/          # Button, Card, Badge, SlotGrid, Filters
-│   │   ├── views/               # pages: Facilities, FacilityDetail, Reservations, Reports, OfficerQueue, Admin/*
-│   │   ├── layouts/             # AppLayout, AuthLayout
-│   │   ├── services/            # api.js (fetch wrapper)
-│   │   ├── hooks/               # useAuth, useAvailability
-│   │   ├── utils/               # validators, slot helpers, fmt
-│   │   ├── App.jsx & main.jsx
-│   │   └── styles/
-│   ├── index.html
-│   └── package.json
-├── app/                         # ← wajib: model/controller backend
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── middlewares/             # auth, role, error, validate, upload, rateLimit
-│   ├── validators/              # zod schemas
-│   ├── services/                # reservationService (slot+conflict), reportService, pdfService
-│   └── utils/
-├── config/                      # ← wajib: konfigurasi
-│   ├── database.js              # mysql2 pool
-│   └── env.js
-├── views/                       # ← wajib: template (email atau PDF view bila perlu)
-│   └── emails/
+├── config/                      # ← wajib: konfigurasi (dipertahankan literal)
+│   ├── database.ts              # pool mysql2 (diimpor lib/db.ts)
+│   └── env.ts                   # validasi env via zod
+├── views/                       # ← wajib: dipertahankan literal berisi template email + CATATAN-MAPPING.md
+│   ├── emails/
+│   └── CATATAN-MAPPING.md       # penjelasan: views Next.js = app/**/page.tsx
 ├── database/
 │   ├── schema.sql
 │   ├── seed.sql
 │   └── migrations/              # opsional
-├── server.js                    # entry Express
 ├── .env.example
 ├── .gitignore
 ├── README.md
-└── package.json                 # root scripts
+└── package.json                 # scripts: next dev / build / start
 ```
 
-> Jika dosen memeriksa folder secara literal di root, keempat folder di atas sudah ada di root. Isi `client/` tidak menggantikan kewajiban tersebut.
+> Jika dosen memeriksa folder secara literal di root, keempat folder (`/public`, `/app`, `/views`, `/config`) terpenuhi: `/app` = folder App Router Next.js itu sendiri; `/views` berisi template email + catatan mapping ke `app/**/page.tsx`; `/config` berisi konfigurasi DB/env; `/public` berisi aset + uploads.
 
 ---
 
@@ -589,20 +618,20 @@ Setiap halaman wajib punya: loading, empty, error state; form punya inline error
 
 ## 16. Validasi Client + Server
 
-### Client (React)
+### Client (Next.js Client Components)
 
 - Required, panjang, format email, kekuatan password, file type/size, jam 07.00–20.00, kelipatan 30 menit (UX).
 - Disable submit bila invalid, tampilkan pesan dekat field.
 
 ### Server (otoritatif — tidak bisa di-bypass)
 
-- Semua rule client diulang di `validators/` + `services/`.
-- Validasi jam/slot di satu tempat: `services/reservationService.validateSlot()` — dipakai oleh create & approve.
-- Cek konflik di `services/reservationService.checkConflict()` dalam transaksi.
-- Upload: `multer` fileFilter + limits.
+- Semua rule client diulang di `lib/validations/` + `lib/services/`.
+- Validasi jam/slot di satu tempat: `lib/services/reservationService.validateSlot()` — dipakai oleh create & approve.
+- Cek konflik di `lib/services/reservationService.checkConflict()` dalam transaksi.
+- Upload: `request.formData()` + cek mime/size di Route Handler (tanpa `multer`).
 - Semua error mengembalikan 4xx dengan `message` yang bisa ditampilkan.
 
-**Contoh helper slot (dipakai client & server):**
+**Contoh helper slot (di `lib/helpers/slots.ts`, dipakai Client Component & Route Handler):**
 
 ```js
 export function isThirtyMinuteSlot(t) { // t = "HH:mm"
@@ -618,12 +647,11 @@ export function withinOperatingHours(start, end) {
 
 ## 17. Keamanan
 
-- Hash password `bcrypt` (jangan simpan plain).
-- JWT httpOnly cookie + `SameSite=Lax`, `Secure` di prod, expiry 1–7 hari.
-- RBAC: `authorize('admin')`, `authorize('officer','admin')`, dst. di setiap route sensitif.
-- Rate limit `/auth/login` (mis. 10/menit/IP).
-- CORS: hanya `CLIENT_URL`.
-- Jangan commit `.env`; sediakan `.env.example`.
+- Hash password `bcryptjs` (jangan simpan plain; `bcrypt` native tidak cocok untuk runtime edge/serverless — pakai `bcryptjs`).
+- JWT via `jose` di httpOnly cookie + `SameSite=Lax`, `Secure` di prod, expiry 1–7 hari. Semua Route Handler DB/auth/PDF memakai `runtime = 'nodejs'`.
+- RBAC: `middleware.ts` (`authorize('admin')`, `authorize('officer','admin')`, dst.) + cek ulang role di tiap Route Handler sensitif.
+- Rate limit `/api/auth/login` di Route Handler (mis. 10/menit/IP).
+- Tanpa CORS (single origin `APP_URL`); jangan commit `.env`; sediakan `.env.example`.
 - Sanitasi input, parameterized query (mysql2 `?` placeholders).
 - Upload: validasi mime + ext + uuid filename, jangan pakai nama asli user.
 
@@ -644,7 +672,7 @@ export function withinOperatingHours(start, end) {
 
 ### Export PDF (keputusan: PDF saja)
 
-- Library: `pdfkit`.
+- Library: `pdfkit` di `lib/services/pdfService.ts`, dipanggil dari Route Handler `.../export/route.ts` (`runtime = 'nodejs'`).
 - Header: judul, periode, filter, tanggal cetak, nama admin.
 - Tabel rapi + footer halaman.
 - Endpoint `.../export` mengembalikan `Content-Disposition: attachment; filename="rekap-*.pdf"`.
@@ -669,8 +697,8 @@ Asumsi start minggu ini (akhir Agustus). Jika start lebih lambat, kompres minggu
 
 | Minggu | Periode | Fokus | Output |
 |---|---|---|---|
-| 1 | 1–7 Sep | Setup + ERD + wireframe | Repo, struktur folder, ERD, wireframe, `.env.example`, README |
-| 2 | 8–14 Sep | Fondasi & Auth | React+Vite+Express+MySQL jalan, `users` + seed, register/login/logout, RBAC |
+| 1 | 1–7 Sep | Setup + ERD + wireframe | Repo, struktur folder Next.js, ERD, wireframe, `.env.example`, README |
+| 2 | 8–14 Sep | Fondasi & Auth | Next.js + MySQL jalan (single port), `users` + seed, register/login/logout, `middleware.ts` RBAC |
 | 3 | 15–21 Sep | Fasilitas & ketersediaan | CRUD fasilitas, pencarian, availability per slot |
 | 4 | 22–28 Sep | Reservasi | Create, riwayat, cancel user, approve/reject/cancel petugas + anti-bentrok |
 | 5 | 29 Sep–5 Okt | Laporan & rekap | Laporan+foto, proses laporan, maintenance, rekap & export PDF |
@@ -687,7 +715,7 @@ Nama placeholder — ganti dengan nama/NIM anggota.
 
 | Anggota | Peran | Tanggung jawab utama | Branch utama | Reviewer |
 |---|---|---|---|---|
-| **A1 — Anggota 1** | Tech Lead + Auth | Setup repo, `config/database.js`, `server.js`, `users` + seed, register/login/logout, middleware auth/role, akun demo, `.env.example`, README | `feature/setup`, `feature/auth` | A2 |
+| **A1 — Anggota 1** | Tech Lead + Auth | Setup repo (create-next-app), `config/database.ts`, `lib/db.ts`, `middleware.ts`, `users` + seed, register/login/logout (Route Handlers + JWT httpOnly via `jose`), akun demo, `.env.example`, README | `feature/setup`, `feature/auth` | A2 |
 | **A2 — Anggota 2** | Fasilitas & Ketersediaan | CRUD fasilitas, pencarian tipe/lokasi/kapasitas, availability per tanggal/slot, badge status, halaman user & admin fasilitas | `feature/facilities`, `feature/availability` | A3 |
 | **A3 — Anggota 3** | Reservasi | Form reservasi, validasi slot 30 menit & jam, cek konflik, riwayat/detail/cancel user, antrian & approve/reject/cancel petugas | `feature/reservations` | A4 |
 | **A4 — Anggota 4** | Laporan, Rekap & Rilis | Laporan+foto, proses laporan, maintenance fasilitas, dashboard petugas, rekap & export PDF, screenshot, dokumen Word, materi demo | `feature/reports`, `feature/recap-pdf`, `docs/submission` | A1 |
@@ -699,14 +727,18 @@ Kepemilikan file (CODEOWNERS — buat di `.github/CODEOWNERS`):
 ```
 # Fallback
 *               @A1
-/app/models/facility*  @A2
-/app/controllers/facility* @A2
-/client/src/views/*Facility* @A2
+/app/api/*facility*  @A2
+/app/**/facilities/** @A2
+/app/admin/facilities/** @A2
 /app/*reservation*      @A3
-/client/src/views/*Reserv* @A3
+/app/**/reservations/** @A3
+/app/officer/queue/**   @A3 @A4
+/components/ui/**       @A1
 /app/*report*           @A4
-/app/services/pdf*      @A4
+/lib/services/pdf*      @A4
 /config/                @A1
+/lib/db.ts              @A1
+/middleware.ts          @A1
 /database/              @A1
 ```
 
@@ -817,7 +849,7 @@ feat: validate reservation operating hours on server
 fix: prevent overlapping approved reservations on approve
 test: add reservation conflict tests
 docs: add local setup instructions
-chore: add multer upload limits
+chore: add report photo upload limits (5MB, jpeg/png/webp)
 ```
 
 ### Pull Request
@@ -861,7 +893,7 @@ Fitur disebut **Done** jika:
 
 Quality gates sebelum merge ke `main`:
 
-- [ ] `develop` bisa `npm install && npm run dev` tanpa error.
+- [ ] `develop` bisa `npm install && npm run dev` (Next.js `:3000`) tanpa error.
 - [ ] Semua 17 US diuji ulang (smoke test).
 - [ ] Export PDF bisa dibuka.
 - [ ] `git shortlog` menunjukkan 4 anggota punya commit.
@@ -882,7 +914,7 @@ Quality gates sebelum merge ke `main`:
 
 ```bash
 # harus 422 meski client di-bypass
-curl -X POST http://localhost:5000/api/reservations \
+curl -X POST http://localhost:3000/api/reservations \
   -H "Authorization: Bearer <token-user>" -H "Content-Type: application/json" \
   -d '{"facility_id":1,"reservation_date":"2026-10-01","start_time":"09:10","end_time":"10:00","purpose":"coba"}'
 # harus 409 saat bentrok
@@ -902,7 +934,9 @@ curl -X POST http://localhost:5000/api/reservations \
 |---|---|---|
 | Race condition approve bentrok | Jadwal ganda | Transaksi + `FOR UPDATE`, test konkurensi |
 | Validasi hanya di client | Bypass via API | Validasi server otoritatif + test curl |
-| Foto besar / mime salah | Storage penuh / XSS | Limit 5MB, whitelist mime, uuid filename |
+| Foto besar / mime salah | Storage penuh / XSS | Limit 5MB, whitelist mime, uuid filename, cek di Route Handler |
+| Route Handler jalan di edge | `mysql2`/`bcryptjs`/`pdfkit` error | Wajib `export const runtime = 'nodejs'` di semua route DB/auth/upload/PDF |
+| Folder `app/` Next.js disangka melanggar ketentuan | Nilai struktur | Pertahankan literal `/public`, `/config`, `/views` + `views/CATATAN-MAPPING.md` |
 | Anggota tidak commit | Nilai kolaborasi | Aturan 1 commit/hari + PR kecil + audit shortlog |
 | Konflik merge besar | Telat integrasi | Merge ke develop 2×/minggu, PR <300 baris |
 | PDF tidak rapi | Gagal rekap | Mulai pdfkit di minggu 5, test dengan data banyak |
@@ -956,8 +990,9 @@ Pending  — email: pending@example.com  — password: User123!     — status: 
 ### .env.example
 
 ```env
-PORT=5000
-CLIENT_URL=http://localhost:5173
+APP_URL=http://localhost:3000
+DATABASE_URL=mysql://root:@localhost:3306/campus_facility
+# atau granular bila diinginkan:
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=campus_facility
@@ -977,15 +1012,10 @@ mysql -u root -p -e "CREATE DATABASE campus_facility CHARACTER SET utf8mb4 COLLA
 mysql -u root -p campus_facility < database/schema.sql
 mysql -u root -p campus_facility < database/seed.sql
 
-# 2) Backend
-cp .env.example .env
+# 2) App (single port Next.js fullstack)
+cp .env.example .env.local
 npm install
-npm run dev        # http://localhost:5000
-
-# 3) Frontend
-cd client
-npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:3000 (halaman + /api/*)
 ```
 
 ---
@@ -1001,7 +1031,10 @@ npm run dev        # http://localhost:5173
 
 ## 30. Lampiran C — Daftar Keputusan yang Sudah Dikunci
 
-- Stack: React.js + Vite + Express + MySQL (React tidak langsung ke MySQL).
+- Stack: Next.js 15 App Router (fullstack, single port `:3000`) + MySQL (DB diakses via `mysql2/promise` pool, tanpa ORM; Route Handler DB/auth/PDF memakai `runtime = 'nodejs'`).
+- Auth: JWT manual httpOnly cookie via `jose` + `bcryptjs`, RBAC di `middleware.ts` + cek ulang di Route Handler.
+- Styling: Tailwind CSS v4 (CSS-first, `app/globals.css`) + shadcn/ui minimal (style `new-york`, base `neutral`; komponen awal: button, card, badge, input, label, textarea, select, dialog, table, tabs, calendar, popover, skeleton, sonner). Komponen baru di luar daftar ditambah via CLI dan dicatat di PR description.
+- Theme custom (warna kampus/dark mode): **ditunda** — pakai default; token `@theme` di `globals.css` sebagai placeholder.
 - Registrasi mandiri pengguna: **ya** (pending → verifikasi admin).
 - Export rekap: **PDF saja** untuk MVP (sesuai instruksi).
 - Anggota: **placeholder** (nama/NIM diisi belakangan).
