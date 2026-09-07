@@ -214,7 +214,7 @@ out/
 /lib/services/pdf*          @A4
 /config/                    @A1
 /lib/db.ts                  @A1
-/middleware.ts              @A1
+/proxy.ts              @A1
 /database/                  @A1
 ```
 
