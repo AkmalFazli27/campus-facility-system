@@ -177,7 +177,7 @@ git tag -a v1.0-uts -m "UTS release 11 Okt 2026"
 git push origin main --tags
 ```
 
-Artefak Drive: zip `source/` + `database/schema.sql` + `database/seed.sql` + `README.md` + `.env.example` (tanpa `.env*`, tanpa `node_modules`, tanpa `.next/`, tanpa `public/uploads/*`).
+Artefak Drive: zip `source/` + SQL dari `prisma/migrations/` + `README.md` + `.env.example` (tanpa `.env*`, tanpa `node_modules`, tanpa `.next/`, tanpa `public/uploads/*`).
 
 Versioning: `v0.1-auth`, `v0.2-facilities`, `v0.3-reservations`, `v0.4-reports`, `v1.0-uts`.
 
@@ -214,7 +214,8 @@ out/
 /lib/services/pdf*          @A4
 /config/                    @A1
 /lib/db.ts                  @A1
-/proxy.ts              @A1
+/proxy.ts                   @A1
+/prisma/**                  @A1
 /database/                  @A1
 ```
 

@@ -121,7 +121,7 @@ Validasi waktu reservasi (jam 07.00–20.00, slot 30 menit, kelipatan 30 menit) 
 Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Next.js melayani halaman dan API sekaligus (single port), menghilangkan pemisahan Vite (`:5173`) + Express (`:5000`):
 
 ```
-[ Browser ] --HTTP--> [ Next.js App Router (port 3000) ] --mysql2/promise--> [ MySQL 8 ]
+[ Browser ] --HTTP--> [ Next.js App Router (port 3000) ] --Prisma--> [ MySQL 8 ]
                         |--- app/**/page.tsx + components/   (tampilan, Client/Server Components)
                         |--- app/api/**/route.ts              (controller/API, Route Handlers, runtime nodejs)
                         |--- lib/services/*                  (logika proses: slot, konflik, PDF)
@@ -135,7 +135,7 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
 - Styling: Tailwind CSS v4 (CSS-first, tanpa `tailwind.config.js`): dep `tailwindcss` + `@tailwindcss/postcss`, plugin di `postcss.config.mjs`, `@import "tailwindcss";` di `app/globals.css` yang diimpor root layout
 - Komponen UI: shadcn/ui (preset `base-nova`, base `neutral`, CSS variables): dep `clsx` + `tailwind-merge` + `class-variance-authority` + `lucide-react`; util `cn()` di `lib/utils.ts`; komponen awal: button, card, badge, input, label, textarea, select, dialog, table, tabs, calendar, popover, skeleton, sonner
 - Data-fetching hybrid: baca via Server Components, mutasi via Route Handlers `app/api/*` (REST, tetap bisa di-test via curl/Postman)
-- DB: MySQL 8 via `mysql2/promise` pool di `lib/db.ts` (query parameterized; tanpa ORM agar sesuai deadline dan mapping `/config` eksplisit)
+- DB: MySQL 8 via Prisma 6 (`prisma/schema.prisma` sebagai sumber kebenaran skema, `migrate dev` untuk migrasi berversi); akses dari kode hanya lewat singleton `db` di `lib/db.ts` (otomatis ter-type end-to-end)
 - Auth: JWT manual (httpOnly cookie) via `jose` + `bcryptjs` — diputuskan Anggota 1 saat setup; PRD mengasumsikan JWT httpOnly cookie. Wajib `export const runtime = 'nodejs'` di route yang memakai DB/auth/PDF (bukan edge).
 - Upload foto: `request.formData()` di Route Handler → `public/uploads` (nama file uuid, MVP) — pengganti `multer`
 - Export PDF: `pdfkit` di Route Handler `.../export/route.ts`
@@ -354,6 +354,11 @@ Login admin → `/admin/facilities` (CRUD) → `/admin/users` (create/verify) �
 
 ## 12. Rancangan Data & ERD
 
+> Implementasi otoritatif: `prisma/schema.prisma` (5 model + enum, salinan 1:1 ERD di bawah).
+> ID memakai `Int` (bukan `BIGINT UNSIGNED`) agar hasil query bisa langsung di-`JSON`-kan
+> dari Route Handler tanpa serializer manual. Nilai enum di DB lowercase
+> (`user`, `pending`, …) via `@map`.
+
 ### ERD (teks)
 
 ```
@@ -565,7 +570,7 @@ campus-facility-system/          # root repo (Next.js app)
 │   ├── ui/                      # hasil shadcn CLI (button, card, badge, …) — milik A1, tambah hanya via CLI
 │   └── custom/                  # SlotGrid, Filters, dan komponen rakitan tim
 ├── lib/                         # logika proses + koneksi (pengganti app/services + app/validators Express)
-│   ├── db.ts                    # mysql2 pool (re-export dari config/)
+│   ├── db.ts                    # singleton PrismaClient (satu-satunya akses DB dari kode)
 │   ├── auth.ts                  # sign/verify JWT (jose) + getSession
 │   ├── utils.ts                 # cn() shadcn (clsx + tailwind-merge) — jangan digabung ke helpers/
 │   ├── validations/             # zod schemas (auth, reservation, report, facility)
@@ -580,15 +585,16 @@ campus-facility-system/          # root repo (Next.js app)
 │   ├── uploads/                 # foto laporan (gitignored, kecuali .gitkeep)
 │   └── assets/
 ├── config/                      # ← wajib: konfigurasi (dipertahankan literal)
-│   ├── database.ts              # pool mysql2 (diimpor lib/db.ts)
-│   └── env.ts                   # validasi env via zod
+│   └── env.ts                   # validasi env via zod (DATABASE_URL wajib)
 ├── views/                       # ← wajib: dipertahankan literal berisi template email + CATATAN-MAPPING.md
 │   ├── emails/
 │   └── CATATAN-MAPPING.md       # penjelasan: views Next.js = app/**/page.tsx
+├── prisma/                      # sumber kebenaran skema DB (milik A1)
+│   ├── schema.prisma            # 5 model + enum, salinan ERD §12 (ID Int, bukan BIGINT)
+│   ├── migrations/              # SQL berversi hasil `migrate dev` — wajib di-commit
+│   └── seed.ts                  # akun demo + 10 fasilitas (`npm run db:seed`)
 ├── database/
-│   ├── schema.sql
-│   ├── seed.sql
-│   └── migrations/              # opsional
+│   └── CATATAN.md               # arsip snapshot SQL untuk Drive dibuat dari prisma/migrations saat rilis
 ├── .env.example
 ├── .gitignore
 ├── README.md
@@ -652,7 +658,7 @@ export function withinOperatingHours(start, end) {
 - RBAC: `proxy.ts` (`authorize('admin')`, `authorize('officer','admin')`, dst.) + cek ulang role di tiap Route Handler sensitif.
 - Rate limit `/api/auth/login` di Route Handler (mis. 10/menit/IP).
 - Tanpa CORS (single origin `APP_URL`); jangan commit `.env`; sediakan `.env.example`.
-- Sanitasi input, parameterized query (mysql2 `?` placeholders).
+- Sanitasi input + query selalu lewat Prisma Client (tanpa SQL string manual; cegah injeksi).
 - Upload: validasi mime + ext + uuid filename, jangan pakai nama asli user.
 
 ---
@@ -715,7 +721,7 @@ Nama placeholder — ganti dengan nama/NIM anggota.
 
 | Anggota | Peran | Tanggung jawab utama | Branch utama | Reviewer |
 |---|---|---|---|---|
-| **A1 — Anggota 1** | Tech Lead + Auth | Setup repo (create-next-app), `config/database.ts`, `lib/db.ts`, `proxy.ts`, `users` + seed, register/login/logout (Route Handlers + JWT httpOnly via `jose`), akun demo, `.env.example`, README | `feature/setup`, `feature/auth` | A2 |
+| **A1 — Anggota 1** | Tech Lead + Auth | Setup repo (create-next-app), `prisma/schema.prisma` + `migrate dev`, `lib/db.ts`, `proxy.ts`, `users` + seed, register/login/logout (Route Handlers + JWT httpOnly via `jose`), akun demo, `.env.example`, README | `feature/setup`, `feature/auth` | A2 |
 | **A2 — Anggota 2** | Fasilitas & Ketersediaan | CRUD fasilitas, pencarian tipe/lokasi/kapasitas, availability per tanggal/slot, badge status, halaman user & admin fasilitas | `feature/facilities`, `feature/availability` | A3 |
 | **A3 — Anggota 3** | Reservasi | Form reservasi, validasi slot 30 menit & jam, cek konflik, riwayat/detail/cancel user, antrian & approve/reject/cancel petugas | `feature/reservations` | A4 |
 | **A4 — Anggota 4** | Laporan, Rekap & Rilis | Laporan+foto, proses laporan, maintenance fasilitas, dashboard petugas, rekap & export PDF, screenshot, dokumen Word, materi demo | `feature/reports`, `feature/recap-pdf`, `docs/submission` | A1 |
@@ -738,7 +744,8 @@ Kepemilikan file (CODEOWNERS — buat di `.github/CODEOWNERS`):
 /lib/services/pdf*      @A4
 /config/                @A1
 /lib/db.ts              @A1
-/proxy.ts          @A1
+/proxy.ts               @A1
+/prisma/**              @A1
 /database/              @A1
 ```
 
@@ -867,7 +874,7 @@ git switch main
 git merge develop
 git tag -a v1.0-uts -m "UTS release 11 Okt 2026"
 git push origin main --tags
-# build Drive: zip source + schema.sql + seed.sql + README + .env.example (tanpa .env)
+# build Drive: zip source + SQL dari prisma/migrations + README + .env.example (tanpa .env)
 ```
 
 ### Menjamin 4 anggota punya commit
@@ -935,7 +942,7 @@ curl -X POST http://localhost:3000/api/reservations \
 | Race condition approve bentrok | Jadwal ganda | Transaksi + `FOR UPDATE`, test konkurensi |
 | Validasi hanya di client | Bypass via API | Validasi server otoritatif + test curl |
 | Foto besar / mime salah | Storage penuh / XSS | Limit 5MB, whitelist mime, uuid filename, cek di Route Handler |
-| Route Handler jalan di edge | `mysql2`/`bcryptjs`/`pdfkit` error | Wajib `export const runtime = 'nodejs'` di semua route DB/auth/upload/PDF |
+| Route Handler jalan di edge | Prisma/`bcryptjs`/`pdfkit` error | Wajib `export const runtime = 'nodejs'` di semua route DB/auth/upload/PDF |
 | Folder `app/` Next.js disangka melanggar ketentuan | Nilai struktur | Pertahankan literal `/public`, `/config`, `/views` + `views/CATATAN-MAPPING.md` |
 | Anggota tidak commit | Nilai kolaborasi | Aturan 1 commit/hari + PR kecil + audit shortlog |
 | Konflik merge besar | Telat integrasi | Merge ke develop 2×/minggu, PR <300 baris |
@@ -952,7 +959,7 @@ curl -X POST http://localhost:3000/api/reservations \
 2. Latar belakang & tujuan (ringkas dari §2–§3).
 3. Aktor & hak akses (tabel §4).
 4. Pembagian tugas (tabel §21 + §20).
-5. Link Google Drive: source code + `schema.sql` + `seed.sql` + aset yang dibutuhkan.
+5. Link Google Drive: source code + SQL hasil `migrate dev` (`prisma/migrations/`) + aset yang dibutuhkan.
 6. Cara menjalankan program (dari §28).
 7. Akun login tiap aktor (dari §28).
 8. Screenshot tiap fitur + penjelasan singkat (urut US01–US17).
@@ -991,13 +998,7 @@ Pending  — email: pending@example.com  — password: User123!     — status: 
 
 ```env
 APP_URL=http://localhost:3000
-DATABASE_URL=mysql://root:@localhost:3306/campus_facility
-# atau granular bila diinginkan:
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=campus_facility
-DB_USER=root
-DB_PASSWORD=
+DATABASE_URL=mysql://root:PASSWORD@localhost:3306/campus_facility
 JWT_SECRET=change-this-secret-min-32chars
 JWT_EXPIRES_IN=7d
 UPLOAD_DIR=public/uploads
@@ -1007,14 +1008,13 @@ MAX_UPLOAD_MB=5
 ### Cara jalan (untuk Word & README)
 
 ```bash
-# 1) DB
-mysql -u root -p -e "CREATE DATABASE campus_facility CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u root -p campus_facility < database/schema.sql
-mysql -u root -p campus_facility < database/seed.sql
+# 1) DB (pastikan MySQL menyala, lalu)
+cp .env.example .env.local   # isi DATABASE_URL + JWT_SECRET
+npx prisma migrate dev       # buat DB + terapkan prisma/migrations
+npm run db:seed              # 4 akun demo + 10 fasilitas
 
 # 2) App (single port Next.js fullstack)
-cp .env.example .env.local
-npm install
+npm install                  # otomatis `prisma generate` via postinstall
 npm run dev        # http://localhost:3000 (halaman + /api/*)
 ```
 
@@ -1022,16 +1022,16 @@ npm run dev        # http://localhost:3000 (halaman + /api/*)
 
 ## 29. Lampiran B — Seed & Contoh Data
 
-- 8–12 fasilitas: 3 kelas, 2 aula, 2 lab, 2 lapangan, 1 alat (kapasitas bervariasi, lokasi: Gedung A/B/C, Lapangan).
-- 5 kategori laporan seed.
-- 10+ reservasi seed (campur pending/approved) untuk demo konflik & rekap.
-- 5+ laporan seed (new/in_progress/resolved).
+- 10 fasilitas via `prisma/seed.ts`: 3 kelas, 2 aula, 2 lab, 2 lapangan, 1 alat (kapasitas bervariasi, lokasi: Gedung A/B/C, Lapangan).
+- 5 kategori laporan (string bebas, bukan tabel).
+- 10+ reservasi seed (campur pending/approved) untuk demo konflik & rekap — ditambah minggu 4–5.
+- 5+ laporan seed (new/in_progress/resolved) — ditambah minggu 5.
 
 ---
 
 ## 30. Lampiran C — Daftar Keputusan yang Sudah Dikunci
 
-- Stack: Next.js 16 App Router (fullstack, single port `:3000`) + MySQL (DB diakses via `mysql2/promise` pool, tanpa ORM; Route Handler DB/auth/PDF memakai `runtime = 'nodejs'`).
+- Stack: Next.js 16 App Router (fullstack, single port `:3000`) + MySQL via Prisma 6 (`schema.prisma` otoritatif, workflow `migrate dev`; ID `Int` agar JSON-aman; Route Handler DB/auth/PDF memakai `runtime = 'nodejs'`).
 - Auth: JWT manual httpOnly cookie via `jose` + `bcryptjs`, RBAC di `proxy.ts` + cek ulang di Route Handler.
 - Styling: Tailwind CSS v4 (CSS-first, `app/globals.css`) + shadcn/ui minimal (preset `base-nova`, base `neutral`; komponen awal: button, card, badge, input, label, textarea, select, dialog, table, tabs, calendar, popover, skeleton, sonner). Komponen baru di luar daftar ditambah via CLI dan dicatat di PR description.
 - Theme custom (warna kampus/dark mode): **ditunda** — pakai default; token `@theme` di `globals.css` sebagai placeholder.

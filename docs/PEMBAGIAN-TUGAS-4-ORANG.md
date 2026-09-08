@@ -1,6 +1,6 @@
 # Pembagian Tugas 4 Orang — Sistem Reservasi & Pelaporan Fasilitas Kampus
 
-> Stack: Next.js 16 (App Router, fullstack) + MySQL | Export: PDF | Registrasi mandiri: ya | Anggota: placeholder
+> Stack: Next.js 16 (App Router, fullstack) + MySQL via Prisma 6 | Export: PDF | Registrasi mandiri: ya | Anggota: placeholder
 > Sumber kebenaran: `docs/PRD-Sistem-Reservasi-Pelaporan-Fasilitas-Kampus.md`
 
 ---
@@ -21,7 +21,7 @@
 | **User story** | US13–US15 (sebagian), fondasi semua US | US01, US02, US12, US16 | US03–US05, US08–US10 | US06–US08, US11–US12, US17 |
 | **Branch** | `feature/setup`, `feature/auth` | `feature/facilities`, `feature/availability` | `feature/reservations` | `feature/reports`, `feature/recap-pdf`, `docs/submission` |
 | **Reviewer** | mereview A4 | mereview A1 | mereview A2 | mereview A3 |
-| **File utama** | `config/*`, `proxy.ts`, `lib/db.ts`, `lib/auth.ts`, `lib/utils.ts`, `app/api/auth/**`, `app/globals.css`, `components.json`, `components/ui/**`, `database/*`, `.env.example` | `app/api/facilities/**`, `app/**/facilities/**` | `app/api/**/reservations/**`, `app/**/reservations/**`, `lib/services/reservationService.ts` | `app/api/**/reports/**`, `lib/services/pdf*.ts`, `docs/*` |
+| **File utama** | `config/*`, `proxy.ts`, `lib/db.ts`, `lib/auth.ts`, `lib/utils.ts`, `app/api/auth/**`, `app/globals.css`, `components.json`, `components/ui/**`, `prisma/**`, `.env.example` | `app/api/facilities/**`, `app/**/facilities/**` | `app/api/**/reservations/**`, `app/**/reservations/**`, `lib/services/reservationService.ts` | `app/api/**/reports/**`, `lib/services/pdf*.ts`, `docs/*` |
 
 ---
 
@@ -32,17 +32,17 @@
 **Minggu 1**
 - [ ] Inisiasi repo GitHub/GitLab, proteksi `main` & `develop`, buat `.github/CODEOWNERS` & PR template.
 - [ ] Buat struktur folder Next.js: `app/` (pages + `api/`), `components/`, `lib/`, plus folder literal wajib: `/public`, `/config`, `/views` (+ `views/CATATAN-MAPPING.md`).
-- [ ] Setup Next.js (`create-next-app`, TypeScript, ESLint), `config/database.ts` (mysql2 pool), `lib/db.ts`, `config/env.ts`, `.env.example`, `.gitignore`, `proxy.ts` (kerangka).
+- [ ] Setup Next.js (`create-next-app`, TypeScript, ESLint), Prisma (`schema.prisma`, `migrate dev`, `seed.ts`), `lib/db.ts`, `config/env.ts`, `.env.example`, `.gitignore`, `proxy.ts` (kerangka).
 - [ ] Setup Tailwind v4 (`tailwindcss` + `@tailwindcss/postcss`, `postcss.config.mjs`, `app/globals.css`, impor di root layout).
 - [ ] Setup shadcn (`components.json`: preset base-nova/neutral/css-variables, `lib/utils.ts` berisi `cn()`), install komponen awal: button, card, badge, input, label, textarea, select, dialog, table, tabs, calendar, popover, skeleton, sonner. Verifikasi `npm run build` hijau.
 - [ ] Setup layout dasar + halaman publik, helper fetch ke `/api/*`.
-- [ ] Tulis ERD & `database/schema.sql` untuk `users` (kolaborasi dengan A2–A4 untuk tabel lain).
+- [ ] Tulis ERD & `prisma/schema.prisma` untuk model `User` (kolaborasi dengan A2–A4 untuk model lain), lalu `migrate dev`.
 
 **Minggu 2**
 - [ ] `POST /api/auth/register` → `pending`, `POST /api/auth/login` (bcryptjs + JWT httpOnly via `jose`), `POST /api/auth/logout`, `GET /api/auth/me` (semua Route Handler `runtime = 'nodejs'`).
 - [ ] `proxy.ts` `authenticate` + `authorize(role)`, error handling + validasi `zod` di Route Handler.
 - [ ] Halaman `/login`, `/register`, `/pending-verification`, guard route per role (Server Component + middleware).
-- [ ] `database/seed.sql`: admin, officer, user, pending.
+- [ ] `prisma/seed.ts` + `npm run db:seed`: admin, officer, user, pending.
 - [ ] `POST /api/admin/users`, `PATCH /api/admin/users/:id/verify|reject` (bersama A4, tapi A1 pemilik kontrak).
 
 **Minggu 3–6**
@@ -104,7 +104,7 @@
 **Minggu 6–7**
 - [ ] Kumpulkan screenshot tiap fitur (US01–US17) + tulis **file Word** pengumpulan.
 - [ ] Siapkan materi demo 10 menit + simulasi tanya jawab.
-- [ ] Siapkan zip Drive: source + `schema.sql` + `seed.sql` + README.
+- [ ] Siapkan zip Drive: source + SQL dari `prisma/migrations/` + README.
 
 ---
 

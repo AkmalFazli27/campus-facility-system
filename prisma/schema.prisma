@@ -1,0 +1,160 @@
+// Skema database — salinan otoritatif ERD pada PRD §12.
+// ID memakai Int (bukan BIGINT) agar hasil query bisa langsung di-JSON-kan
+// dari Route Handler tanpa serializer manual (PRD §12).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  OFFICER
+  ADMIN
+
+  @@map("role")
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+  INACTIVE
+
+  @@map("account_status")
+}
+
+enum FacilityStatus {
+  ACTIVE
+  INACTIVE
+  UNDER_MAINTENANCE
+
+  @@map("facility_status")
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED_BY_USER
+  CANCELLED_BY_OFFICER
+  COMPLETED
+
+  @@map("reservation_status")
+}
+
+enum ReportStatus {
+  NEW
+  IN_PROGRESS
+  RESOLVED
+  REJECTED
+
+  @@map("report_status")
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  name          String        @db.VarChar(100)
+  email         String        @unique @db.VarChar(190)
+  passwordHash  String        @map("password_hash") @db.VarChar(255)
+  role          Role          @default(USER)
+  accountStatus AccountStatus @default(PENDING) @map("account_status")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  reservations          Reservation[] @relation("ReservationUser")
+  processedReservations Reservation[] @relation("ReservationOfficer")
+  reports               Report[]      @relation("ReportReporter")
+  handledReports        Report[]      @relation("ReportHandler")
+  auditLogs             AuditLog[]
+
+  @@index([role, accountStatus])
+  @@map("users")
+}
+
+model Facility {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique @db.VarChar(150)
+  type        String         @db.VarChar(50)
+  location    String         @db.VarChar(150)
+  capacity    Int            @default(0) @db.UnsignedInt
+  description String?        @db.Text
+  status      FacilityStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  reservations Reservation[]
+  reports      Report[]
+
+  @@index([type])
+  @@index([location])
+  @@index([status])
+  @@index([capacity])
+  @@map("facilities")
+}
+
+model Reservation {
+  id                 Int               @id @default(autoincrement())
+  userId             Int               @map("user_id")
+  facilityId         Int               @map("facility_id")
+  reservationDate    DateTime          @map("reservation_date") @db.Date
+  startTime          DateTime          @map("start_time") @db.Time
+  endTime            DateTime          @map("end_time") @db.Time
+  purpose            String            @db.Text
+  status             ReservationStatus @default(PENDING)
+  cancellationReason String?           @map("cancellation_reason") @db.Text
+  processedBy        Int?              @map("processed_by")
+  processedAt        DateTime?         @map("processed_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  user     User     @relation("ReservationUser", fields: [userId], references: [id])
+  officer  User?    @relation("ReservationOfficer", fields: [processedBy], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@index([facilityId, reservationDate, status])
+  @@index([userId])
+  @@index([status])
+  @@map("reservations")
+}
+
+model Report {
+  id              Int          @id @default(autoincrement())
+  reporterId      Int          @map("reporter_id")
+  facilityId      Int          @map("facility_id")
+  category        String       @db.VarChar(50)
+  description     String       @db.Text
+  photoPath       String       @map("photo_path") @db.VarChar(255)
+  status          ReportStatus @default(NEW)
+  resolutionNotes String?      @map("resolution_notes") @db.Text
+  handledBy       Int?         @map("handled_by")
+  handledAt       DateTime?    @map("handled_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  reporter User     @relation("ReportReporter", fields: [reporterId], references: [id])
+  handler  User?    @relation("ReportHandler", fields: [handledBy], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@index([facilityId, status])
+  @@index([reporterId])
+  @@map("reports")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     @map("user_id")
+  action      String   @db.VarChar(50)
+  entityType  String   @map("entity_type") @db.VarChar(50)
+  entityId    Int?     @map("entity_id")
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
