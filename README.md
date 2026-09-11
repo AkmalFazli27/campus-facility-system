@@ -28,6 +28,28 @@ Akun seed: `admin@example.com / Admin123!`, `officer@example.com / Officer123!`,
 
 Jangan commit `.env` / `.env.local`. Yang di-commit hanya `prisma/schema.prisma` + `prisma/migrations/` + `.env.example`.
 
+## Setup Database Bersama / Staging (Aiven MySQL)
+
+DB bersama hanya untuk integrasi dan demo. Dev harian tetap pakai MySQL lokal
+(Free tier Aiven lambat dan koneksinya terbatas).
+
+```bash
+# 1) Simpan URL staging di file terpisah (tidak di-commit)
+cp .env.example .env.staging.local
+# isi DATABASE_URL staging, contoh:
+# DATABASE_URL="mysql://campus_app:PASSWORD@HOST:PORT/campus_facility?ssl-mode=REQUIRED"
+
+# 2) Terapkan migration yang sudah ada (jangan migrate dev ke staging)
+$env:DATABASE_URL = "<isi-URL-staging>"
+npx prisma migrate deploy
+npm run db:seed  # sekali saja
+```
+
+Aturan DB bersama:
+* Dilarang `npx prisma migrate reset` dan `npx prisma migrate dev` ke staging.
+* Perubahan skema lewat lokal → PR → `develop` → `migrate deploy` ke staging.
+* Kredensial staging hanya dibagikan via jalur private, tidak pernah di-commit.
+
 ## Getting Started
 
 First, run the development server:
