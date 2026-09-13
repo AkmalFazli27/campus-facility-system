@@ -46,3 +46,6 @@ public/uploads/*
 next-env.d.ts
 
 .vscode
+
+# superpowers skill state (lokal, jangan commit)
+.superpowers/
