@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --env-file-if-exists=.env --import tsx --test",
+    "typecheck": "tsc --noEmit",
     "db:seed": "prisma db seed",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "smoke:auth": "node --env-file=.env scripts/smoke-auth.mjs",
     "postinstall": "prisma generate"
   },
   "prisma": {

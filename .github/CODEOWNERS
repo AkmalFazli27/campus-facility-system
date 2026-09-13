@@ -1,0 +1,24 @@
+# CODEOWNERS — Sistem Reservasi & Pelaporan Fasilitas Kampus
+# Ganti @A1..@A4 dengan username GitHub setelah nama final (GIT-WORKFLOW §10).
+
+*                           @A1
+/app/api/*facility*         @A2
+/app/**/facilities/**       @A2
+/app/admin/facilities/**    @A2
+/app/*reservation*          @A3
+/app/**/reservations/**     @A3
+/app/officer/queue/**       @A3 @A4
+/components/ui/**           @A1
+/app/*report*               @A4
+/app/**/reports/**          @A4
+/lib/services/pdf*          @A4
+/lib/services/reservationService.ts @A3
+/config/                    @A1
+/lib/auth.ts                @A1
+/lib/session.ts             @A1
+/lib/authorize.ts           @A1
+/lib/db.ts                  @A1
+/proxy.ts                   @A1
+/prisma/**                  @A1
+/database/                  @A1
+/views/**                   @A1
