@@ -27,8 +27,14 @@ export async function signSession(payload: {
     .sign(secret);
 }
 
-// TODO (minggu 2, A1): validasi penuh + ambil user dari DB.
-export async function getSession(token: string) {
-  const { payload } = await jwtVerify(token, secret);
-  return payload as { id: number; role: string };
+export type SessionPayload = { id: number; role: string };
+
+// Verifikasi penuh: paksa algoritma HS256 + validasi bentuk payload.
+// Melempar error bila token tidak valid/kadaluarsa/payload menyimpang.
+export async function getSession(token: string): Promise<SessionPayload> {
+  const { payload } = await jwtVerify(token, secret, { algorithms: ["HS256"] });
+  if (typeof payload.id !== "number" || typeof payload.role !== "string") {
+    throw new Error("Payload sesi tidak valid");
+  }
+  return { id: payload.id, role: payload.role };
 }
