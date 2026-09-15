@@ -31,11 +31,25 @@ async function getPreviewFacilities(): Promise<FacilityPreview[]> {
   });
 }
 
+async function getLocations(): Promise<string[]> {
+  const rows = await db.facility.findMany({
+    where: { status: "ACTIVE" },
+    distinct: ["location"],
+    orderBy: { location: "asc" },
+    select: { location: true },
+  });
+  return rows.map((row) => row.location).filter((location) => location.length > 0);
+}
+
 export default async function Home() {
   let facilities: FacilityPreview[] | null = null;
+  let locations: string[] = [];
 
   try {
-    facilities = await getPreviewFacilities();
+    [facilities, locations] = await Promise.all([
+      getPreviewFacilities(),
+      getLocations(),
+    ]);
   } catch {
   }
 
@@ -43,7 +57,7 @@ export default async function Home() {
     <div className="flex flex-1 flex-col">
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-16 px-6 py-12 sm:py-16">
         <HeroSection />
-        <QuickSearchForm />
+        <QuickSearchForm locations={locations} />
 
         <section aria-labelledby="popular-facilities-heading" className="space-y-6">
           <div className="flex flex-wrap items-end justify-between gap-4">

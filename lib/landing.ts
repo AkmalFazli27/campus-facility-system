@@ -15,7 +15,7 @@ export function buildFacilitySearchUrl(input: FacilitySearchInput): string {
   const type = input.type?.trim();
   if (type && type !== "all") params.set("type", type);
   const location = input.location?.trim();
-  if (location) params.set("location", location);
+  if (location && location !== "all") params.set("location", location);
   const date = input.date?.trim();
   if (date) params.set("date", date);
   const startTime = input.startTime?.trim();

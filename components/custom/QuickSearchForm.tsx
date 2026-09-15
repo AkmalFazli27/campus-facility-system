@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { buildFacilitySearchUrl, buildTimeSlots } from "@/lib/landing";
 
 const TYPE_OPTIONS = [
@@ -37,22 +38,29 @@ function SearchField({
   icon: Icon,
   label,
   htmlFor,
+  withDivider = true,
   children,
 }: {
   icon: LucideIcon;
   label: string;
   htmlFor: string;
+  withDivider?: boolean;
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-1 items-center gap-3 px-3 py-2 lg:border-r lg:border-brand-100">
+    <div
+      className={cn(
+        "flex min-w-0 flex-1 basis-0 items-center gap-3 px-3 py-2 lg:px-4",
+        withDivider && "lg:border-r lg:border-brand-100"
+      )}
+    >
       <span
         aria-hidden
         className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600"
       >
         <Icon className="size-5" />
       </span>
-      <div className="w-full text-left">
+      <div className="w-full min-w-0 text-left">
         <Label
           htmlFor={htmlFor}
           className="block text-[11px] font-bold tracking-wider text-ink-400 uppercase"
@@ -65,7 +73,11 @@ function SearchField({
   );
 }
 
-export default function QuickSearchForm() {
+export type QuickSearchFormProps = {
+  locations: string[];
+};
+
+export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
   const router = useRouter();
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -73,10 +85,11 @@ export default function QuickSearchForm() {
     const data = new FormData(event.currentTarget);
     const slot = String(data.get("slot") ?? "");
     const [startTime, endTime] = slot.split("|");
+    const location = String(data.get("location") ?? "");
     router.push(
       buildFacilitySearchUrl({
         type: String(data.get("type") ?? "all"),
-        location: String(data.get("location") ?? ""),
+        location: location === "all" ? "" : location,
         date: String(data.get("date") ?? ""),
         startTime,
         endTime,
@@ -88,15 +101,20 @@ export default function QuickSearchForm() {
     <form
       onSubmit={onSubmit}
       aria-label="Cek ketersediaan cepat"
-      className="flex flex-col gap-3 rounded-3xl border border-brand-100 bg-white p-4 shadow-lg shadow-brand-100/50 lg:flex-row lg:items-center lg:gap-0 lg:rounded-full lg:px-6"
+      className="flex flex-col gap-3 rounded-3xl border border-brand-100 bg-white p-4 shadow-lg shadow-brand-100/50 lg:flex-row lg:items-center lg:gap-0 lg:rounded-full lg:px-4"
     >
       <SearchField icon={Building2} label="Jenis fasilitas" htmlFor="quick-type">
         <Select name="type" defaultValue="all">
           <SelectTrigger
             id="quick-type"
-            className="w-full border-none bg-transparent p-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
-            <SelectValue placeholder="Semua jenis" />
+            <SelectValue placeholder="Semua jenis">
+              {(value) =>
+                TYPE_OPTIONS.find((opt) => opt.value === value)?.label ??
+                "Semua jenis"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {TYPE_OPTIONS.map((opt) => (
@@ -109,13 +127,24 @@ export default function QuickSearchForm() {
       </SearchField>
 
       <SearchField icon={MapPin} label="Lokasi" htmlFor="quick-location">
-        <Input
-          id="quick-location"
-          name="location"
-          placeholder="cth. Gedung A"
-          autoComplete="off"
-          className="border-none bg-transparent p-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
-        />
+        <Select name="location" defaultValue="all">
+          <SelectTrigger
+            id="quick-location"
+            className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <SelectValue placeholder="Semua lokasi">
+              {(value) => (value === "all" ? "Semua lokasi" : String(value))}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua lokasi</SelectItem>
+            {locations.map((location) => (
+              <SelectItem key={location} value={location}>
+                {location}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </SearchField>
 
       <SearchField icon={CalendarDays} label="Tanggal" htmlFor="quick-date">
@@ -123,17 +152,27 @@ export default function QuickSearchForm() {
           id="quick-date"
           name="date"
           type="date"
-          className="border-none bg-transparent p-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
         />
       </SearchField>
 
-      <SearchField icon={Clock3} label="Waktu (30 menit)" htmlFor="quick-slot">
+      <SearchField
+        icon={Clock3}
+        label="Waktu (30 menit)"
+        htmlFor="quick-slot"
+        withDivider={false}
+      >
         <Select name="slot" defaultValue="07:00|07:30">
           <SelectTrigger
             id="quick-slot"
-            className="w-full border-none bg-transparent p-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
-            <SelectValue placeholder="Pilih slot" />
+            <SelectValue placeholder="Pilih slot">
+              {(value) =>
+                TIME_SLOTS.find((slot) => `${slot.start}|${slot.end}` === value)
+                  ?.label ?? "Pilih slot"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {TIME_SLOTS.map((slot) => (
@@ -145,10 +184,10 @@ export default function QuickSearchForm() {
         </Select>
       </SearchField>
 
-      <div className="flex justify-end lg:w-auto">
+      <div className="flex lg:shrink-0 lg:pl-3">
         <Button
           type="submit"
-          className="w-full min-h-11 rounded-2xl bg-brand-500 px-6 hover:bg-brand-600 lg:w-14 lg:rounded-full lg:px-0"
+          className="h-11 w-full rounded-2xl bg-brand-500 px-6 hover:bg-brand-600 lg:w-14 lg:rounded-full lg:px-0"
         >
           <Search aria-hidden className="size-5" />
           <span className="lg:sr-only">Cari ketersediaan</span>

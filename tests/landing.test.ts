@@ -42,6 +42,13 @@ test("buildFacilitySearchUrl membuang type=all dan field kosong", () => {
   );
 });
 
+test("buildFacilitySearchUrl membuang location=all dari dropdown", () => {
+  assert.equal(
+    buildFacilitySearchUrl({ location: "all" }),
+    "/facilities"
+  );
+});
+
 test("buildFacilitySearchUrl tanpa argumen ke /facilities", () => {
   assert.equal(buildFacilitySearchUrl({}), "/facilities");
 });
