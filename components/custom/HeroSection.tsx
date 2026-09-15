@@ -23,13 +23,13 @@ export default function HeroSection() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/facilities"
-            className={cn(buttonVariants({ size: "lg" }), "min-h-11 rounded-full bg-brand-500 hover:bg-brand-600")}
+            className={cn(buttonVariants({ size: "lg" }), "min-h-11 rounded-full px-6 bg-brand-500 hover:bg-brand-600")}
           >
             Lihat fasilitas
           </Link>
           <Link
             href="/register"
-            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-h-11 rounded-full")}
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-h-11 rounded-full px-6")}
           >
             Daftar akun
           </Link>
