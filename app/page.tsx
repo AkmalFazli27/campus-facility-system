@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import BenefitCards from "@/components/custom/BenefitCards";
 import FacilityPreviewCard, {
   type FacilityPreview,
 } from "@/components/custom/FacilityPreviewCard";
@@ -45,7 +44,6 @@ export default async function Home() {
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-16 px-6 py-12 sm:py-16">
         <HeroSection />
         <QuickSearchForm />
-        <BenefitCards />
 
         <section aria-labelledby="popular-facilities-heading" className="space-y-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
