@@ -28,6 +28,15 @@ type ApiResponse = {
   };
 };
 
+type FilterState = {
+  query: string;
+  type: string;
+  location: string;
+  capacityMin: string;
+  capacityMax: string;
+  date: string;
+};
+
 const facilityTypes = [
   { value: "", label: "Semua tipe" },
   { value: "kelas", label: "Kelas" },
@@ -68,6 +77,19 @@ function getInitialFilters() {
   };
 }
 
+function buildFilterParams(filters: FilterState) {
+  const params = new URLSearchParams();
+
+  if (filters.query) params.set("q", filters.query);
+  if (filters.type) params.set("type", filters.type);
+  if (filters.location) params.set("location", filters.location);
+  if (filters.capacityMin) params.set("capacity_min", filters.capacityMin);
+  if (filters.capacityMax) params.set("capacity_max", filters.capacityMax);
+  if (filters.date) params.set("date", filters.date);
+
+  return params;
+}
+
 export default function FacilitiesPage() {
   const [filters, setFilters] = useState(getInitialFilters);
   const [appliedFilters, setAppliedFilters] = useState(getInitialFilters);
@@ -78,14 +100,7 @@ export default function FacilitiesPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams();
-
-    if (appliedFilters.query) params.set("q", appliedFilters.query);
-    if (appliedFilters.type) params.set("type", appliedFilters.type);
-    if (appliedFilters.location) params.set("location", appliedFilters.location);
-    if (appliedFilters.capacityMin) params.set("capacity_min", appliedFilters.capacityMin);
-    if (appliedFilters.capacityMax) params.set("capacity_max", appliedFilters.capacityMax);
-    if (appliedFilters.date) params.set("date", appliedFilters.date);
+    const params = buildFilterParams(appliedFilters);
 
     fetch(`/api/facilities?${params.toString()}`, { signal: controller.signal })
       .then(async (response) => {
@@ -106,18 +121,25 @@ export default function FacilitiesPage() {
     return () => controller.abort();
   }, [appliedFilters]);
 
+  function submitSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextFilters = { ...appliedFilters, query: filters.query.trim() };
+    const params = buildFilterParams(nextFilters);
+    window.history.pushState({}, "", `/facilities?${params.toString()}`);
+    setError(null);
+    setIsLoading(true);
+    setFilters(nextFilters);
+    setAppliedFilters(nextFilters);
+  }
+
   function submitFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const params = new URLSearchParams();
-
-    if (filters.query.trim()) params.set("q", filters.query.trim());
-    if (filters.type) params.set("type", filters.type);
-    if (filters.location.trim()) params.set("location", filters.location.trim());
-    if (filters.capacityMin) params.set("capacity_min", filters.capacityMin);
-    if (filters.capacityMax) params.set("capacity_max", filters.capacityMax);
-    if (filters.date) params.set("date", filters.date);
-
-    const nextFilters = { ...filters, query: filters.query.trim() };
+    const nextFilters = {
+      ...filters,
+      query: appliedFilters.query,
+      location: filters.location.trim(),
+    };
+    const params = buildFilterParams(nextFilters);
     window.history.pushState({}, "", `/facilities?${params.toString()}`);
     setError(null);
     setIsLoading(true);
@@ -142,25 +164,32 @@ export default function FacilitiesPage() {
           <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Cari fasilitas</h1>
           <p className="text-base leading-7 text-muted-foreground sm:text-lg">
             Temukan ruang, laboratorium, aula, dan fasilitas kampus yang sesuai dengan kebutuhanmu.
-            Ketersediaan detail dapat dilihat setelah memilih fasilitas.
           </p>
         </div>
       </section>
 
       <section className="rounded-2xl border border-orange-100 bg-orange-50/60 p-4 shadow-sm sm:p-6">
-        <form className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_0.7fr_0.7fr_1fr_auto] xl:items-end" onSubmit={submitFilters}>
-          <label className="grid gap-2 text-sm font-medium sm:col-span-2 xl:col-span-7">
+        <form className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end" onSubmit={submitSearch}>
+          <label className="grid gap-2 text-sm font-medium">
             Cari fasilitas
             <Input
+              className="bg-white"
               value={filters.query}
               placeholder="Contoh: Lab Komputer"
               onChange={(event) => setFilters({ ...filters, query: event.target.value })}
             />
           </label>
+          <Button type="submit" className="sm:col-start-2 sm:row-start-1">
+            <Search />
+            Cari
+          </Button>
+        </form>
+
+        <form className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_0.7fr_0.7fr_1fr_auto] xl:items-end" onSubmit={submitFilters}>
           <label className="grid gap-2 text-sm font-medium">
             Tipe fasilitas
             <select
-              className="h-9 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="h-9 rounded-lg border border-input bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               value={filters.type}
               onChange={(event) => setFilters({ ...filters, type: event.target.value })}
             >
@@ -172,7 +201,7 @@ export default function FacilitiesPage() {
           <label className="grid gap-2 text-sm font-medium">
             Lokasi
             <select
-              className="h-9 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="h-9 rounded-lg border border-input bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               value={filters.location}
               onChange={(event) => setFilters({ ...filters, location: event.target.value })}
             >
@@ -185,6 +214,7 @@ export default function FacilitiesPage() {
           <label className="grid gap-2 text-sm font-medium">
             Kapasitas min.
             <Input
+              className="bg-white"
               min="0"
               type="number"
               value={filters.capacityMin}
@@ -195,6 +225,7 @@ export default function FacilitiesPage() {
           <label className="grid gap-2 text-sm font-medium">
             Kapasitas maks.
             <Input
+              className="bg-white"
               min="0"
               type="number"
               value={filters.capacityMax}
@@ -207,7 +238,7 @@ export default function FacilitiesPage() {
             <div className="relative">
               <CalendarDays className="pointer-events-none absolute top-2 left-2.5 size-4 text-muted-foreground" />
               <Input
-                className="pl-9"
+                className="bg-white pl-9"
                 type="date"
                 value={filters.date}
                 onChange={(event) => setFilters({ ...filters, date: event.target.value })}
@@ -216,8 +247,7 @@ export default function FacilitiesPage() {
           </label>
           <div className="flex items-center gap-2">
             <Button type="submit" className="flex-1 lg:w-full">
-              <Search />
-              Cari
+              Terapkan filter
             </Button>
             <Button type="button" variant="outline" size="icon" onClick={resetFilters} aria-label="Reset filter">
               <RotateCcw />
