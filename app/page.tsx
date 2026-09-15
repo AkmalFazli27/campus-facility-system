@@ -14,6 +14,8 @@ import WorkflowCards from "@/components/custom/WorkflowCards";
 import { db } from "@/lib/db";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 async function getPreviewFacilities(): Promise<FacilityPreview[]> {
   return db.facility.findMany({
     where: { status: "ACTIVE" },

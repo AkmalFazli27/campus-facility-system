@@ -10,6 +10,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -107,6 +108,9 @@ export default function PublicHeader() {
           />
           <DialogContent className="rounded-3xl">
             <DialogTitle>Menu navigasi</DialogTitle>
+            <DialogDescription>
+              Gunakan menu ini untuk menjelajahi fasilitas atau masuk ke akun Anda.
+            </DialogDescription>
             <ul className="flex flex-col gap-1 text-sm font-medium text-ink-600">
               {NAV_LINKS.map((link) => (
                 <li key={link.label}>
