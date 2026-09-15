@@ -36,4 +36,6 @@ test("isAuthRoute mengenali route auth", () => {
   assert.equal(isAuthRoute("/pending-verification"), true);
   assert.equal(isAuthRoute("/"), false);
   assert.equal(isAuthRoute("/facilities"), false);
+  assert.equal(isAuthRoute("/login-evil"), false);
+  assert.equal(isAuthRoute("/login/"), true);
 });
