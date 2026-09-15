@@ -1,11 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Clock, ShieldCheck } from "lucide-react";
+import { CalendarCheck, Clock } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const DEMO_SLOTS = [
-  true, true, false, true, true, false, true, false,
-];
 
 export default function HeroSection() {
   return (
@@ -41,33 +38,35 @@ export default function HeroSection() {
           </Link>
         </div>
       </div>
-      <div
-        aria-label="Contoh ketersediaan slot"
-        className="relative overflow-hidden rounded-[2rem] border-4 border-white bg-gradient-to-tr from-brand-500 via-brand-600 to-amber-400 p-6 shadow-xl sm:p-8"
-      >
-        <p className="text-xs font-bold tracking-widest text-white/90 uppercase">
-          Contoh slot hari ini • 30 menit
-        </p>
-        <div className="mt-4 grid grid-cols-4 gap-2">
-          {DEMO_SLOTS.map((free, i) => (
-            <span
-              key={i}
-              className={cn(
-                "rounded-xl px-2 py-3 text-center text-xs font-bold",
-                free ? "bg-white/95 text-ink-950" : "bg-black/25 text-white/80"
-              )}
-            >
-              {free ? "Buka" : "Penuh"}
-            </span>
-          ))}
+      <div className="relative min-h-[360px] overflow-hidden rounded-[2rem] border-4 border-white shadow-xl sm:min-h-[440px] lg:min-h-[520px]">
+        <Image
+          src="/assets/undip-img.png"
+          alt="Gedung fasilitas kampus"
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" />
+
+        <span className="absolute top-5 left-5 hidden rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold tracking-wider text-ink-950 uppercase backdrop-blur-sm sm:inline-flex">
+          Portal fasilitas kampus
+        </span>
+
+        <div className="absolute top-5 right-5 rounded-2xl border border-white/60 bg-white/90 p-3 shadow-lg backdrop-blur-md">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-brand-600 uppercase">
+            <Clock aria-hidden className="size-3.5" />
+            Jam operasional
+          </p>
+          <p className="mt-1 text-xs font-bold text-ink-950">07.00–20.00 WIB</p>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold">
-          <span className="flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 text-white">
-            <Clock aria-hidden className="size-3.5" /> Operasional 07.00–20.00
-          </span>
-          <span className="flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 text-white">
-            <ShieldCheck aria-hidden className="size-3.5" /> Validasi anti-bentrok
-          </span>
+
+        <div className="absolute bottom-5 left-5 rounded-2xl border border-white/60 bg-white/90 p-3 pr-4 shadow-lg backdrop-blur-md">
+          <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-brand-600 uppercase">
+            <CalendarCheck aria-hidden className="size-3.5" />
+            Cek ketersediaan
+          </p>
+          <p className="mt-1 text-xs font-bold text-ink-950">Slot 30 menit</p>
         </div>
       </div>
     </section>
