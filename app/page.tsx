@@ -76,7 +76,7 @@ export default async function Home() {
               href="/facilities"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "min-h-11 rounded-full px-6"
+                "min-h-11 rounded-full border-brand-200 bg-brand-50 px-6 text-brand-600 hover:bg-brand-100 hover:text-brand-700"
               )}
             >
               Lihat semua fasilitas
