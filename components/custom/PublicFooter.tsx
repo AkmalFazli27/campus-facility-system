@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 const FACILITY_LINKS = [
   { label: "Semua fasilitas", href: "/facilities" },
@@ -21,25 +20,16 @@ const GUIDE_LINKS = [
 
 function FooterLinks({
   links,
-  columns = 1,
 }: {
   links: readonly { label: string; href: string }[];
-  columns?: 1 | 2;
 }) {
   return (
-    <ul
-      className={cn(
-        "mt-2 text-sm text-ink-600",
-        columns === 2
-          ? "grid grid-flow-col grid-rows-3 gap-x-6"
-          : "flex flex-col"
-      )}
-    >
+    <ul className="mt-2 flex flex-col gap-0.5 text-sm text-ink-600">
       {links.map((link) => (
         <li key={link.href}>
           <Link
             href={link.href}
-            className="inline-flex min-h-11 items-center rounded-md px-1 whitespace-nowrap hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+            className="inline-flex min-h-6 items-center rounded-md whitespace-nowrap hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
           >
             {link.label}
           </Link>
@@ -52,11 +42,11 @@ function FooterLinks({
 export default function PublicFooter() {
   return (
     <footer className="border-t border-brand-100 bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-8 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-13 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div>
           <Link
             href="/"
-            className="inline-flex min-h-11 items-center rounded-md text-xl font-bold tracking-tight text-ink-950 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+            className="inline-flex min-h-6 items-start rounded-md text-xl font-bold tracking-tight text-ink-950 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none leading-6"
           >
             Kampus<span className="text-brand-500">Space</span>
           </Link>
@@ -74,7 +64,7 @@ export default function PublicFooter() {
           <h2 id="footer-facilities-heading" className="font-bold text-ink-950">
             Fasilitas
           </h2>
-          <FooterLinks links={FACILITY_LINKS} columns={2} />
+          <FooterLinks links={FACILITY_LINKS} />
         </nav>
 
         <nav aria-labelledby="footer-account-heading">
