@@ -47,16 +47,17 @@ export default function FacilityPreviewCard({
         </div>
         <CardTitle className="text-lg">{facility.name}</CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center justify-between text-sm">
-        <span className="flex items-center gap-1.5 text-ink-600">
-          <Users aria-hidden className="size-4" />
+      <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm">
+        <span className="flex min-w-0 items-center gap-1.5 text-ink-600">
+          <Users aria-hidden className="size-4 shrink-0" />
           Kapasitas {facility.capacity}
-          <MapPin aria-hidden className="ml-2 size-4" />
-          {facility.location}
+          <MapPin aria-hidden className="ml-2 size-4 shrink-0" />
+          <span className="truncate">{facility.location}</span>
         </span>
         <Link
           href={buildFacilitySearchUrl({ type: facility.type })}
-          className="rounded-full bg-brand-50 px-4 py-1.5 text-xs font-bold text-brand-600 transition-colors hover:bg-brand-500 hover:text-white"
+          aria-label={`Cek ketersediaan ${facility.name}`}
+          className="shrink-0 rounded-full bg-brand-50 px-4 py-2.5 text-xs font-bold text-brand-600 transition-colors hover:bg-brand-500 hover:text-white focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
         >
           Cek ketersediaan
         </Link>
