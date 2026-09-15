@@ -8,9 +8,6 @@ export default function HeroSection() {
   return (
     <section aria-labelledby="hero-heading" className="grid items-center gap-10 lg:grid-cols-2">
       <div>
-        <p className="mb-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-bold tracking-wider text-brand-600 uppercase">
-          Portal reservasi &amp; pelaporan fasilitas kampus
-        </p>
         <h1
           id="hero-heading"
           className="text-4xl font-bold tracking-tight text-ink-950 sm:text-5xl"
@@ -49,9 +46,6 @@ export default function HeroSection() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20" />
 
-        <span className="absolute top-5 left-5 hidden rounded-full bg-white/90 px-3 py-1 text-[11px] font-bold tracking-wider text-ink-950 uppercase backdrop-blur-sm sm:inline-flex">
-          Portal fasilitas kampus
-        </span>
 
         <div className="absolute top-5 right-5 rounded-2xl border border-white/60 bg-white/90 p-3 shadow-lg backdrop-blur-md">
           <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-brand-600 uppercase">
