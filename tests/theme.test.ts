@@ -29,9 +29,26 @@ for (const [name, value] of tokens) {
   });
 }
 
-test("globals.css memetakan token ke @theme inline", () => {
-  assert.match(css, /--color-brand-500:\s*var\(--brand-500\)/);
-  assert.match(css, /--color-ink-600:\s*var\(--ink-600\)/);
-  assert.match(css, /--color-canvas-public:\s*var\(--canvas-public\)/);
-  assert.match(css, /--color-success:\s*var\(--success\)/);
-});
+const themeTokens = [
+  "brand-50",
+  "brand-100",
+  "brand-500",
+  "brand-600",
+  "brand-700",
+  "ink-950",
+  "ink-600",
+  "ink-400",
+  "canvas-public",
+  "canvas-app",
+  "surface",
+  "success",
+  "warning",
+  "danger",
+  "info",
+];
+
+for (const name of themeTokens) {
+  test(`globals.css memetakan --color-${name}`, () => {
+    assert.match(css, new RegExp(`--color-${name}:\\s*var\\(--${name}\\)`));
+  });
+}
