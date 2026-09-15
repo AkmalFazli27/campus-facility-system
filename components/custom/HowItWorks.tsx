@@ -25,7 +25,10 @@ export default function HowItWorks() {
         <p className="text-sm font-bold tracking-wider text-brand-600 uppercase">
           Cara kerja
         </p>
-        <h2 id="cara-kerja-heading" className="mt-2 text-3xl font-bold tracking-tight text-ink-950">
+        <h2
+          id="cara-kerja-heading"
+          className="mt-2 scroll-mt-24 text-3xl font-bold tracking-tight text-ink-950"
+        >
           Reservasi fasilitas tanpa alur yang membingungkan
         </h2>
       </div>

@@ -13,18 +13,23 @@ const ACCOUNT_LINKS = [
   { label: "Daftar akun", href: "/register" },
 ] as const;
 
+const GUIDE_LINKS = [
+  { label: "Alur reservasi & pelaporan", href: "/#tentang" },
+  { label: "Cara meminjam fasilitas", href: "/#cara-kerja-heading" },
+] as const;
+
 function FooterLinks({
   links,
 }: {
   links: readonly { label: string; href: string }[];
 }) {
   return (
-    <ul className="mt-4 space-y-2 text-sm text-ink-600">
+    <ul className="mt-3 space-y-0 text-sm text-ink-600">
       {links.map((link) => (
         <li key={link.href}>
           <Link
             href={link.href}
-            className="inline-flex min-h-11 items-center rounded-md py-2 hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+            className="inline-flex min-h-11 items-center rounded-md px-1 hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
           >
             {link.label}
           </Link>
@@ -37,7 +42,7 @@ function FooterLinks({
 export default function PublicFooter() {
   return (
     <footer className="border-t border-brand-100 bg-white">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
+      <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-8 sm:grid-cols-2 sm:py-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div>
           <Link
             href="/"
@@ -67,6 +72,13 @@ export default function PublicFooter() {
             Akun
           </h2>
           <FooterLinks links={ACCOUNT_LINKS} />
+        </nav>
+
+        <nav aria-labelledby="footer-guide-heading">
+          <h2 id="footer-guide-heading" className="font-bold text-ink-950">
+            Panduan
+          </h2>
+          <FooterLinks links={GUIDE_LINKS} />
         </nav>
       </div>
     </footer>
