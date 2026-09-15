@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import PublicHeader from "@/components/custom/PublicHeader";
 import "./globals.css";
-import Navbar from "@/components/sections/Navbar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,17 +22,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <>
-      <Navbar />
-      <html
-        lang="id"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="min-h-full flex flex-col">
-          {children}
-          <Toaster position="top-center" richColors />
-        </body>
-      </html>
-    </>
+    <html
+      lang="id"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full flex flex-col bg-canvas-public">
+        <PublicHeader />
+        {children}
+        <Toaster position="top-center" richColors />
+      </body>
+    </html>
   );
 }

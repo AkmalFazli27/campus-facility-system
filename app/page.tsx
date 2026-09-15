@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Navbar from "@/components/sections/Navbar";
 export default function Home() {
   return (
     
