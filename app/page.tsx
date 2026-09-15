@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
+import Navbar from "@/components/sections/Navbar";
 export default function Home() {
   return (
+    
     <div className="flex flex-1 flex-col">
-      <header className="border-b">
+      {/* <Navbar /> */}
+      {/* <header className="border-b">
         <nav className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-4">
           <span className="font-semibold">Fasilitas Kampus</span>
           <div className="flex items-center gap-2">
@@ -18,7 +20,7 @@ export default function Home() {
             </Link>
           </div>
         </nav>
-      </header>
+      </header> */}
 
       <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-6 py-16">
         <section className="flex flex-col gap-4">
