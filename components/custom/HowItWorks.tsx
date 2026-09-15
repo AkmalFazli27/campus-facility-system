@@ -1,19 +1,20 @@
 const STEPS = [
   {
     title: "Daftar akun",
-    description: "Registrasi dengan email kampus, lalu tunggu verifikasi admin.",
+    description: "Registrasi dengan email kampus, lalu ajukan akun untuk diverifikasi admin.",
+  },
+  {
+    title: "Verifikasi admin",
+    description: "Akun aktif setelah admin memverifikasi pendaftaranmu.",
   },
   {
     title: "Pilih slot",
-    description: "Temukan fasilitas dan pilih slot waktu dalam interval 30 menit.",
-  },
-  {
-    title: "Isi tujuan",
-    description: "Jelaskan keperluan, unit atau UKM, serta estimasi peserta.",
+    description: "Cek slot 30 menit yang masih tersedia pada tanggal tujuan.",
   },
   {
     title: "Tunggu persetujuan",
-    description: "Status pengajuan pending, approved, atau rejected terlihat di akun.",
+    description:
+      "Petugas memproses pengajuan; status pending, disetujui, atau ditolak terlihat di riwayat.",
   },
 ] as const;
 

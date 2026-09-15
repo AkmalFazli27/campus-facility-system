@@ -24,8 +24,9 @@ export default function WorkflowCards() {
           Reservasi fasilitas online
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-ink-600">
-          Amankan slot dalam interval 30 menit pada jam 07.00–20.00. Server
-          menolak pengajuan yang bentrok dengan jadwal yang sudah disetujui.
+          Amankan slot dalam interval 30 menit pada jam 07.00–20.00. Saat
+          persetujuan petugas, server memeriksa kembali bentrok jadwal agar fasilitas tidak
+          terpesan ganda.
         </p>
         <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm text-ink-600">
           {RESERVATION_STEPS.map((s) => (
