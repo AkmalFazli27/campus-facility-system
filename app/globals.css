@@ -118,3 +118,73 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Auth dual-slider (login/register). Durasi + easing disalin dari referensi
+   docs/login-register-ref.html agar animasi 1:1; token mengikuti DESIGN.md.
+   Di-scope .auth-slider agar tidak memengaruhi halaman lain. */
+.auth-slider .form-container,
+.auth-slider .overlay-container,
+.auth-slider .overlay,
+.auth-slider .overlay-panel {
+  transition:
+    transform 0.65s cubic-bezier(0.76, 0, 0.24, 1),
+    opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+.auth-slider .sign-in-container {
+  transform: translateX(0);
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
+}
+.auth-slider .sign-up-container {
+  transform: translateX(0);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.auth-slider .overlay-left {
+  transform: translateX(-20%);
+  opacity: 0;
+  pointer-events: none;
+}
+.auth-slider .overlay-right {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.auth-slider.right-panel-active .sign-in-container {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.auth-slider.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 5;
+}
+.auth-slider.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+}
+.auth-slider.right-panel-active .overlay {
+  transform: translateX(50%);
+}
+.auth-slider.right-panel-active .overlay-left {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.auth-slider.right-panel-active .overlay-right {
+  transform: translateX(20%);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-slider .form-container,
+  .auth-slider .overlay-container,
+  .auth-slider .overlay,
+  .auth-slider .overlay-panel {
+    transition-duration: 0.01ms !important;
+  }
+}
