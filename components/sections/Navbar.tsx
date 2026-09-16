@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const navMenus = [
   { name: "Beranda", path: "/" },
-  { name: "Fasilitas", path: "/" },
+  { name: "Fasilitas", path: "/facilities" },
   { name: "Tentang", path: "/" },
 ];
 
