@@ -10,3 +10,10 @@ test("overlay-container memiliki z-index di atas form", () => {
   assert.ok(block, "blok .auth-slider .overlay-container tidak ditemukan");
   assert.match(block[0], /z-index:\s*20/);
 });
+
+test("aturan posisi slider hanya aktif di md+ (mobile pakai hidden/flex)", () => {
+  assert.match(
+    css,
+    /@media\s*\(min-width:\s*768px\)[\s\S]*\.right-panel-active \.sign-up-container/
+  );
+});

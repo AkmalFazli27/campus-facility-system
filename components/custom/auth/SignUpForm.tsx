@@ -91,7 +91,6 @@ export default function SignUpForm() {
           peminjaman aktif.
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <Label htmlFor="reg-name">Nama lengkap</Label>
           <div className="relative flex items-center">
@@ -143,8 +142,6 @@ export default function SignUpForm() {
             </p>
           )}
         </div>
-      </div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
           <Label htmlFor="reg-password">Kata sandi</Label>
           <div className="relative flex items-center">
@@ -228,7 +225,6 @@ export default function SignUpForm() {
             </p>
           )}
         </div>
-      </div>
       <div className="flex items-start gap-2 pt-1">
         <input
           id="terms-agree"
