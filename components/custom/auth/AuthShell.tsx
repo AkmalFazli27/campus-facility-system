@@ -2,17 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Clock, ShieldCheck, Users } from "lucide-react";
 import { buildAuthToggleHref, type AuthMode } from "@/lib/auth-ui";
 import SignInForm from "./SignInForm";
 import SignUpForm from "./SignUpForm";
 import OverlayPanel from "./OverlayPanel";
-
-const TRUST_BADGES = [
-  { icon: ShieldCheck, label: "Validasi server" },
-  { icon: Users, label: "RBAC terpadu" },
-  { icon: Clock, label: "Slot 07.00–20.00" },
-];
 
 export default function AuthShell({
   initialMode,
@@ -36,22 +29,18 @@ export default function AuthShell({
   }
 
   return (
-    <main className="relative flex w-full flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6">
+    <main className="relative flex w-full flex-1 flex-col">
       <div
-        aria-hidden
-        className="pointer-events-none fixed top-12 left-1/2 h-[550px] w-[700px] max-w-[95vw] -translate-x-1/2 rounded-full bg-gradient-to-tr from-brand-500/20 via-brand-100/60 to-amber-200/40 blur-3xl"
-      />
-      <div
-        className={`auth-slider relative flex w-full max-w-[940px] flex-col overflow-hidden rounded-3xl border bg-surface shadow-xl shadow-brand-100/60 md:block md:min-h-[640px] ${
+        className={`auth-slider relative flex w-full flex-1 flex-col overflow-hidden bg-surface md:block md:min-h-svh ${
           toRegister ? "right-panel-active" : ""
         }`}
       >
         <div
-          className={`form-container sign-in-container relative w-full flex-col justify-between gap-6 overflow-y-auto p-6 sm:p-10 md:absolute md:top-0 md:left-0 md:h-full md:w-1/2 ${
+          className={`form-container sign-in-container relative w-full flex-col items-center justify-center gap-6 overflow-y-auto p-6 sm:p-10 md:absolute md:top-0 md:left-0 md:h-full md:w-1/2 ${
             toRegister ? "hidden md:flex" : "flex"
           }`}
         >
-          <div>
+          <div className="w-full max-w-[440px]">
             <div className="mb-3 flex items-center justify-between">
               <Link
                 href="/"
@@ -75,7 +64,7 @@ export default function AuthShell({
               <SignInForm next={next} />
             </div>
           </div>
-          <div className="flex items-center justify-center gap-1.5 border-t pt-4 text-center md:hidden">
+          <div className="flex w-full max-w-[440px] items-center justify-center gap-1.5 border-t pt-4 text-center md:hidden">
             <span className="text-xs text-ink-600">Belum memiliki akun?</span>
             <button
               type="button"
@@ -87,11 +76,11 @@ export default function AuthShell({
           </div>
         </div>
         <div
-          className={`form-container sign-up-container relative w-full flex-col justify-between gap-6 overflow-y-auto p-6 sm:p-10 md:absolute md:top-0 md:left-0 md:h-full md:w-1/2 ${
+          className={`form-container sign-up-container relative w-full flex-col items-center justify-center gap-6 overflow-y-auto p-6 sm:p-10 md:absolute md:top-0 md:left-0 md:h-full md:w-1/2 ${
             toRegister ? "flex" : "hidden md:flex"
           }`}
         >
-          <div>
+          <div className="w-full max-w-[440px]">
             <div className="mb-3 flex items-center justify-between">
               <Link
                 href="/"
@@ -115,7 +104,7 @@ export default function AuthShell({
               <SignUpForm />
             </div>
           </div>
-          <div className="flex items-center justify-center gap-1.5 border-t pt-3 text-center md:hidden">
+          <div className="flex w-full max-w-[440px] items-center justify-center gap-1.5 border-t pt-3 text-center md:hidden">
             <span className="text-xs text-ink-600">Sudah memiliki akun?</span>
             <button
               type="button"
@@ -128,19 +117,6 @@ export default function AuthShell({
         </div>
         <OverlayPanel mode={mode} onToggle={toggle} />
       </div>
-      <footer className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 text-center">
-        {TRUST_BADGES.map((b) => (
-          <span
-            key={b.label}
-            className="inline-flex items-center gap-2 text-ink-600"
-          >
-            <b.icon aria-hidden className="size-4 text-brand-600" />
-            <span className="text-[11px] font-semibold tracking-wider uppercase">
-              {b.label}
-            </span>
-          </span>
-        ))}
-      </footer>
     </main>
   );
 }
