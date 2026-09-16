@@ -33,6 +33,19 @@ export const createUserSchema = registerSchema.extend({
   role: z.enum(["USER", "OFFICER"], { error: "Role harus USER atau OFFICER" }),
 });
 
+// Skema client untuk form register dual-slider. Server tetap memakai
+// registerSchema (name/email/password); confirm + terms hanya UX,
+// tidak dikirim ke API.
+export const registerClientSchema = registerSchema
+  .extend({
+    confirmPassword: z.string().min(1, { error: "Konfirmasi sandi wajib diisi" }),
+    agreeTerms: z.literal(true, { error: "Anda harus menyetujui ketentuan" }),
+  })
+  .refine((v) => v.password === v.confirmPassword, {
+    error: "Konfirmasi sandi tidak sama",
+    path: ["confirmPassword"],
+  });
+
 export const listUsersQuerySchema = z.object({
   status: z.enum(["PENDING", "ACTIVE", "REJECTED", "INACTIVE"]).optional(),
   role: z.enum(["USER", "OFFICER", "ADMIN"]).optional(),
@@ -41,4 +54,5 @@ export const listUsersQuerySchema = z.object({
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type RegisterClientInput = z.infer<typeof registerClientSchema>;
 export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
