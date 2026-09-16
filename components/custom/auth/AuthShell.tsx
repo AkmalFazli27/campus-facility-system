@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { buildAuthToggleHref, type AuthMode } from "@/lib/auth-ui";
 import SignInForm from "./SignInForm";
 import SignUpForm from "./SignUpForm";
@@ -41,7 +42,15 @@ export default function AuthShell({
           }`}
         >
           <div className="w-full max-w-[400px]">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex flex-col gap-1">
+              <Link
+                href="/"
+                aria-label="Kembali ke beranda"
+                className="mb-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+              >
+                <ArrowLeft aria-hidden className="size-4" />
+                <span>Kembali ke beranda</span>
+              </Link>
               <Link
                 href="/"
                 className="text-3xl font-bold tracking-tight focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
@@ -78,7 +87,15 @@ export default function AuthShell({
           }`}
         >
           <div className="w-full max-w-[400px]">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex flex-col gap-1">
+              <Link
+                href="/"
+                aria-label="Kembali ke beranda"
+                className="mb-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-600 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+              >
+                <ArrowLeft aria-hidden className="size-4" />
+                <span>Kembali ke beranda</span>
+              </Link>
               <Link
                 href="/"
                 className="text-3xl font-bold tracking-tight focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
