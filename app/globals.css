@@ -188,3 +188,8 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Overlay selalu di atas form selama transisi (hanya kotak orange terlihat). */
+.auth-slider .overlay-container {
+  z-index: 20;
+}
