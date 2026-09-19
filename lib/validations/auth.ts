@@ -26,6 +26,7 @@ const identityNumberRaw = z
   .or(z.literal(""));
 
 const ALPHANUMERIC = /^[A-Za-z0-9]+$/;
+const DIGITS_ONLY = /^[0-9]+$/;
 
 export const registerSchema = z
   .object({
@@ -50,10 +51,19 @@ export const registerSchema = z
       });
       return;
     }
-    if (!ALPHANUMERIC.test(raw)) {
+    if (v.userType === "MAHASISWA") {
+      if (!ALPHANUMERIC.test(raw)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "NIM hanya boleh huruf dan angka",
+          path: ["identityNumber"],
+        });
+        return;
+      }
+    } else if (!DIGITS_ONLY.test(raw)) {
       ctx.addIssue({
         code: "custom",
-        message: "Nomor identitas hanya boleh huruf dan angka",
+        message: "NIP hanya boleh angka",
         path: ["identityNumber"],
       });
       return;

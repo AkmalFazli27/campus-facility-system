@@ -180,15 +180,15 @@ export default function SignUpForm() {
               id="reg-identity"
               value={identityNumber}
               onChange={(e) => setIdentityNumber(e.target.value)}
-              placeholder={userType === "MAHASISWA" ? "misal 211201201" : "18 karakter"}
-              inputMode="text"
+              placeholder={userType === "MAHASISWA" ? "misal 211201201" : "18 digit angka"}
+              inputMode={userType === "MAHASISWA" ? "text" : "numeric"}
               className="py-1.5 text-[13px]"
             />
             {fieldErrors.identityNumber ? (
               <p role="alert" className="text-xs text-danger">{fieldErrors.identityNumber}</p>
             ) : (
               <p className="text-[11px] text-ink-400">
-                {userType === "MAHASISWA" ? "NIM 9-16 huruf/angka." : userType === "DOSEN" ? "NIP tepat 18 huruf/angka." : "Tendik boleh kosong; bila diisi 18 huruf/angka."}
+                {userType === "MAHASISWA" ? "NIM 9-16 huruf/angka." : userType === "DOSEN" ? "NIP tepat 18 angka." : "Tendik boleh kosong; bila diisi 18 angka."}
               </p>
             )}
           </div>
