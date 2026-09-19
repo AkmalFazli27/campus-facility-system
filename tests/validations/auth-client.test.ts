@@ -6,6 +6,8 @@ const base = {
   name: "Budi Santoso",
   email: "budi@example.com",
   password: "User1234",
+  userType: "MAHASISWA",
+  identityNumber: "211201201",
 };
 
 test("registerClientSchema menerima data lengkap yang cocok + setuju", () => {

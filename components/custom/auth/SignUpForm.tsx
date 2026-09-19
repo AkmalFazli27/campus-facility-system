@@ -13,6 +13,8 @@ export default function SignUpForm() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [userType, setUserType] = useState<"MAHASISWA" | "DOSEN" | "TENDIK">("MAHASISWA");
+  const [identityNumber, setIdentityNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
@@ -21,6 +23,8 @@ export default function SignUpForm() {
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string;
     email?: string;
+    userType?: string;
+    identityNumber?: string;
     password?: string;
     confirmPassword?: string;
     agreeTerms?: string;
@@ -35,12 +39,16 @@ export default function SignUpForm() {
       password,
       confirmPassword,
       agreeTerms,
+      userType,
+      identityNumber,
     });
     if (!parsed.success) {
       const flat = parsed.error.flatten().fieldErrors;
       setFieldErrors({
         name: flat.name?.[0],
         email: flat.email?.[0],
+        userType: flat.userType?.[0],
+        identityNumber: flat.identityNumber?.[0],
         password: flat.password?.[0],
         confirmPassword: flat.confirmPassword?.[0],
         agreeTerms: flat.agreeTerms?.[0],
@@ -58,13 +66,20 @@ export default function SignUpForm() {
           name: parsed.data.name,
           email: parsed.data.email,
           password: parsed.data.password,
+          userType: parsed.data.userType,
+          identityNumber: (parsed.data.identityNumber ?? "").trim(),
         }),
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         const message: string = payload?.message ?? "Gagal mendaftar";
         if (response.status === 409) {
-          setFieldErrors({ email: message });
+          const msg: string = payload?.message ?? "Sudah terdaftar";
+          if (msg.toLowerCase().includes("identitas")) {
+            setFieldErrors({ identityNumber: msg });
+          } else {
+            setFieldErrors({ email: msg });
+          }
         }
         toast.error(message);
         return;
@@ -141,6 +156,42 @@ export default function SignUpForm() {
               {fieldErrors.email}
             </p>
           )}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="reg-usertype">Tipe civitas</Label>
+            <select
+              id="reg-usertype"
+              value={userType}
+              onChange={(e) => setUserType(e.target.value as "MAHASISWA" | "DOSEN" | "TENDIK")}
+              className="rounded-xl border bg-surface px-2.5 py-1.5 text-[13px]"
+            >
+              <option value="MAHASISWA">Mahasiswa</option>
+              <option value="DOSEN">Dosen</option>
+              <option value="TENDIK">Tendik</option>
+            </select>
+            {fieldErrors.userType && (
+              <p role="alert" className="text-xs text-danger">{fieldErrors.userType}</p>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="reg-identity">{userType === "MAHASISWA" ? "NIM" : "NIP"}{userType === "TENDIK" ? " (opsional)" : ""}</Label>
+            <Input
+              id="reg-identity"
+              value={identityNumber}
+              onChange={(e) => setIdentityNumber(e.target.value)}
+              placeholder={userType === "MAHASISWA" ? "misal 211201201" : "18 digit angka"}
+              inputMode={userType === "MAHASISWA" ? "text" : "numeric"}
+              className="py-1.5 text-[13px]"
+            />
+            {fieldErrors.identityNumber ? (
+              <p role="alert" className="text-xs text-danger">{fieldErrors.identityNumber}</p>
+            ) : (
+              <p className="text-[11px] text-ink-400">
+                {userType === "MAHASISWA" ? "NIM 9-16 huruf/angka." : userType === "DOSEN" ? "NIP tepat 18 angka." : "Tendik boleh kosong; bila diisi 18 angka."}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex flex-col gap-1">
           <Label htmlFor="reg-password">Kata sandi</Label>

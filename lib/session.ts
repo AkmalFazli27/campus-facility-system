@@ -33,6 +33,8 @@ export type SessionUser = {
   name: string;
   email: string;
   role: "USER" | "OFFICER" | "ADMIN";
+  userType: "MAHASISWA" | "DOSEN" | "TENDIK";
+  identityNumber: string | null;
   accountStatus: "PENDING" | "ACTIVE" | "REJECTED" | "INACTIVE";
 };
 
@@ -45,7 +47,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     const payload = await getSession(token);
     const user = await db.user.findUnique({
       where: { id: payload.id },
-      select: { id: true, name: true, email: true, role: true, accountStatus: true },
+      select: { id: true, name: true, email: true, role: true, userType: true, identityNumber: true, accountStatus: true },
     });
     if (!user || user.accountStatus !== "ACTIVE") return null;
     return user;

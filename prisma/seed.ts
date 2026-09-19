@@ -13,6 +13,8 @@ async function main() {
       email: "admin@example.com",
       password: "Admin123!",
       role: Role.ADMIN,
+      userType: "TENDIK" as const,
+      identityNumber: null as string | null,
       accountStatus: AccountStatus.ACTIVE,
     },
     {
@@ -20,6 +22,8 @@ async function main() {
       email: "officer@example.com",
       password: "Officer123!",
       role: Role.OFFICER,
+      userType: "TENDIK" as const,
+      identityNumber: "198701012009041002",
       accountStatus: AccountStatus.ACTIVE,
     },
     {
@@ -27,6 +31,8 @@ async function main() {
       email: "user@example.com",
       password: "User123!",
       role: Role.USER,
+      userType: "MAHASISWA" as const,
+      identityNumber: "211201201",
       accountStatus: AccountStatus.ACTIVE,
     },
     {
@@ -34,6 +40,8 @@ async function main() {
       email: "pending@example.com",
       password: "User123!",
       role: Role.USER,
+      userType: "DOSEN" as const,
+      identityNumber: "198701012009041003",
       accountStatus: AccountStatus.PENDING,
     },
   ];
@@ -46,6 +54,8 @@ async function main() {
         email: u.email,
         passwordHash: await bcrypt.hash(u.password, 10),
         role: u.role,
+        userType: u.userType,
+        identityNumber: u.identityNumber,
         accountStatus: u.accountStatus,
       },
     });
