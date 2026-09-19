@@ -32,7 +32,7 @@ Alur:
 | Klaim terlarang | Hapus badge `SSO Terpadu`, link `Lupa Sandi?`, checkbox `Ingat sesi`, klaim `SLA real-time`/`Terenkripsi` | SSO & lupa-sandi out of scope PRD §5; cookie httpOnly 7 hari fixed di server sehingga checkbox tidak punya efek |
 | Animasi | Port 1:1 durasi+easing referensi (`0.65s cubic-bezier(0.76,0,0.24,1)`, class `right-panel-active`), di-scope `.auth-slider`, plus `prefers-reduced-motion` | Animasi adalah inti permintaan; scoping mencegah bocor ke halaman lain |
 | Redirect sukses | Tetap `next` (aman) → `/`; belum role-based | Minim scope; role-based (`admin→/admin/recap` dst.) dicatat sebagai follow-up |
-| API | Tanpa perubahan | Route login/register sudah sesuai kontrak §13 + rate-limit + RBAC |
+| API | Sertakan `userType` + `identityNumber` di register/login/me/admin | Login/me mengembalikan identitas agar UI tahu dosen/mahasiswa; kontrak §13 diperluas, rate-limit + RBAC tetap |
 
 ## 3. Isi halaman
 
@@ -55,11 +55,11 @@ Alur:
 
 ### 3.3 Form sign-up
 
-- Field: Nama lengkap (`User`), Email institusi (`Mail`), Kata sandi + Konfirmasi (`Lock`, masing-masing show/hide), checkbox ketentuan (`required`).
+- Field: Nama lengkap (`User`), Email institusi (`Mail`), Tipe civitas (Mahasiswa/Dosen/Tendik) + Nomor identitas NIM/NIP, Kata sandi + Konfirmasi (`Lock`, masing-masing show/hide), checkbox ketentuan (`required`).
 - Banner US15 (`warning` token): `Akun registrasi mandiri berstatus pending dan memerlukan validasi admin sebelum hak peminjaman aktif.`
 - Copy: H2 `Daftar akun civitas`, sub `Pengajuan akses portal reservasi ruangan dan fasilitas kampus.`
-- Validasi client via `registerClientSchema` (= `registerSchema` + `confirmPassword` cocok + `agreeTerms=true`); yang dikirim ke API tetap `{name,email,password}`.
-- Sukses 201: toast + `router.push('/pending-verification')`; 409: error inline di email.
+- Validasi client via `registerClientSchema` (= `registerSchema` + `confirmPassword` cocok + `agreeTerms=true`); yang dikirim ke API `{name,email,password,userType,identityNumber}`.
+- Sukses 201: toast + `router.push('/pending-verification')`; 409: error inline di email atau nomor identitas.
 
 ### 3.4 Overlay (desktop saja)
 
