@@ -19,6 +19,8 @@ export async function GET() {
         name: true,
         email: true,
         role: true,
+        userType: true,
+        identityNumber: true,
         accountStatus: true,
         createdAt: true,
       },
