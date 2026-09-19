@@ -7,6 +7,8 @@ test("registerSchema menerima data valid", () => {
     name: "Budi Santoso",
     email: "budi@example.com",
     password: "User1234",
+    userType: "MAHASISWA",
+    identityNumber: "211201201",
   });
   assert.equal(result.success, true);
 });
@@ -16,6 +18,8 @@ test("registerSchema menormalkan email (trim + lowercase)", () => {
     name: "Budi",
     email: "  BUDI@Example.COM ",
     password: "User1234",
+    userType: "MAHASISWA",
+    identityNumber: "211201201",
   });
   assert.equal(result.success, true);
   if (result.success) assert.equal(result.data.email, "budi@example.com");
@@ -26,6 +30,8 @@ test("registerSchema menolak email tidak valid", () => {
     name: "Budi",
     email: "bukan-email",
     password: "User1234",
+    userType: "MAHASISWA",
+    identityNumber: "211201201",
   });
   assert.equal(result.success, false);
 });
@@ -35,6 +41,8 @@ test("registerSchema menolak password < 8 karakter", () => {
     name: "Budi",
     email: "budi@example.com",
     password: "Us1",
+    userType: "MAHASISWA",
+    identityNumber: "211201201",
   });
   assert.equal(result.success, false);
 });
@@ -44,6 +52,8 @@ test("registerSchema menolak password tanpa angka", () => {
     name: "Budi",
     email: "budi@example.com",
     password: "UserOnly",
+    userType: "MAHASISWA",
+    identityNumber: "211201201",
   });
   assert.equal(result.success, false);
 });
@@ -54,7 +64,7 @@ test("loginSchema cukup butuh password tidak kosong", () => {
 });
 
 test("createUserSchema hanya mengizinkan role USER atau OFFICER", () => {
-  const base = { name: "Petugas", email: "officer2@example.com", password: "Officer1" };
+  const base = { name: "Petugas", email: "officer2@example.com", password: "Officer1", userType: "TENDIK", identityNumber: "198701012009041002" };
   assert.equal(createUserSchema.safeParse({ ...base, role: "OFFICER" }).success, true);
   assert.equal(createUserSchema.safeParse({ ...base, role: "USER" }).success, true);
   assert.equal(createUserSchema.safeParse({ ...base, role: "ADMIN" }).success, false);

@@ -84,8 +84,8 @@ export const createUserSchema = registerSchema.safeExtend({
 });
 
 // Skema client untuk form register dual-slider. Server tetap memakai
-// registerSchema (name/email/password); confirm + terms hanya UX,
-// tidak dikirim ke API.
+// registerSchema (name/email/password/userType/identityNumber);
+// confirm + terms hanya UX, tidak dikirim ke API.
 export const registerClientSchema = registerSchema
   .safeExtend({
     confirmPassword: z.string().min(1, { error: "Konfirmasi sandi wajib diisi" }),
