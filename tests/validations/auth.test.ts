@@ -59,3 +59,26 @@ test("createUserSchema hanya mengizinkan role USER atau OFFICER", () => {
   assert.equal(createUserSchema.safeParse({ ...base, role: "USER" }).success, true);
   assert.equal(createUserSchema.safeParse({ ...base, role: "ADMIN" }).success, false);
 });
+
+const baseValid = { name: "Budi Santoso", email: "budi@example.com", password: "User1234" };
+
+test("MAHASISWA wajib NIM 9-16 alfanumerik", () => {
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "MAHASISWA", identityNumber: "211201201" }).success, true);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "MAHASISWA", identityNumber: "12345678" }).success, false);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "MAHASISWA", identityNumber: "12345678901234567" }).success, false);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "MAHASISWA", identityNumber: "abc-123" }).success, false);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "MAHASISWA" }).success, false);
+});
+
+test("DOSEN wajib NIP tepat 18 alfanumerik", () => {
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "DOSEN", identityNumber: "198701012009041001" }).success, true);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "DOSEN", identityNumber: "12345678901234567" }).success, false);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "DOSEN" }).success, false);
+});
+
+test("TENDIK opsional, bila diisi wajib 18", () => {
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "TENDIK" }).success, true);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "TENDIK", identityNumber: "" }).success, true);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "TENDIK", identityNumber: "198701012009041001" }).success, true);
+  assert.equal(registerSchema.safeParse({ ...baseValid, userType: "TENDIK", identityNumber: "12345" }).success, false);
+});
