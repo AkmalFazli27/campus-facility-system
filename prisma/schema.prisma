@@ -28,6 +28,14 @@ enum AccountStatus {
   @@map("account_status")
 }
 
+enum UserType {
+  MAHASISWA
+  DOSEN
+  TENDIK
+
+  @@map("user_type")
+}
+
 enum FacilityStatus {
   ACTIVE
   INACTIVE
@@ -63,6 +71,8 @@ model User {
   passwordHash  String        @map("password_hash") @db.VarChar(255)
   role          Role          @default(USER)
   accountStatus AccountStatus @default(PENDING) @map("account_status")
+  userType        UserType      @default(MAHASISWA) @map("user_type")
+  identityNumber  String?       @unique @map("identity_number") @db.VarChar(20)
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
 
@@ -73,6 +83,7 @@ model User {
   auditLogs             AuditLog[]
 
   @@index([role, accountStatus])
+  @@index([userType])
   @@map("users")
 }
 
