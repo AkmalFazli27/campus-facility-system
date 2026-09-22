@@ -10,6 +10,25 @@ function isValidDate(value: string) {
   return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
+const dateSchema = z
+  .string()
+  .refine(isValidDate, { error: "Tanggal harus valid dengan format YYYY-MM-DD" });
+
+export const reservationStatusSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
+  z.enum(
+    [
+      "PENDING",
+      "APPROVED",
+      "REJECTED",
+      "CANCELLED_BY_USER",
+      "CANCELLED_BY_OFFICER",
+      "COMPLETED",
+    ],
+    { error: "Status reservasi tidak valid" },
+  ),
+);
+
 export const createReservationSchema = z.object({
   facility_id: z
     .number({ error: "Facility ID wajib berupa angka" })
@@ -30,4 +49,22 @@ export const createReservationSchema = z.object({
     .min(1, { error: "Tujuan wajib diisi" }),
 });
 
+export const listReservationsQuerySchema = z
+  .object({
+    status: reservationStatusSchema.optional(),
+    from: dateSchema.optional(),
+    to: dateSchema.optional(),
+  })
+  .refine((value) => !value.from || !value.to || value.from <= value.to, {
+    error: "Tanggal awal tidak boleh setelah tanggal akhir",
+    path: ["to"],
+  });
+
+export const reservationIdSchema = z
+  .string()
+  .regex(/^[1-9]\d*$/, { error: "ID reservasi tidak valid" })
+  .transform(Number)
+  .pipe(z.number().int().positive());
+
 export type CreateReservationInput = z.infer<typeof createReservationSchema>;
+export type ListReservationsQuery = z.infer<typeof listReservationsQuerySchema>;

@@ -31,3 +31,18 @@ export function validateSlot(
 
   return { valid: true };
 }
+
+export function serializeReservation<
+  T extends {
+    reservationDate: Date;
+    startTime: Date;
+    endTime: Date;
+  },
+>(reservation: T) {
+  return {
+    ...reservation,
+    reservationDate: reservation.reservationDate.toISOString().slice(0, 10),
+    startTime: reservation.startTime.toISOString().slice(11, 16),
+    endTime: reservation.endTime.toISOString().slice(11, 16),
+  };
+}
