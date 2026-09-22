@@ -46,7 +46,7 @@ test("header nav ke /tentang dengan active state", () => {
   const src = read("components/custom/PublicHeader.tsx");
   assert.match(src, /label: "Tentang", href: "\/tentang"/);
   assert.doesNotMatch(src, /href: "\/#tentang"/);
-  assert.match(src, /pathname === "\/tentang"/);
+  assert.match(src, /pathname === href/);
 });
 
 test("footer panduan ke /tentang, landing pertahankan anchor + teaser", () => {

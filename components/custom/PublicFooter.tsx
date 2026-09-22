@@ -14,7 +14,7 @@ const ACCOUNT_LINKS = [
 ] as const;
 
 const GUIDE_LINKS = [
-  { label: "Alur reservasi & pelaporan", href: "/#tentang" },
+  { label: "Alur reservasi & pelaporan", href: "/tentang" },
   { label: "Cara meminjam fasilitas", href: "/#cara-kerja-heading" },
 ] as const;
 

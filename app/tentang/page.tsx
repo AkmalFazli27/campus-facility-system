@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Building2, Clock, Users } from "lucide-react";
 import AboutFaq from "@/components/custom/AboutFaq";
 import FinalCta from "@/components/custom/FinalCta";
+import PublicFooter from "@/components/custom/PublicFooter";
 import WorkflowCards from "@/components/custom/WorkflowCards";
 export const metadata: Metadata = {
   title: "Tentang — KampusSpace",
@@ -34,6 +35,7 @@ export default function TentangPage() {
         <AboutFaq />
         <FinalCta />
       </main>
+      <PublicFooter />
     </div>
   );
 }
