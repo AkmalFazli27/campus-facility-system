@@ -113,8 +113,16 @@ export default async function Home() {
           )}
         </section>
 
-        <section id="tentang" className="scroll-mt-24">
+        <section id="tentang" className="scroll-mt-24 space-y-4">
           <WorkflowCards />
+          <div className="flex justify-center">
+            <Link
+              href="/tentang"
+              className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-bold text-brand-600 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+            >
+              Pelajari lebih lanjut tentang KampusSpace →
+            </Link>
+          </div>
         </section>
         <HowItWorks />
         <FinalCta />

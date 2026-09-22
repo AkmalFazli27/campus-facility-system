@@ -20,7 +20,7 @@ import { isAuthRoute } from "@/lib/landing";
 const NAV_LINKS = [
   { label: "Beranda", href: "/" },
   { label: "Fasilitas", href: "/facilities" },
-  { label: "Tentang", href: "/#tentang" },
+  { label: "Tentang", href: "/tentang" },
 ];
 
 export default function PublicHeader() {
@@ -28,10 +28,7 @@ export default function PublicHeader() {
 
   if (isAuthRoute(pathname)) return null;
 
-  const isActive = (href: string) => {
-    if (href === "/#tentang") return false;
-    return pathname === href;
-  };
+  const isActive = (href: string) => pathname === href;
 
   return (
     <div className="sticky top-3 z-40 px-3 pt-1 sm:top-5">
