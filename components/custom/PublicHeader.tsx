@@ -13,6 +13,8 @@ import {
   DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -40,6 +42,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (isAuthRoute(pathname)) return null;
 
@@ -49,6 +52,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (!res.ok) throw new Error("logout gagal");
+      setConfirmOpen(false);
       router.push("/");
       router.refresh();
     } catch {
@@ -140,7 +144,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 </Link>
                 <button
                   type="button"
-                  onClick={handleLogout}
+                  onClick={() => setConfirmOpen(true)}
                   disabled={loggingOut}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none disabled:opacity-60"
                 >
@@ -227,7 +231,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 />
                 <Button
                   variant="outline"
-                  onClick={handleLogout}
+                  onClick={() => setConfirmOpen(true)}
                   disabled={loggingOut}
                   className="w-full rounded-full"
                 >
@@ -261,6 +265,39 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
           </DialogContent>
         </Dialog>
       </nav>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="rounded-3xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Keluar dari akun?</DialogTitle>
+            <DialogDescription>
+              Kamu perlu masuk kembali untuk mengelola reservasi dan laporan
+              fasilitas.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose
+              render={
+                <Button
+                  variant="outline"
+                  disabled={loggingOut}
+                  className="rounded-full"
+                >
+                  Batal
+                </Button>
+              }
+            />
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="rounded-full"
+            >
+              {loggingOut ? "Keluar..." : "Ya, keluar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
