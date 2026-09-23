@@ -2,7 +2,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function FinalCta() {
+export default function FinalCta({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   return (
     <section
       aria-labelledby="final-cta-heading"
@@ -11,11 +11,12 @@ export default function FinalCta() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="max-w-2xl">
           <h2 id="final-cta-heading" className="text-3xl font-bold tracking-tight">
-            Siap memakai fasilitas kampus?
+            {isLoggedIn ? "Kelola reservasi fasilitas kampus." : "Siap memakai fasilitas kampus?"}
           </h2>
           <p className="mt-3 leading-relaxed text-white/75">
-            Daftar akun untuk mengecek ketersediaan, mengajukan reservasi, dan
-            membuat laporan fasilitas dari satu tempat.
+            {isLoggedIn
+              ? "Cek ketersediaan, pantau status reservasi, dan buat laporan fasilitas dari dashboard."
+              : "Daftar akun untuk mengecek ketersediaan, mengajukan reservasi, dan membuat laporan fasilitas dari satu tempat."}
           </p>
         </div>
 
@@ -30,13 +31,13 @@ export default function FinalCta() {
             Mulai reservasi
           </Link>
           <Link
-            href="/register"
+            href={isLoggedIn ? "/dashboard" : "/register"}
             className={cn(
               buttonVariants({ size: "lg" }),
               "min-h-11 rounded-full bg-brand-500 px-5 text-white hover:bg-brand-600 focus-visible:ring-brand-300"
             )}
           >
-            Laporkan kerusakan
+            {isLoggedIn ? "Ke dashboard" : "Laporkan kerusakan"}
           </Link>
         </div>
       </div>

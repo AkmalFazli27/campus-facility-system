@@ -4,7 +4,7 @@ import { CalendarCheck, Clock } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function HeroSection() {
+export default function HeroSection({ user }: { user: { name: string } | null }) {
   return (
     <section aria-labelledby="hero-heading" className="grid items-center gap-10 lg:grid-cols-2">
       <div>
@@ -28,10 +28,10 @@ export default function HeroSection() {
             Lihat fasilitas
           </Link>
           <Link
-            href="/register"
+            href={user ? "/dashboard" : "/register"}
             className={cn(buttonVariants({ variant: "outline", size: "lg" }), "min-h-11 rounded-full px-6")}
           >
-            Daftar akun
+            {user ? "Ke dashboard" : "Daftar akun"}
           </Link>
         </div>
       </div>

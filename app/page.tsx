@@ -11,6 +11,7 @@ import QuickSearchForm from "@/components/custom/QuickSearchForm";
 import RetryButton from "@/components/custom/RetryButton";
 import WorkflowCards from "@/components/custom/WorkflowCards";
 import { db } from "@/lib/db";
+import { getSessionUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,7 @@ async function getLocations(): Promise<string[]> {
 export default async function Home() {
   let facilities: FacilityPreview[] | null = null;
   let locations: string[] = [];
+  let heroUser: { name: string } | null = null;
 
   try {
     [facilities, locations] = await Promise.all([
@@ -53,10 +55,17 @@ export default async function Home() {
   } catch {
   }
 
+  try {
+    const sessionUser = await getSessionUser();
+    if (sessionUser) heroUser = { name: sessionUser.name };
+  } catch {
+    heroUser = null;
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-16 px-6 py-12 sm:py-16">
-        <HeroSection />
+        <HeroSection user={heroUser} />
         <QuickSearchForm locations={locations} />
 
         <section aria-labelledby="popular-facilities-heading" className="space-y-6">
@@ -125,7 +134,7 @@ export default async function Home() {
           </div>
         </section>
         <HowItWorks />
-        <FinalCta />
+        <FinalCta isLoggedIn={heroUser !== null} />
       </main>
       <PublicFooter />
     </div>

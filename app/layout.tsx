@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import PublicHeader from "@/components/custom/PublicHeader";
+import { getSessionUser } from "@/lib/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,14 +21,28 @@ export const metadata: Metadata = {
     "Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan dalam satu aplikasi.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  let headerUser: { name: string; email: string; role: string } | null = null;
+  try {
+    const sessionUser = await getSessionUser();
+    if (sessionUser) {
+      headerUser = {
+        name: sessionUser.name,
+        email: sessionUser.email,
+        role: sessionUser.role,
+      };
+    }
+  } catch {
+    headerUser = null;
+  }
+
   return (
     <html
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-canvas-public">
-        <PublicHeader />
+        <PublicHeader user={headerUser} />
         {children}
         <Toaster position="top-center" richColors />
       </body>
