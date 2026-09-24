@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildAvailabilitySlots } from "@/lib/services/facilityAvailabilityService";
+import {
+  buildAvailabilitySlots,
+  getFacilityAvailability,
+  type FacilityAvailabilityReader,
+} from "@/lib/services/facilityAvailabilityService";
 
 test("buildAvailabilitySlots menghasilkan 26 slot 30 menit", () => {
   const slots = buildAvailabilitySlots();
@@ -28,4 +32,107 @@ test("buildAvailabilitySlots menghasilkan slot berurutan tanpa jeda", () => {
     assert.equal(slots[index].available, true);
     assert.equal(slots[index].reason, null);
   }
+});
+
+function createDatabase(
+  status: "ACTIVE" | "INACTIVE" | "UNDER_MAINTENANCE" = "ACTIVE",
+  reservations: Array<{ startTime: string; endTime: string }> = [],
+): FacilityAvailabilityReader {
+  return {
+    facility: {
+      findUnique: async () => ({ id: 1, name: "Lab Komputer", status }),
+    },
+    reservation: {
+      findMany: async () =>
+        reservations.map(({ startTime, endTime }) => ({
+          startTime: new Date(`1970-01-01T${startTime}:00.000Z`),
+          endTime: new Date(`1970-01-01T${endTime}:00.000Z`),
+        })),
+    },
+  };
+}
+
+test("getFacilityAvailability membiarkan semua slot tersedia tanpa reservasi", async () => {
+  const result = await getFacilityAvailability(createDatabase(), {
+    facilityId: 1,
+    reservationDate: new Date("2026-09-24T00:00:00.000Z"),
+  });
+
+  assert.ok(result);
+  assert.equal(result.slots.every((slot) => slot.available), true);
+});
+
+test("getFacilityAvailability menandai slot yang overlap reservasi approved", async () => {
+  const result = await getFacilityAvailability(
+    createDatabase("ACTIVE", [{ startTime: "09:00", endTime: "10:00" }]),
+    { facilityId: 1, reservationDate: new Date("2026-09-24T00:00:00.000Z") },
+  );
+
+  assert.ok(result);
+  assert.deepEqual(result.slots.find((slot) => slot.start === "09:00"), {
+    start: "09:00",
+    end: "09:30",
+    available: false,
+    reason: "Sudah disetujui",
+  });
+  assert.deepEqual(result.slots.find((slot) => slot.start === "09:30"), {
+    start: "09:30",
+    end: "10:00",
+    available: false,
+    reason: "Sudah disetujui",
+  });
+  assert.equal(result.slots.find((slot) => slot.start === "10:00")?.available, true);
+});
+
+test("getFacilityAvailability menandai semua slot saat fasilitas tidak aktif", async () => {
+  const result = await getFacilityAvailability(createDatabase("INACTIVE"), {
+    facilityId: 1,
+    reservationDate: new Date("2026-09-24T00:00:00.000Z"),
+  });
+
+  assert.ok(result);
+  assert.equal(result.slots.every((slot) => !slot.available), true);
+  assert.equal(result.slots.every((slot) => slot.reason === "Fasilitas tidak aktif"), true);
+});
+
+test("getFacilityAvailability menandai semua slot saat maintenance", async () => {
+  const result = await getFacilityAvailability(createDatabase("UNDER_MAINTENANCE"), {
+    facilityId: 1,
+    reservationDate: new Date("2026-09-24T00:00:00.000Z"),
+  });
+
+  assert.ok(result);
+  assert.equal(result.slots.every((slot) => !slot.available), true);
+  assert.equal(
+    result.slots.every((slot) => slot.reason === "Fasilitas sedang dalam perbaikan"),
+    true,
+  );
+});
+
+test("getFacilityAvailability mengembalikan null bila fasilitas tidak ditemukan", async () => {
+  const database = createDatabase();
+  database.facility.findUnique = async () => null;
+
+  const result = await getFacilityAvailability(database, {
+    facilityId: 999,
+    reservationDate: new Date("2026-09-24T00:00:00.000Z"),
+  });
+
+  assert.equal(result, null);
+});
+
+test("getFacilityAvailability hanya membaca reservasi approved", async () => {
+  let query: unknown;
+  const database = createDatabase();
+  database.reservation.findMany = async (args) => {
+    query = args;
+    return [];
+  };
+
+  await getFacilityAvailability(database, {
+    facilityId: 1,
+    reservationDate: new Date("2026-09-24T00:00:00.000Z"),
+  });
+
+  assert.equal((query as { where: { status: string } }).where.status, "APPROVED");
 });
