@@ -26,12 +26,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
   formatReservationDate,
+  formatReservationDateTime,
   RESERVATION_STATUS_META,
+  type ReservationDetail,
 } from "@/lib/reservation-ui";
 
-// Antrian reservasi petugas (US08/US09): filter + tabel + aksi approve/reject.
-// Dipasang di app/officer/queue/page.tsx tab Reservasi. Cancel approved + detail
-// menyusul di commit berikutnya.
+// Antrian reservasi petugas (US08-US10): filter + tabel + aksi
+// approve/reject/cancel + dialog detail. Dipasang di
+// app/officer/queue/page.tsx tab Reservasi.
 
 type QueueStatus = "PENDING" | "APPROVED";
 type QueueStatusFilter = QueueStatus | "ALL";
@@ -46,6 +48,7 @@ type QueueItem = {
   createdAt: string;
   user: { id: number; name: string; email: string };
   facility: { id: number; name: string; type: string; location: string };
+  conflicts: Array<{ id: number; startTime: string; endTime: string }>;
 };
 
 type QueueResponse = {
@@ -78,6 +81,12 @@ export default function ReservationQueue() {
   const [rejectId, setRejectId] = useState<number | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectError, setRejectError] = useState<string | null>(null);
+  const [cancelId, setCancelId] = useState<number | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const [detail, setDetail] = useState<ReservationDetail | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -164,6 +173,52 @@ export default function ReservationQueue() {
     setRejectError(null);
   }
 
+  function openCancel(id: number) {
+    setCancelId(id);
+    setCancelReason("");
+    setCancelError(null);
+  }
+
+  function openDetail(id: number) {
+    setDetailId(id);
+    setDetail(null);
+    setDetailError(null);
+  }
+
+  useEffect(() => {
+    if (detailId === null) return;
+    const controller = new AbortController();
+    fetch(`/api/reservations/${detailId}`, { signal: controller.signal })
+      .then(async (response) => {
+        const body = (await response.json()) as {
+          success: boolean;
+          data?: { reservation: ReservationDetail };
+          message?: string;
+        };
+        if (response.status === 401) {
+          router.push("/login?next=/officer/queue");
+          throw new Error("Sesi telah berakhir");
+        }
+        if (!response.ok || !body.success || !body.data) {
+          throw new Error(body.message ?? "Gagal mengambil detail reservasi");
+        }
+        return body.data.reservation;
+      })
+      .then((data) => {
+        setDetail(data);
+        setDetailError(null);
+      })
+      .catch((requestError: unknown) => {
+        if (requestError instanceof DOMException && requestError.name === "AbortError") return;
+        setDetailError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Terjadi kesalahan saat memuat detail",
+        );
+      });
+    return () => controller.abort();
+  }, [detailId, router]);
+
   async function handleReject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (rejectId === null) return;
@@ -198,8 +253,43 @@ export default function ReservationQueue() {
     }
   }
 
+  async function handleCancel(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (cancelId === null) return;
+    if (!cancelReason.trim()) {
+      setCancelError("Alasan pembatalan wajib diisi");
+      return;
+    }
+    setActingId(cancelId);
+    try {
+      const response = await fetch(`/api/officer/reservations/${cancelId}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: cancelReason.trim() }),
+      });
+      const body = (await response.json()) as { success: boolean; message?: string };
+      if (response.status === 401) {
+        router.push("/login?next=/officer/queue");
+        throw new Error("Sesi telah berakhir");
+      }
+      if (!response.ok || !body.success) {
+        throw new Error(body.message ?? "Gagal membatalkan reservasi");
+      }
+      toast.success("Reservasi dibatalkan petugas");
+      setCancelId(null);
+      reload();
+    } catch (requestError: unknown) {
+      setCancelError(
+        requestError instanceof Error ? requestError.message : "Gagal membatalkan reservasi",
+      );
+    } finally {
+      setActingId(null);
+    }
+  }
+
   const hasFilters =
     applied.status !== "PENDING" || applied.facilityId !== "" || applied.date !== "";
+  const conflictCount = items.filter((item) => item.conflicts.length > 0).length;
 
   return (
     <section className="space-y-6" aria-live="polite">
@@ -300,6 +390,11 @@ export default function ReservationQueue() {
               <h2 className="text-xl font-semibold text-ink-950">Daftar antrian</h2>
               <p className="text-sm text-ink-600">{items.length} pengajuan ditemukan</p>
             </div>
+            {conflictCount > 0 && (
+              <Badge className="border-red-200 bg-red-50 text-red-700">
+                {conflictCount} jadwal bentrok
+              </Badge>
+            )}
           </div>
 
           <div className="hidden overflow-hidden rounded-2xl border border-border bg-white md:block">
@@ -315,7 +410,14 @@ export default function ReservationQueue() {
               </thead>
               <tbody className="divide-y">
                 {items.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/70">
+                  <tr
+                    key={item.id}
+                    className={
+                      item.conflicts.length > 0
+                        ? "bg-red-50/60 hover:bg-red-50"
+                        : "hover:bg-slate-50/70"
+                    }
+                  >
                     <td className="max-w-56 px-4 py-4">
                       <p className="font-medium text-ink-950">{item.user.name}</p>
                       <p className="truncate text-xs text-ink-600">{item.user.email}</p>
@@ -329,34 +431,77 @@ export default function ReservationQueue() {
                       <p className="font-mono text-xs">
                         {item.startTime}-{item.endTime}
                       </p>
+                      {item.conflicts.length > 0 && (
+                        <p className="mt-1 text-xs font-medium text-red-700">
+                          Bentrok dengan {item.conflicts
+                            .map(
+                              (conflict) =>
+                                `#${conflict.id} (${conflict.startTime}-${conflict.endTime})`,
+                            )
+                            .join(", ")}
+                        </p>
+                      )}
                     </td>
                     <td className="px-4 py-4">
-                      <Badge className={RESERVATION_STATUS_META[item.status].className}>
-                        {RESERVATION_STATUS_META[item.status].label}
-                      </Badge>
+                      <div className="flex flex-col items-start gap-1.5">
+                        <Badge className={RESERVATION_STATUS_META[item.status].className}>
+                          {RESERVATION_STATUS_META[item.status].label}
+                        </Badge>
+                        {item.conflicts.length > 0 && (
+                          <Badge className="border-red-200 bg-red-50 text-red-700">
+                            Jadwal bentrok
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      {item.status === "PENDING" ? (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            className="h-10"
-                            disabled={actingId === item.id}
-                            onClick={() => handleApprove(item.id)}
-                          >
-                            {actingId === item.id ? "Memproses..." : "Setujui"}
-                          </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-10"
+                          onClick={() => openDetail(item.id)}
+                        >
+                          <Eye aria-hidden /> Detail
+                        </Button>
+                        {item.status === "PENDING" && (
+                          <>
+                            <Button
+                              className="h-10"
+                              disabled={actingId === item.id || item.conflicts.length > 0}
+                              title={
+                                item.conflicts.length > 0
+                                  ? "Tidak dapat disetujui karena jadwal bentrok"
+                                  : undefined
+                              }
+                              onClick={() => handleApprove(item.id)}
+                            >
+                              {item.conflicts.length > 0
+                                ? "Bentrok"
+                                : actingId === item.id
+                                  ? "Memproses..."
+                                  : "Setujui"}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              className="h-10 border-red-200 text-red-700 hover:bg-red-50"
+                              disabled={actingId === item.id}
+                              onClick={() => openReject(item.id)}
+                            >
+                              Tolak
+                            </Button>
+                          </>
+                        )}
+                        {item.status === "APPROVED" && (
                           <Button
                             variant="outline"
                             className="h-10 border-red-200 text-red-700 hover:bg-red-50"
                             disabled={actingId === item.id}
-                            onClick={() => openReject(item.id)}
+                            onClick={() => openCancel(item.id)}
                           >
-                            Tolak
+                            Batalkan
                           </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-ink-400">Sudah diproses</span>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -366,7 +511,14 @@ export default function ReservationQueue() {
 
           <div className="grid gap-4 md:hidden">
             {items.map((item) => (
-              <div key={item.id} className="space-y-3 rounded-2xl border border-sky-100 bg-white p-4">
+              <div
+                key={item.id}
+                className={
+                  item.conflicts.length > 0
+                    ? "space-y-3 rounded-2xl border border-red-200 bg-red-50/60 p-4"
+                    : "space-y-3 rounded-2xl border border-sky-100 bg-white p-4"
+                }
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-ink-950">{item.facility.name}</p>
@@ -374,9 +526,16 @@ export default function ReservationQueue() {
                       <User className="size-3.5" aria-hidden /> {item.user.name}
                     </p>
                   </div>
-                  <Badge className={RESERVATION_STATUS_META[item.status].className}>
-                    {RESERVATION_STATUS_META[item.status].label}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <Badge className={RESERVATION_STATUS_META[item.status].className}>
+                      {RESERVATION_STATUS_META[item.status].label}
+                    </Badge>
+                    {item.conflicts.length > 0 && (
+                      <Badge className="border-red-200 bg-red-50 text-red-700">
+                        Jadwal bentrok
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <div className="grid gap-1.5 text-sm text-ink-600">
                   <span className="flex items-center gap-2">
@@ -392,26 +551,63 @@ export default function ReservationQueue() {
                     {item.startTime}-{item.endTime}
                   </span>
                 </div>
-                <p className="line-clamp-2 text-sm leading-6 text-ink-600">{item.purpose}</p>
-                {item.status === "PENDING" && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      className="h-11"
-                      disabled={actingId === item.id}
-                      onClick={() => handleApprove(item.id)}
-                    >
-                      Setujui
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-11 border-red-200 text-red-700"
-                      disabled={actingId === item.id}
-                      onClick={() => openReject(item.id)}
-                    >
-                      Tolak
-                    </Button>
+                {item.conflicts.length > 0 && (
+                  <div className="rounded-xl border border-red-200 bg-white/70 p-3 text-xs text-red-700">
+                    <p className="font-semibold">Tidak dapat disetujui</p>
+                    <p className="mt-1">
+                      Bentrok dengan {item.conflicts
+                        .map(
+                          (conflict) =>
+                            `#${conflict.id} (${conflict.startTime}-${conflict.endTime})`,
+                        )
+                        .join(", ")}.
+                    </p>
                   </div>
                 )}
+                <p className="line-clamp-2 text-sm leading-6 text-ink-600">{item.purpose}</p>
+                <div className="grid gap-2">
+                  <Button
+                    variant="outline"
+                    className="h-11 w-full"
+                    onClick={() => openDetail(item.id)}
+                  >
+                    <Eye aria-hidden /> Lihat detail
+                  </Button>
+                  {item.status === "PENDING" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button
+                        className="h-11"
+                        disabled={actingId === item.id || item.conflicts.length > 0}
+                        title={
+                          item.conflicts.length > 0
+                            ? "Tidak dapat disetujui karena jadwal bentrok"
+                            : undefined
+                        }
+                        onClick={() => handleApprove(item.id)}
+                      >
+                        {item.conflicts.length > 0 ? "Bentrok" : "Setujui"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-11 border-red-200 text-red-700"
+                        disabled={actingId === item.id}
+                        onClick={() => openReject(item.id)}
+                      >
+                        Tolak
+                      </Button>
+                    </div>
+                  )}
+                  {item.status === "APPROVED" && (
+                    <Button
+                      variant="outline"
+                      className="h-11 w-full border-red-200 text-red-700"
+                      disabled={actingId === item.id}
+                      onClick={() => openCancel(item.id)}
+                    >
+                      Batalkan reservasi
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -455,10 +651,114 @@ export default function ReservationQueue() {
         </DialogContent>
       </Dialog>
 
-      <p className="flex items-center gap-2 text-xs text-ink-400">
-        <Eye aria-hidden className="size-3.5" /> Detail reservasi + cancel approved menyusul
-        commit berikutnya.
-      </p>
+      <Dialog open={cancelId !== null} onOpenChange={(open) => !open && setCancelId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Batalkan reservasi #{cancelId}</DialogTitle>
+            <DialogDescription>
+              Reservasi approved yang dibatalkan butuh alasan (mis. fasilitas
+              mendadak tidak layak). Alasan terlihat pemohon.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCancel} className="grid gap-3">
+            <Textarea
+              aria-label="Alasan pembatalan"
+              placeholder="Contoh: AC rusak mendadak, ruangan tidak layak pakai"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              className="min-h-24 bg-white"
+            />
+            {cancelError && (
+              <p role="alert" className="text-xs text-danger">
+                {cancelError}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setCancelId(null)}>
+                Batal
+              </Button>
+              <Button
+                type="submit"
+                disabled={actingId !== null}
+                className="border-red-200 bg-red-600 text-white hover:bg-red-700"
+              >
+                {actingId !== null ? "Membatalkan..." : "Batalkan reservasi"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={detailId !== null} onOpenChange={(open) => !open && setDetailId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detail reservasi #{detailId}</DialogTitle>
+            <DialogDescription>
+              Informasi lengkap pengajuan untuk keputusan petugas.
+            </DialogDescription>
+          </DialogHeader>
+          {detailError && (
+            <p role="alert" className="text-sm text-danger">
+              {detailError}
+            </p>
+          )}
+          {!detailError && !detail && (
+            <div className="space-y-2" aria-label="Memuat detail">
+              <Skeleton className="h-6 w-full" />
+              <Skeleton className="h-6 w-2/3" />
+              <Skeleton className="h-6 w-1/2" />
+            </div>
+          )}
+          {detail && (
+            <dl className="grid gap-3 text-sm">
+              <div>
+                <dt className="text-ink-400">Pemohon</dt>
+                <dd className="font-medium text-ink-950">
+                  {items.find((i) => i.id === detailId)?.user.name ?? "—"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-ink-400">Fasilitas</dt>
+                <dd className="font-medium text-ink-950">
+                  {detail.facility.name} · {detail.facility.location} (kapasitas{" "}
+                  {detail.facility.capacity})
+                </dd>
+              </div>
+              <div>
+                <dt className="text-ink-400">Jadwal</dt>
+                <dd className="font-medium text-ink-950">
+                  {formatReservationDate(detail.reservationDate)} ·{" "}
+                  <span className="font-mono">
+                    {detail.startTime}-{detail.endTime}
+                  </span>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-ink-400">Tujuan</dt>
+                <dd className="leading-6 text-ink-950">{detail.purpose}</dd>
+              </div>
+              <div>
+                <dt className="text-ink-400">Status</dt>
+                <dd>
+                  <Badge className={RESERVATION_STATUS_META[detail.status].className}>
+                    {RESERVATION_STATUS_META[detail.status].label}
+                  </Badge>
+                </dd>
+              </div>
+              {detail.cancellationReason && (
+                <div>
+                  <dt className="text-ink-400">Alasan pembatalan/penolakan</dt>
+                  <dd className="leading-6 text-ink-950">{detail.cancellationReason}</dd>
+                </div>
+              )}
+              <div>
+                <dt className="text-ink-400">Diajukan</dt>
+                <dd className="text-ink-600">{formatReservationDateTime(detail.createdAt)}</dd>
+              </div>
+            </dl>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
