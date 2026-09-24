@@ -32,6 +32,61 @@ export function validateSlot(
   return { valid: true };
 }
 
+export function hasOverlap(
+  aStart: string,
+  aEnd: string,
+  bStart: string,
+  bEnd: string,
+): boolean {
+  return aStart < bEnd && bStart < aEnd;
+}
+
+function toHHmm(value: Date): string {
+  return value.toISOString().slice(11, 16);
+}
+
+type ConflictReader = {
+  reservation: {
+    findMany: (args: unknown) => Promise<Array<{ startTime: Date; endTime: Date }>>;
+  };
+};
+
+export async function checkConflict(
+  database: ConflictReader,
+  params: {
+    facilityId: number;
+    reservationDate: Date;
+    startTime: string;
+    endTime: string;
+    excludeId?: number;
+  },
+): Promise<boolean> {
+  const existing = await database.reservation.findMany({
+    where: {
+      facilityId: params.facilityId,
+      reservationDate: params.reservationDate,
+      status: "APPROVED",
+      ...(params.excludeId ? { id: { not: params.excludeId } } : {}),
+    },
+    select: { startTime: true, endTime: true },
+  });
+
+  return existing.some((row) =>
+    hasOverlap(params.startTime, params.endTime, toHHmm(row.startTime), toHHmm(row.endTime)),
+  );
+}
+
+// Input HH:mm dianggap waktu WIB (PRD §7). Dipakai cancel user: tolak jika sudah lewat start.
+export function isPastStart(
+  reservationDate: string,
+  startTime: string,
+  now: Date = new Date(),
+): boolean {
+  const start = new Date(`${reservationDate}T${startTime}:00+07:00`);
+  if (Number.isNaN(start.getTime())) return true;
+  return now >= start;
+}
+
 export function serializeReservation<
   T extends {
     reservationDate: Date;
