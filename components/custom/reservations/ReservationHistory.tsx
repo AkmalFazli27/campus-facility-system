@@ -55,6 +55,8 @@ export default function ReservationHistory() {
   const [error, setError] = useState<string | null>(null);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -115,6 +117,41 @@ export default function ReservationHistory() {
     setError(null);
     setIsLoading(true);
     setReloadKey((value) => value + 1);
+  }
+
+  function isCancellable(status: ReservationSummary["status"]) {
+    return status === "PENDING" || status === "APPROVED";
+  }
+
+  async function handleCancel(id: number) {
+    if (!window.confirm("Batalkan reservasi ini? Aksi ini tidak bisa dibatalkan.")) return;
+    setCancellingId(id);
+    setCancelError(null);
+    try {
+      const response = await fetch(`/api/reservations/${id}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const body = (await response.json()) as { success: boolean; message?: string };
+      if (response.status === 401) {
+        router.push("/login?next=/reservations");
+        throw new Error("Sesi telah berakhir");
+      }
+      if (!response.ok || !body.success) {
+        throw new Error(body.message ?? "Gagal membatalkan reservasi");
+      }
+      setSelectedReservationId(null);
+      setReloadKey((value) => value + 1);
+    } catch (requestError: unknown) {
+      setCancelError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Terjadi kesalahan saat membatalkan reservasi",
+      );
+    } finally {
+      setCancellingId(null);
+    }
   }
 
   const hasFilters =
@@ -242,6 +279,11 @@ export default function ReservationHistory() {
 
       {!isLoading && !error && reservations.length > 0 && (
         <>
+          {cancelError && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+              {cancelError}
+            </div>
+          )}
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold text-ink-950">Daftar reservasi</h2>
@@ -277,13 +319,25 @@ export default function ReservationHistory() {
                       <ReservationStatusBadge status={reservation.status} />
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <Button
-                        variant="outline"
-                        className="h-11"
-                        onClick={() => setSelectedReservationId(reservation.id)}
-                      >
-                        <Eye aria-hidden /> Lihat detail
-                      </Button>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          className="h-11"
+                          onClick={() => setSelectedReservationId(reservation.id)}
+                        >
+                          <Eye aria-hidden /> Lihat detail
+                        </Button>
+                        {isCancellable(reservation.status) && (
+                          <Button
+                            variant="outline"
+                            className="h-11 border-red-200 text-red-700 hover:bg-red-50"
+                            disabled={cancellingId === reservation.id}
+                            onClick={() => handleCancel(reservation.id)}
+                          >
+                            {cancellingId === reservation.id ? "Membatalkan..." : "Batal"}
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -321,13 +375,25 @@ export default function ReservationHistory() {
                   <p className="line-clamp-2 text-sm leading-6 text-ink-600">
                     {reservation.purpose}
                   </p>
-                  <Button
-                    variant="outline"
-                    className="h-11 w-full"
-                    onClick={() => setSelectedReservationId(reservation.id)}
-                  >
-                    <Eye aria-hidden /> Lihat detail
-                  </Button>
+                  <div className="grid gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-11 w-full"
+                      onClick={() => setSelectedReservationId(reservation.id)}
+                    >
+                      <Eye aria-hidden /> Lihat detail
+                    </Button>
+                    {isCancellable(reservation.status) && (
+                      <Button
+                        variant="outline"
+                        className="h-11 w-full border-red-200 text-red-700"
+                        disabled={cancellingId === reservation.id}
+                        onClick={() => handleCancel(reservation.id)}
+                      >
+                        {cancellingId === reservation.id ? "Membatalkan..." : "Batalkan reservasi"}
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -338,6 +404,10 @@ export default function ReservationHistory() {
       <ReservationDetailDialog
         reservationId={selectedReservationId}
         onClose={() => setSelectedReservationId(null)}
+        onCancelled={() => {
+          setSelectedReservationId(null);
+          setReloadKey((value) => value + 1);
+        }}
       />
     </section>
   );

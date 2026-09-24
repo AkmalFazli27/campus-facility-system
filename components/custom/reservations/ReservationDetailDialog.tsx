@@ -35,14 +35,18 @@ const FACILITY_STATUS_LABEL = {
 export default function ReservationDetailDialog({
   reservationId,
   onClose,
+  onCancelled,
 }: {
   reservationId: number | null;
   onClose: () => void;
+  onCancelled?: () => void;
 }) {
   const router = useRouter();
   const [reservation, setReservation] = useState<ReservationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   useEffect(() => {
     if (reservationId === null) return;
@@ -80,8 +84,47 @@ export default function ReservationDetailDialog({
     if (open) return;
     setReservation(null);
     setError(null);
+    setCancelError(null);
     onClose();
   }
+
+  async function handleCancel() {
+    if (reservationId === null) return;
+    if (!window.confirm("Batalkan reservasi ini? Aksi ini tidak bisa dibatalkan.")) return;
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      const response = await fetch(`/api/reservations/${reservationId}/cancel`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const body = (await response.json()) as DetailResponse;
+      if (response.status === 401) {
+        router.push("/login?next=/reservations");
+        throw new Error("Sesi telah berakhir");
+      }
+      if (!response.ok || !body.success) {
+        throw new Error(body.message ?? "Gagal membatalkan reservasi");
+      }
+      if (onCancelled) onCancelled();
+      else {
+        setReservation(null);
+        setReloadKey((value) => value + 1);
+      }
+    } catch (requestError: unknown) {
+      setCancelError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Terjadi kesalahan saat membatalkan reservasi",
+      );
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  const isCancellable =
+    reservation?.status === "PENDING" || reservation?.status === "APPROVED";
 
   function retry() {
     setReservation(null);
@@ -165,6 +208,23 @@ export default function ReservationDetailDialog({
                 <p className="text-xs font-medium tracking-wide uppercase">Alasan pembatalan</p>
                 <p className="mt-2 text-sm leading-6">{reservation.cancellationReason}</p>
               </div>
+            )}
+
+            {cancelError && (
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+                {cancelError}
+              </div>
+            )}
+
+            {isCancellable && (
+              <Button
+                variant="outline"
+                className="h-11 w-full border-red-200 text-red-700 hover:bg-red-50"
+                disabled={cancelling}
+                onClick={handleCancel}
+              >
+                {cancelling ? "Membatalkan..." : "Batalkan reservasi ini"}
+              </Button>
             )}
 
             <dl className="grid gap-3 border-t pt-4 text-sm sm:grid-cols-2">
