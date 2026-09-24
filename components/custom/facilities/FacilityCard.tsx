@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -40,9 +41,9 @@ export default function FacilityCard({ facility }: { facility: Facility }) {
             Kapasitas {facility.capacity} orang
           </span>
         </div>
-        <Button className="w-full" variant="outline" disabled>
-          Detail segera hadir
-        </Button>
+        <Link href={`/facilities/${facility.id}`} className={buttonVariants({ variant: "outline", className: "w-full" })}>
+          Lihat detail
+        </Link>
       </CardContent>
     </Card>
   );
