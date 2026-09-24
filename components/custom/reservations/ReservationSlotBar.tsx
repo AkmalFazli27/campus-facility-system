@@ -2,6 +2,10 @@
 
 import { useRef } from "react";
 import { isThirtyMinuteSlot } from "@/lib/helpers/slots";
+import {
+  type AvailabilitySlot,
+  unavailableReasonForRange,
+} from "@/lib/reservation-ui";
 import { cn } from "@/lib/utils";
 
 // Drag bar slot 07:00-20:00 (26 slot @30 menit) untuk ReservationForm.
@@ -27,11 +31,15 @@ function slotLabel(index: number): string {
 export default function ReservationSlotBar({
   start,
   end,
+  slots = [],
   onRangeChange,
+  onUnavailableRange,
 }: {
   start: string;
   end: string;
+  slots?: AvailabilitySlot[];
   onRangeChange: (nextStart: string, nextEnd: string) => void;
+  onUnavailableRange?: (reason: string) => void;
 }) {
   const dragging = useRef(false);
   const anchor = useRef(0);
@@ -52,7 +60,16 @@ export default function ReservationSlotBar({
   function applyRange(a: number, b: number) {
     const lo = Math.max(0, Math.min(a, b));
     const hi = Math.min(SLOT_COUNT, Math.max(a, b) + 1);
-    if (hi > lo) onRangeChange(slotLabel(lo), slotLabel(hi));
+    if (hi <= lo) return;
+
+    const nextStart = slotLabel(lo);
+    const nextEnd = slotLabel(hi);
+    const unavailableReason = unavailableReasonForRange(nextStart, nextEnd, slots);
+    if (unavailableReason) {
+      onUnavailableRange?.(unavailableReason);
+      return;
+    }
+    onRangeChange(nextStart, nextEnd);
   }
 
   function beginDrag(index: number) {
@@ -107,12 +124,22 @@ export default function ReservationSlotBar({
         >
           {Array.from({ length: SLOT_COUNT }, (_, i) => {
             const selected = valid && i >= selStart && i < selEnd;
+            const slotStart = slotLabel(i);
+            const slotEnd = slotLabel(i + 1);
+            const unavailableReason = unavailableReasonForRange(
+              slotStart,
+              slotEnd,
+              slots,
+            );
+            const unavailable = Boolean(unavailableReason);
             return (
               <button
                 key={i}
                 type="button"
-                aria-label={`Slot ${slotLabel(i)} sampai ${slotLabel(i + 1)}`}
+                aria-label={`Slot ${slotStart} sampai ${slotEnd}${unavailable ? ` tidak tersedia: ${unavailableReason}` : ""}`}
                 aria-pressed={selected}
+                disabled={unavailable}
+                title={unavailableReason ?? undefined}
                 onPointerDown={(e) => {
                   e.preventDefault();
                   beginDrag(i);
@@ -121,7 +148,9 @@ export default function ReservationSlotBar({
                 onClick={() => handleClick(i)}
                 className={cn(
                   "h-9 rounded-md border transition-colors focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none",
-                  selected
+                  unavailable
+                    ? "cursor-not-allowed border-slate-200 bg-slate-200 opacity-80"
+                    : selected
                     ? "border-brand-500 bg-brand-500"
                     : "border-border bg-white hover:border-brand-300 hover:bg-brand-50",
                 )}
@@ -133,6 +162,18 @@ export default function ReservationSlotBar({
           <span>07:00</span>
           <span>20:00</span>
         </div>
+        {slots.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-4 text-xs text-ink-500">
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-white ring-1 ring-border" />
+              Tersedia
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-slate-200 ring-1 ring-slate-300" />
+              Tidak tersedia
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

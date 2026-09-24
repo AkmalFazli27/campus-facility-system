@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Minus, Plus } from "lucide-react";
@@ -15,18 +15,17 @@ import {
 } from "@/lib/helpers/slots";
 import { validateSlot } from "@/lib/services/reservationService";
 import { createReservationSchema } from "@/lib/validations/reservation";
+import {
+  type AvailabilitySlot,
+  todayInJakarta,
+  unavailableReasonForRange,
+} from "@/lib/reservation-ui";
 import ReservationSlotBar from "@/components/custom/reservations/ReservationSlotBar";
 
 // Form reservasi inti (US03): input manual start/end + stepper durasi ±30 menit.
 // Dipasang A2 di app/facilities/[id]/page.tsx dalam section id="reservasi":
 //   <ReservationForm facilityId={facility.id} bookable={facility.status === "ACTIVE"} />
 // Drag bar slot menyusul di commit terpisah.
-
-function todayLocal(): string {
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10);
-}
 
 function formatDurationId(totalMinutes: number | null): string {
   if (totalMinutes === null || totalMinutes <= 0) return "—";
@@ -57,8 +56,48 @@ export default function ReservationForm({
     purpose?: string;
   }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [availability, setAvailability] = useState<{
+    date: string;
+    slots: AvailabilitySlot[];
+    error: string | null;
+  }>({ date: "", slots: [], error: null });
 
   const duration = durationBetween(start, end);
+  const availabilityLoading = Boolean(date) && availability.date !== date;
+  const availabilityError =
+    availability.date === date ? availability.error : null;
+  const slots = availability.date === date ? availability.slots : [];
+
+  useEffect(() => {
+    if (!date) return;
+
+    const controller = new AbortController();
+
+    fetch(
+      `/api/facilities/${facilityId}/availability?date=${encodeURIComponent(date)}`,
+      { signal: controller.signal },
+    )
+      .then(async (response) => {
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !Array.isArray(payload?.data?.slots)) {
+          throw new Error(payload?.message ?? "Ketersediaan slot gagal dimuat");
+        }
+        setAvailability({ date, slots: payload.data.slots, error: null });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setAvailability({
+          date,
+          slots: [],
+          error:
+            error instanceof Error
+              ? error.message
+              : "Ketersediaan slot gagal dimuat",
+        });
+      });
+
+    return () => controller.abort();
+  }, [date, facilityId]);
 
   function stepDuration(delta: number) {
     const current = durationBetween(start, end) ?? SLOT_STEP_MINUTES;
@@ -95,6 +134,16 @@ export default function ReservationForm({
     if (!slot.valid) {
       setFieldErrors({ time: slot.message });
       toast.error("Periksa kembali jam reservasi");
+      return;
+    }
+    const unavailableReason = unavailableReasonForRange(
+      parsed.data.start_time,
+      parsed.data.end_time,
+      slots,
+    );
+    if (unavailableReason) {
+      setFieldErrors({ time: unavailableReason });
+      toast.error("Pilih slot yang masih tersedia");
       return;
     }
     setFieldErrors({});
@@ -159,7 +208,7 @@ export default function ReservationForm({
           id="resv-date"
           type="date"
           required
-          min={todayLocal()}
+          min={todayInJakarta()}
           value={date}
           onChange={(e) => setDate(e.target.value)}
           aria-invalid={Boolean(fieldErrors.date)}
@@ -213,12 +262,25 @@ export default function ReservationForm({
       <ReservationSlotBar
         start={start}
         end={end}
+        slots={slots}
         onRangeChange={(nextStart, nextEnd) => {
           setStart(nextStart);
           setEnd(nextEnd);
           setFieldErrors((prev) => ({ ...prev, time: undefined }));
         }}
+        onUnavailableRange={(reason) => {
+          setFieldErrors((prev) => ({ ...prev, time: reason }));
+        }}
       />
+
+      {date && availabilityLoading && (
+        <p className="text-xs text-ink-500">Memuat ketersediaan slot...</p>
+      )}
+      {availabilityError && (
+        <p role="alert" className="text-xs text-warning">
+          {availabilityError}. Pilihan waktu tetap akan diperiksa kembali oleh server.
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-slate-50 px-4 py-3">
         <p className="text-sm text-ink-600">
@@ -274,7 +336,7 @@ export default function ReservationForm({
 
       <Button
         type="submit"
-        disabled={submitting}
+        disabled={submitting || availabilityLoading}
         className="h-11 bg-brand-500 hover:bg-brand-600"
       >
         {submitting ? "Mengirim..." : "Ajukan reservasi"}
