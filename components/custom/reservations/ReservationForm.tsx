@@ -15,6 +15,7 @@ import {
 } from "@/lib/helpers/slots";
 import { validateSlot } from "@/lib/services/reservationService";
 import { createReservationSchema } from "@/lib/validations/reservation";
+import ReservationSlotBar from "@/components/custom/reservations/ReservationSlotBar";
 
 // Form reservasi inti (US03): input manual start/end + stepper durasi ±30 menit.
 // Dipasang A2 di app/facilities/[id]/page.tsx dalam section id="reservasi":
@@ -206,6 +207,16 @@ export default function ReservationForm({
           {fieldErrors.time}
         </p>
       )}
+
+      <ReservationSlotBar
+        start={start}
+        end={end}
+        onRangeChange={(nextStart, nextEnd) => {
+          setStart(nextStart);
+          setEnd(nextEnd);
+          setFieldErrors((prev) => ({ ...prev, time: undefined }));
+        }}
+      />
 
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-slate-50 px-4 py-3">
         <p className="text-sm text-ink-600">
