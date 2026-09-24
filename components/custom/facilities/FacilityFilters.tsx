@@ -53,7 +53,10 @@ export default function FacilityFilters({
             onChange={(event) => updateFilters({ query: event.target.value })}
           />
         </label>
-        <Button type="submit" className="sm:col-start-2 sm:row-start-1">
+        <Button
+          type="submit"
+          className="bg-brand-500 text-white hover:bg-brand-600 sm:col-start-2 sm:row-start-1"
+        >
           <Search />
           Cari
         </Button>
@@ -127,7 +130,7 @@ export default function FacilityFilters({
           </div>
         </label>
         <div className="flex items-center gap-2">
-          <Button type="submit" className="flex-1 lg:w-full">
+          <Button type="submit" className="flex-1 bg-brand-500 text-white hover:bg-brand-600 lg:w-full">
             Terapkan filter
           </Button>
           <Button type="button" variant="outline" size="icon" onClick={onReset} aria-label="Reset filter">

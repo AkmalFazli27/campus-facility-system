@@ -273,6 +273,24 @@ export default function ReservationForm({
         }}
       />
 
+      {slots.some((slot) => !slot.available) && (
+        <div
+          className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-ink-600"
+          aria-live="polite"
+        >
+          <p className="font-medium text-ink-950">Slot sudah dibooking:</p>
+          <ul className="mt-1 grid gap-1">
+            {slots
+              .filter((slot) => !slot.available)
+              .map((slot) => (
+                <li key={`${slot.start}-${slot.end}`}>
+                  {slot.start}–{slot.end} · {slot.reason ?? "Tidak tersedia"}
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
       {date && availabilityLoading && (
         <p className="text-xs text-ink-500">Memuat ketersediaan slot...</p>
       )}
