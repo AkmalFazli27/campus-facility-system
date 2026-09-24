@@ -55,7 +55,7 @@ function toHHmm(value: Date): string {
 
 type ConflictReader = {
   reservation: {
-    findMany: (args: unknown) => Promise<Array<{ startTime: Date; endTime: Date }>>;
+    findMany(args: unknown): Promise<Array<{ startTime: Date; endTime: Date }>>;
   };
 };
 

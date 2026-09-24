@@ -65,6 +65,33 @@ test("checkConflict false bila hanya bersentuhan di tepi / beda jam", async () =
   );
 });
 
+test("checkConflict hanya meminta reservasi APPROVED sebagai pengunci slot", async () => {
+  let receivedWhere: unknown;
+  const db = {
+    reservation: {
+      findMany: async (args: unknown) => {
+        receivedWhere = (args as { where?: unknown }).where;
+        return [];
+      },
+    },
+  };
+
+  assert.equal(
+    await checkConflict(db, {
+      facilityId: 1,
+      reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+      startTime: "10:00",
+      endTime: "11:00",
+    }),
+    false,
+  );
+  assert.deepEqual(receivedWhere, {
+    facilityId: 1,
+    reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+    status: "APPROVED",
+  });
+});
+
 test("isPastStart menolak pembatalan setelah waktu mulai (WIB)", () => {
   const now = new Date("2026-10-01T10:00:00+07:00");
   assert.equal(isPastStart("2026-10-01", "09:00", now), true);

@@ -120,7 +120,9 @@ export default function ReservationForm({
           time:
             apiErrors?.start_time?.[0] ??
             apiErrors?.end_time?.[0] ??
-            (response.status === 422 ? message : undefined),
+            (response.status === 422 || response.status === 409
+              ? message
+              : undefined),
           purpose: apiErrors?.purpose?.[0],
         });
         toast.error(message);
