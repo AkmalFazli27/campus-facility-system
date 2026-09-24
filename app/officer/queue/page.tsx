@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ReservationQueue from "@/components/custom/officer/ReservationQueue";
 import { getSessionUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -50,14 +51,7 @@ export default async function OfficerQueuePage() {
         </TabsList>
 
         <TabsContent value="reservasi">
-          <Card className="border-sky-100">
-            <CardHeader>
-              <CardTitle>Antrian reservasi</CardTitle>
-              <CardDescription>
-                Tabel antrian dengan aksi setuju/tolak segera hadir di sini.
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <ReservationQueue />
         </TabsContent>
 
         <TabsContent value="laporan">
