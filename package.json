@@ -13,6 +13,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "smoke:auth": "node --env-file=.env scripts/smoke-auth.mjs",
+    "smoke:reservation-concurrency": "node --env-file=.env --import tsx scripts/smoke-reservation-concurrency.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

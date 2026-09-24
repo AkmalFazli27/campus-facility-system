@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
+import { rejectReservation } from "@/lib/services/reservationApprovalService";
 import { serializeReservation } from "@/lib/services/reservationService";
 import { getSessionUser } from "@/lib/session";
 import {
@@ -41,41 +42,19 @@ export async function PATCH(
   }
 
   try {
-    const reservation = await db.reservation.findUnique({
-      where: { id: parsedId.data },
-      select: { id: true, status: true },
-    });
-
-    if (!reservation) return fail(404, "Reservasi tidak ditemukan");
-    if (reservation.status !== "PENDING") {
+    const result = await rejectReservation(
+      db,
+      parsedId.data,
+      user.id,
+      parsedBody.data.reason,
+    );
+    if (result.kind === "not-found") {
+      return fail(404, "Reservasi tidak ditemukan");
+    }
+    if (result.kind === "not-pending") {
       return fail(422, "Hanya reservasi pending yang bisa ditolak");
     }
-
-    const updated = await db.reservation.update({
-      where: { id: reservation.id },
-      data: {
-        status: "REJECTED",
-        cancellationReason: parsedBody.data.reason,
-        processedBy: user.id,
-        processedAt: new Date(),
-      },
-      select: {
-        id: true,
-        reservationDate: true,
-        startTime: true,
-        endTime: true,
-        purpose: true,
-        status: true,
-        cancellationReason: true,
-        createdAt: true,
-        user: { select: { id: true, name: true, email: true } },
-        facility: {
-          select: { id: true, name: true, type: true, location: true },
-        },
-      },
-    });
-
-    return ok({ reservation: serializeReservation(updated) });
+    return ok({ reservation: serializeReservation(result.reservation) });
   } catch (error) {
     console.error(`PATCH /api/officer/reservations/${parsedId.data}/reject failed`, error);
     return fail(500, "Gagal menolak reservasi");
