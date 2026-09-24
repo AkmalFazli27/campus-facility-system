@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { buildFacilitySearchUrl, facilityStatusLabel } from "@/lib/landing";
+import type { FacilityStatus } from "@/lib/facilities/types";
 
 export type FacilityPreview = {
   id: number;
@@ -17,7 +18,7 @@ export type FacilityPreview = {
   type: string;
   location: string;
   capacity: number;
-  status: "ACTIVE" | "UNDER_MAINTENANCE" | "INACTIVE";
+  status: FacilityStatus;
 };
 
 const STATUS_BADGE_CLASS: Record<FacilityPreview["status"], string> = {
