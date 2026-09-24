@@ -74,5 +74,30 @@ export const reservationIdSchema = z
   .transform(Number)
   .pipe(z.number().int().positive());
 
+// Keputusan petugas (US09/US10): reject & cancel officer wajib alasan.
+export const officerDecisionSchema = z.object({
+  reason: z
+    .string({ error: "Alasan wajib diisi" })
+    .trim()
+    .min(1, { error: "Alasan wajib diisi" })
+    .max(500, { error: "Alasan maksimal 500 karakter" }),
+});
+
+// Filter antrian petugas (US08): default PENDING ditentukan di handler.
+export const officerQueueQuerySchema = z.object({
+  status: z
+    .preprocess(
+      (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
+      z.enum(["PENDING", "APPROVED", "ALL"], {
+        error: "Status antrian tidak valid",
+      }),
+    )
+    .optional(),
+  facility_id: reservationIdSchema.optional(),
+  date: dateSchema.optional(),
+});
+
 export type CreateReservationInput = z.infer<typeof createReservationSchema>;
 export type ListReservationsQuery = z.infer<typeof listReservationsQuerySchema>;
+export type OfficerDecisionInput = z.infer<typeof officerDecisionSchema>;
+export type OfficerQueueQuery = z.infer<typeof officerQueueQuerySchema>;

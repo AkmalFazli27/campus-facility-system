@@ -42,6 +42,36 @@ export type ReservationDetail = Omit<ReservationSummary, "facility"> & {
   };
 };
 
+export type AvailabilitySlot = {
+  start: string;
+  end: string;
+  available: boolean;
+  reason?: string | null;
+};
+
+export function unavailableReasonForRange(
+  startTime: string,
+  endTime: string,
+  slots: AvailabilitySlot[],
+): string | null {
+  const unavailable = slots.find(
+    (slot) => !slot.available && startTime < slot.end && slot.start < endTime,
+  );
+  if (!unavailable) return null;
+  return unavailable.reason || "Rentang waktu mencakup slot yang tidak tersedia";
+}
+
+export function todayInJakarta(now: Date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
 export const RESERVATION_STATUS_META: Record<
   ReservationStatus,
   { label: string; className: string }

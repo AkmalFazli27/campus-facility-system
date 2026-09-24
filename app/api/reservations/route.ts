@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
-import { validateSlot } from "@/lib/services/reservationService";
+import {
+  checkConflict,
+  isPastStart,
+  validateSlot,
+} from "@/lib/services/reservationService";
 import { getSessionUser } from "@/lib/session";
 import { createReservationSchema } from "@/lib/validations/reservation";
 
@@ -29,6 +33,9 @@ export async function POST(request: Request) {
 
   const slot = validateSlot(parsed.data.start_time, parsed.data.end_time);
   if (!slot.valid) return fail(422, slot.message);
+  if (isPastStart(parsed.data.reservation_date, parsed.data.start_time)) {
+    return fail(422, "Waktu mulai reservasi sudah lewat");
+  }
 
   try {
     const facility = await db.facility.findUnique({
@@ -44,13 +51,28 @@ export async function POST(request: Request) {
       );
     }
 
+    const reservationDate = new Date(
+      `${parsed.data.reservation_date}T00:00:00.000Z`,
+    );
+    const conflict = await checkConflict(db, {
+      facilityId: facility.id,
+      reservationDate,
+      startTime: parsed.data.start_time,
+      endTime: parsed.data.end_time,
+    });
+
+    if (conflict) {
+      return fail(
+        409,
+        "Jadwal bentrok dengan reservasi lain yang sudah disetujui",
+      );
+    }
+
     const reservation = await db.reservation.create({
       data: {
         userId: user.id,
         facilityId: facility.id,
-        reservationDate: new Date(
-          `${parsed.data.reservation_date}T00:00:00.000Z`,
-        ),
+        reservationDate,
         startTime: new Date(`1970-01-01T${parsed.data.start_time}:00.000Z`),
         endTime: new Date(`1970-01-01T${parsed.data.end_time}:00.000Z`),
         purpose: parsed.data.purpose,

@@ -5,6 +5,8 @@ import {
   formatReservationDate,
   RESERVATION_STATUSES,
   RESERVATION_STATUS_META,
+  todayInJakarta,
+  unavailableReasonForRange,
 } from "@/lib/reservation-ui";
 
 test("semua status reservasi memiliki label dan gaya visual", () => {
@@ -36,4 +38,27 @@ test("buildReservationHistoryUrl menyertakan status dan periode", () => {
 
 test("formatReservationDate tidak menggeser tanggal", () => {
   assert.equal(formatReservationDate("2026-10-03"), "3 Oktober 2026");
+});
+
+test("todayInJakarta tetap memakai tanggal WIB di sekitar pergantian hari", () => {
+  assert.equal(
+    todayInJakarta(new Date("2026-09-24T18:00:00.000Z")),
+    "2026-09-25",
+  );
+});
+
+test("unavailableReasonForRange mendeteksi slot tidak tersedia yang terlewati", () => {
+  const slots = [
+    { start: "09:00", end: "09:30", available: true },
+    {
+      start: "09:30",
+      end: "10:00",
+      available: false,
+      reason: "Sudah disetujui",
+    },
+  ];
+
+  assert.equal(unavailableReasonForRange("09:00", "10:00", slots), "Sudah disetujui");
+  assert.equal(unavailableReasonForRange("09:00", "09:30", slots), null);
+  assert.equal(unavailableReasonForRange("10:00", "10:30", slots), null);
 });
