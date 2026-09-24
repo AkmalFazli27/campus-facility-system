@@ -62,7 +62,7 @@ export default async function FacilityDetailPage({
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-12 sm:py-16">
       <Link
         href="/facilities"
-        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700"
+        className="inline-flex w-fit items-center gap-2 text-sm font-medium text-brand-600 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
       >
         <ArrowLeft className="size-4" aria-hidden />
         Kembali ke fasilitas
@@ -95,7 +95,7 @@ export default async function FacilityDetailPage({
           </CardContent>
         </Card>
 
-        <Card id="reservasi" className="rounded-3xl border-orange-100">
+        <Card id="reservasi" className="scroll-mt-28 rounded-3xl border-orange-100">
           <CardHeader>
             <CardTitle className="text-xl">Reservasi fasilitas</CardTitle>
             <p className="text-sm leading-6 text-muted-foreground">
