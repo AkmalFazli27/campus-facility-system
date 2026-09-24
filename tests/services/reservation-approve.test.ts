@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   checkConflict,
+  findOverlappingRanges,
   validateSlot,
 } from "@/lib/services/reservationService";
 
@@ -92,4 +93,14 @@ test("approve mengabaikan reservasi yang masih PENDING", async () => {
 test("approve menolak slot invalid sebelum cek konflik", () => {
   assert.equal(validateSlot("09:10", "10:00").valid, false);
   assert.equal(validateSlot("19:30", "20:30").valid, false);
+});
+
+test("findOverlappingRanges mengembalikan detail bentrok dan mengizinkan tepi", () => {
+  const ranges = [
+    { id: 1, startTime: "09:00", endTime: "10:00" },
+    { id: 2, startTime: "11:00", endTime: "12:00" },
+  ];
+
+  assert.deepEqual(findOverlappingRanges("09:30", "10:30", ranges), [ranges[0]]);
+  assert.deepEqual(findOverlappingRanges("10:00", "11:00", ranges), []);
 });

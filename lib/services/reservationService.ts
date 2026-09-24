@@ -41,6 +41,14 @@ export function hasOverlap(
   return aStart < bEnd && bStart < aEnd;
 }
 
+export function findOverlappingRanges<
+  T extends { startTime: string; endTime: string },
+>(startTime: string, endTime: string, ranges: T[]): T[] {
+  return ranges.filter((range) =>
+    hasOverlap(startTime, endTime, range.startTime, range.endTime),
+  );
+}
+
 function toHHmm(value: Date): string {
   return value.toISOString().slice(11, 16);
 }
@@ -71,8 +79,15 @@ export async function checkConflict(
     select: { startTime: true, endTime: true },
   });
 
-  return existing.some((row) =>
-    hasOverlap(params.startTime, params.endTime, toHHmm(row.startTime), toHHmm(row.endTime)),
+  return (
+    findOverlappingRanges(
+      params.startTime,
+      params.endTime,
+      existing.map((row) => ({
+        startTime: toHHmm(row.startTime),
+        endTime: toHHmm(row.endTime),
+      })),
+    ).length > 0
   );
 }
 

@@ -61,6 +61,10 @@ test("officerQueueQuerySchema menolak status di luar antrian", () => {
     officerQueueQuerySchema.safeParse({ status: "APPROVED" }).success,
     true,
   );
+  assert.equal(
+    officerQueueQuerySchema.safeParse({ status: "all" }).success,
+    true,
+  );
 });
 
 test("officerQueueQuerySchema menolak facility_id dan tanggal invalid", () => {

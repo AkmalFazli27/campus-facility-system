@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
 import {
-  hasOverlap,
+  findOverlappingRanges,
   serializeReservation,
   validateSlot,
 } from "@/lib/services/reservationService";
@@ -68,10 +68,15 @@ export async function PATCH(
         select: { startTime: true, endTime: true },
       });
 
-      const conflict = existing.some((row) =>
-        hasOverlap(startKey, endKey, toHHmm(row.startTime), toHHmm(row.endTime)),
+      const conflicts = findOverlappingRanges(
+        startKey,
+        endKey,
+        existing.map((row) => ({
+          startTime: toHHmm(row.startTime),
+          endTime: toHHmm(row.endTime),
+        })),
       );
-      if (conflict) return null;
+      if (conflicts.length > 0) return null;
 
       return tx.reservation.update({
         where: { id: reservation.id },
