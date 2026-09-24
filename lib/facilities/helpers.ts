@@ -10,17 +10,21 @@ export function createDefaultFilters(): FilterState {
   return { query: "", type: "", location: "", capacityMin: "", capacityMax: "", date: today() };
 }
 
-export function getInitialFilters(): FilterState {
-  if (typeof window === "undefined") return createDefaultFilters();
+type FacilitySearchParams = Record<string, string | string[] | undefined>;
 
-  const params = new URLSearchParams(window.location.search);
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export function getFiltersFromSearchParams(params: FacilitySearchParams): FilterState {
+  const defaults = createDefaultFilters();
   return {
-    query: params.get("q") ?? "",
-    type: params.get("type") ?? "",
-    location: params.get("location") ?? "",
-    capacityMin: params.get("capacity_min") ?? "",
-    capacityMax: params.get("capacity_max") ?? "",
-    date: params.get("date") ?? today(),
+    query: firstParam(params.q) ?? "",
+    type: firstParam(params.type) ?? "",
+    location: firstParam(params.location) ?? "",
+    capacityMin: firstParam(params.capacity_min) ?? "",
+    capacityMax: firstParam(params.capacity_max) ?? "",
+    date: firstParam(params.date) ?? defaults.date,
   };
 }
 

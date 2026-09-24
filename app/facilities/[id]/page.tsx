@@ -68,7 +68,7 @@ export default async function FacilityDetailPage({
         Kembali ke fasilitas
       </Link>
 
-      <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr] lg:items-start">
+      <section className="space-y-6">
         <Card className="rounded-3xl border-orange-100">
           <CardHeader className="gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -41,9 +41,31 @@ export default function FacilityCard({ facility }: { facility: Facility }) {
             Kapasitas {facility.capacity} orang
           </span>
         </div>
-        <Link href={`/facilities/${facility.id}`} className={buttonVariants({ variant: "outline", className: "w-full" })}>
-          Lihat detail
-        </Link>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Link
+            href={`/facilities/${facility.id}`}
+            className={buttonVariants({
+              variant: "outline",
+              className: "w-full border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100 hover:text-brand-700",
+            })}
+          >
+            Lihat detail
+          </Link>
+          {facility.status === "ACTIVE" ? (
+            <Link
+              href={`/facilities/${facility.id}#reservasi`}
+              className={buttonVariants({
+                className: "w-full !bg-brand-500 !text-white hover:!bg-brand-600",
+              })}
+            >
+              Pinjam sekarang
+            </Link>
+          ) : (
+            <Button className="w-full" disabled>
+              Tidak tersedia
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
