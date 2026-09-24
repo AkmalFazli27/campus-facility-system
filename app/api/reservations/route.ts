@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
 import {
   checkConflict,
+  isPastStart,
   validateSlot,
 } from "@/lib/services/reservationService";
 import { getSessionUser } from "@/lib/session";
@@ -32,6 +33,9 @@ export async function POST(request: Request) {
 
   const slot = validateSlot(parsed.data.start_time, parsed.data.end_time);
   if (!slot.valid) return fail(422, slot.message);
+  if (isPastStart(parsed.data.reservation_date, parsed.data.start_time)) {
+    return fail(422, "Waktu mulai reservasi sudah lewat");
+  }
 
   try {
     const facility = await db.facility.findUnique({
