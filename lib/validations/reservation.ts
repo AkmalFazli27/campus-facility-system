@@ -60,6 +60,14 @@ export const listReservationsQuerySchema = z
     path: ["to"],
   });
 
+export const cancelReservationSchema = z.object({
+  reason: z
+    .string()
+    .trim()
+    .max(500, { error: "Alasan maksimal 500 karakter" })
+    .optional(),
+});
+
 export const reservationIdSchema = z
   .string()
   .regex(/^[1-9]\d*$/, { error: "ID reservasi tidak valid" })
