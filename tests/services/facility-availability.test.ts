@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   buildAvailabilitySlots,
+  buildFacilityAvailabilitySummary,
   getFacilityAvailability,
   type FacilityAvailabilityReader,
 } from "@/lib/services/facilityAvailabilityService";
@@ -135,4 +136,36 @@ test("getFacilityAvailability hanya membaca reservasi approved", async () => {
   });
 
   assert.equal((query as { where: { status: string } }).where.status, "APPROVED");
+});
+
+test("buildFacilityAvailabilitySummary menghitung slot dan menggabungkan rentang booking", () => {
+  const summary = buildFacilityAvailabilitySummary(
+    "ACTIVE",
+    "2026-09-24",
+    [{
+      startTime: new Date("1970-01-01T09:00:00.000Z"),
+      endTime: new Date("1970-01-01T10:00:00.000Z"),
+    }],
+  );
+
+  assert.equal(summary.totalSlots, 26);
+  assert.equal(summary.availableSlots, 24);
+  assert.equal(summary.unavailableSlots, 2);
+  assert.deepEqual(summary.unavailableRanges, [
+    { start: "09:00", end: "10:00", reason: "Sudah disetujui" },
+  ]);
+});
+
+test("buildFacilityAvailabilitySummary menutup semua slot saat maintenance", () => {
+  const summary = buildFacilityAvailabilitySummary("UNDER_MAINTENANCE", "2026-09-24", []);
+
+  assert.equal(summary.availableSlots, 0);
+  assert.equal(summary.unavailableSlots, 26);
+  assert.deepEqual(summary.unavailableRanges, [
+    {
+      start: "07:00",
+      end: "20:00",
+      reason: "Fasilitas sedang dalam perbaikan",
+    },
+  ]);
 });

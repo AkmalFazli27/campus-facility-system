@@ -295,7 +295,7 @@ export default function ReservationQueue() {
     <section className="space-y-6" aria-live="polite">
       <form
         onSubmit={applyFilters}
-        className="grid gap-4 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end"
+        className="grid gap-4 rounded-3xl border border-sky-100 bg-white p-5 shadow-sm sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto] xl:items-end"
       >
         <div className="grid gap-2">
           <Label htmlFor="queue-status">Status</Label>
@@ -335,7 +335,7 @@ export default function ReservationQueue() {
             onChange={(e) => setFilters({ ...filters, date: e.target.value })}
           />
         </div>
-        <div className="flex gap-2 sm:col-span-2 lg:col-span-1">
+        <div className="flex gap-2 sm:col-span-2 xl:col-span-1">
           <Button type="submit" className="h-11 flex-1">
             Terapkan
           </Button>
@@ -397,8 +397,8 @@ export default function ReservationQueue() {
             )}
           </div>
 
-          <div className="hidden overflow-hidden rounded-2xl border border-border bg-white md:block">
-            <table className="w-full text-sm">
+          <div className="hidden overflow-x-auto rounded-2xl border border-border bg-white xl:block">
+            <table className="w-full min-w-[960px] text-sm">
               <thead className="border-b bg-slate-50 text-left text-ink-600">
                 <tr>
                   <th className="px-4 py-3 font-medium">Pemohon</th>
@@ -509,7 +509,7 @@ export default function ReservationQueue() {
             </table>
           </div>
 
-          <div className="grid gap-4 md:hidden">
+          <div className="grid gap-4 xl:hidden">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -519,14 +519,15 @@ export default function ReservationQueue() {
                     : "space-y-3 rounded-2xl border border-sky-100 bg-white p-4"
                 }
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-ink-950">{item.facility.name}</p>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <p className="break-words font-semibold text-ink-950">{item.facility.name}</p>
                     <p className="mt-1 flex items-center gap-1 text-sm text-ink-600">
-                      <User className="size-3.5" aria-hidden /> {item.user.name}
+                      <User className="size-3.5 shrink-0" aria-hidden />
+                      <span className="min-w-0 break-words">{item.user.name}</span>
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5">
+                  <div className="flex flex-wrap items-start gap-1.5 sm:flex-col sm:items-end">
                     <Badge className={RESERVATION_STATUS_META[item.status].className}>
                       {RESERVATION_STATUS_META[item.status].label}
                     </Badge>
@@ -538,9 +539,9 @@ export default function ReservationQueue() {
                   </div>
                 </div>
                 <div className="grid gap-1.5 text-sm text-ink-600">
-                  <span className="flex items-center gap-2">
-                    <MapPin className="size-4 text-sky-500" aria-hidden />
-                    {item.facility.location}
+                  <span className="flex min-w-0 items-start gap-2">
+                    <MapPin className="mt-0.5 size-4 shrink-0 text-sky-500" aria-hidden />
+                    <span className="min-w-0 break-words">{item.facility.location}</span>
                   </span>
                   <span className="flex items-center gap-2">
                     <CalendarDays className="size-4 text-sky-500" aria-hidden />
@@ -615,7 +616,7 @@ export default function ReservationQueue() {
       )}
 
       <Dialog open={rejectId !== null} onOpenChange={(open) => !open && setRejectId(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Tolak reservasi #{rejectId}</DialogTitle>
             <DialogDescription>
@@ -652,7 +653,7 @@ export default function ReservationQueue() {
       </Dialog>
 
       <Dialog open={cancelId !== null} onOpenChange={(open) => !open && setCancelId(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Batalkan reservasi #{cancelId}</DialogTitle>
             <DialogDescription>
@@ -690,7 +691,7 @@ export default function ReservationQueue() {
       </Dialog>
 
       <Dialog open={detailId !== null} onOpenChange={(open) => !open && setDetailId(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Detail reservasi #{detailId}</DialogTitle>
             <DialogDescription>

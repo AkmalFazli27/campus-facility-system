@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Users } from "lucide-react";
+import { CalendarDays, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { statusCopy } from "@/lib/facilities/constants";
 import type { Facility } from "@/lib/facilities/types";
+import FacilityAvailabilityBar from "@/components/custom/facilities/FacilityAvailabilityBar";
 
 export default function FacilityCard({ facility }: { facility: Facility }) {
   const status = statusCopy[facility.status];
@@ -41,6 +42,20 @@ export default function FacilityCard({ facility }: { facility: Facility }) {
             Kapasitas {facility.capacity} orang
           </span>
         </div>
+        {facility.availability && (
+          <div className="rounded-xl border border-orange-100 bg-orange-50/50 p-3 text-sm">
+            <div className="flex items-center gap-2 font-medium text-ink-950">
+              <CalendarDays className="size-4 text-orange-600" aria-hidden />
+              Ketersediaan {facility.availability.date}
+            </div>
+            <p className="mt-1 text-muted-foreground">
+              {facility.availability.availableSlots} dari {facility.availability.totalSlots} slot tersedia
+            </p>
+            <div className="mt-3">
+              <FacilityAvailabilityBar availability={facility.availability} />
+            </div>
+          </div>
+        )}
         <div className="grid gap-2 sm:grid-cols-2">
           <Link
             href={`/facilities/${facility.id}`}
