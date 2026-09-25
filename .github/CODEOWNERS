@@ -1,24 +1,18 @@
-# CODEOWNERS — Sistem Reservasi & Pelaporan Fasilitas Kampus
-# Ganti @A1..@A4 dengan username GitHub setelah nama final (GIT-WORKFLOW §10).
-
-*                           @A1
-/app/api/*facility*         @A2
-/app/**/facilities/**       @A2
-/app/admin/facilities/**    @A2
-/app/*reservation*          @A3
-/app/**/reservations/**     @A3
-/app/officer/queue/**       @A3 @A4
-/components/ui/**           @A1
-/app/*report*               @A4
-/app/**/reports/**          @A4
-/lib/services/pdf*          @A4
-/lib/services/reservationService.ts @A3
-/config/                    @A1
-/lib/auth.ts                @A1
-/lib/session.ts             @A1
-/lib/authorize.ts           @A1
-/lib/db.ts                  @A1
-/proxy.ts                   @A1
-/prisma/**                  @A1
-/database/                  @A1
-/views/**                   @A1
+* @AkmalFazli27
+/app/dashboard/page.tsx @AkmalFazli27
+/app/dashboard/_components/DashboardSidebar.tsx @AkmalFazli27
+/app/dashboard/_components/UserDashboard* @devanooo
+/app/dashboard/_components/OfficerDashboard.tsx @frankx-hlmmm
+/app/dashboard/_components/AdminDashboard.tsx @21d4n @frankx-hlmmm
+/components/ui/** @AkmalFazli27
+/app/api/*facility* @21d4n
+/app/**/facilities/** @21d4n
+/app/*reservation* @devanooo
+/app/**/reservations/** @devanooo
+/app/officer/queue/** @devanooo @frankx-hlmmm
+/app/*report* @frankx-hlmmm
+/lib/services/pdf* @frankx-hlmmm
+/config/ @AkmalFazli27
+/lib/db.ts @AkmalFazli27
+/proxy.ts @AkmalFazli27
+/prisma/** @AkmalFazli27
