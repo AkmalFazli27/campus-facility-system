@@ -23,8 +23,8 @@ export default function FacilityAvailabilityBar({
             aria-hidden
             className={`h-5 min-w-0 rounded-sm border ${
               slot.available
-                ? "border-brand-200 bg-white"
-                : "border-slate-300 bg-slate-200"
+                ? "border-brand-200 bg-white hover:border-brand-500"
+                : "border-slate-300 bg-slate-200 hover:border-slate-500"
             }`}
           />
         ))}
