@@ -9,7 +9,6 @@ const USER_NAV: DashboardNavItem[] = [
 ];
 
 const OFFICER_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard", section: "Petugas" },
   { href: "/officer/queue", label: "Antrian Petugas", section: "Petugas" },
 ];
 
@@ -24,6 +23,10 @@ export function getDashboardNav(role: Role): DashboardNavItem[] {
   if (role === "ADMIN") return ADMIN_NAV;
   if (role === "OFFICER") return OFFICER_NAV;
   return USER_NAV;
+}
+
+export function isDashboardNavItemActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function roleLabel(role: Role): string {
