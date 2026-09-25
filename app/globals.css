@@ -1,26 +1,196 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --brand-50: #FFF7ED;
+  --brand-100: #FFEDD5;
+  --brand-500: #F97316;
+  --brand-600: #EA580C;
+  --brand-700: #C2410C;
+  --ink-950: #172033;
+  --ink-600: #475569;
+  --ink-400: #94A3B8;
+  --canvas-public: #FAFAF7;
+  --canvas-app: #F8FAFC;
+  --surface: #FFFFFF;
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --info: #0284C7;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-ink-950: var(--ink-950);
+  --color-ink-600: var(--ink-600);
+  --color-ink-400: var(--ink-400);
+  --color-canvas-public: var(--canvas-public);
+  --color-canvas-app: var(--canvas-app);
+  --color-surface: var(--surface);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Auth dual-slider (login/register). Durasi + easing disalin dari referensi
+   docs/login-register-ref.html agar animasi 1:1; token mengikuti DESIGN.md.
+   Di-scope .auth-slider agar tidak memengaruhi halaman lain. */
+.auth-slider .form-container,
+.auth-slider .overlay-container,
+.auth-slider .overlay,
+.auth-slider .overlay-panel {
+  transition:
+    transform 0.65s cubic-bezier(0.76, 0, 0.24, 1),
+    opacity 0.5s cubic-bezier(0.76, 0, 0.24, 1);
+}
+@media (min-width: 768px) {
+  .auth-slider .sign-in-container {
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 2;
+    pointer-events: auto;
+  }
+  .auth-slider .sign-up-container {
+    transform: translateX(0);
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .auth-slider .overlay-left {
+    transform: translateX(-20%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .auth-slider .overlay-right {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .auth-slider.right-panel-active .sign-in-container {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .auth-slider.right-panel-active .sign-up-container {
+    transform: translateX(100%);
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 5;
+  }
+  .auth-slider.right-panel-active .overlay-container {
+    transform: translateX(-100%);
+  }
+  .auth-slider.right-panel-active .overlay {
+    transform: translateX(50%);
+  }
+  .auth-slider.right-panel-active .overlay-left {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .auth-slider.right-panel-active .overlay-right {
+    transform: translateX(20%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  /* Overlay selalu di atas form selama transisi (hanya kotak orange terlihat). */
+  .auth-slider .overlay-container {
+    z-index: 20;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-slider .form-container,
+  .auth-slider .overlay-container,
+  .auth-slider .overlay,
+  .auth-slider .overlay-panel {
+    transition-duration: 0.01ms !important;
+  }
 }

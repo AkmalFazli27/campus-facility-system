@@ -1,69 +1,142 @@
-import Image from "next/image";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import FacilityPreviewCard, {
+  type FacilityPreview,
+} from "@/components/custom/FacilityPreviewCard";
+import FinalCta from "@/components/custom/FinalCta";
+import HeroSection from "@/components/custom/HeroSection";
+import HowItWorks from "@/components/custom/HowItWorks";
+import PublicFooter from "@/components/custom/PublicFooter";
+import QuickSearchForm from "@/components/custom/QuickSearchForm";
+import RetryButton from "@/components/custom/RetryButton";
+import WorkflowCards from "@/components/custom/WorkflowCards";
+import { db } from "@/lib/db";
+import { getSessionUser } from "@/lib/session";
+import { cn } from "@/lib/utils";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+async function getPreviewFacilities(): Promise<FacilityPreview[]> {
+  return db.facility.findMany({
+    where: { status: "ACTIVE" },
+    orderBy: { name: "asc" },
+    take: 4,
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      location: true,
+      capacity: true,
+      status: true,
+    },
+  });
+}
+
+async function getLocations(): Promise<string[]> {
+  const rows = await db.facility.findMany({
+    where: { status: "ACTIVE" },
+    distinct: ["location"],
+    orderBy: { location: "asc" },
+    select: { location: true },
+  });
+  return rows.map((row) => row.location).filter((location) => location.length > 0);
+}
+
+export default async function Home() {
+  let facilities: FacilityPreview[] | null = null;
+  let locations: string[] = [];
+  let heroUser: { name: string } | null = null;
+
+  try {
+    [facilities, locations] = await Promise.all([
+      getPreviewFacilities(),
+      getLocations(),
+    ]);
+  } catch {
+  }
+
+  try {
+    const sessionUser = await getSessionUser();
+    if (sessionUser) heroUser = { name: sessionUser.name };
+  } catch {
+    heroUser = null;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="flex flex-1 flex-col">
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-16 px-6 py-12 sm:py-16">
+        <HeroSection user={heroUser} />
+        <QuickSearchForm locations={locations} />
+
+        <section aria-labelledby="popular-facilities-heading" className="space-y-6">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold tracking-wider text-brand-600 uppercase">
+                Pilihan kampus
+              </p>
+              <h2
+                id="popular-facilities-heading"
+                className="mt-2 text-3xl font-bold tracking-tight text-ink-950"
+              >
+                Fasilitas populer kampus
+              </h2>
+            </div>
+            <Link
+              href="/facilities"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "min-h-11 rounded-full border-brand-200 bg-brand-50 px-6 text-brand-600 hover:bg-brand-100 hover:text-brand-700"
+              )}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Lihat semua fasilitas
+            </Link>
+          </div>
+
+          {facilities === null ? (
+            <div className="rounded-3xl border border-warning/30 bg-warning/10 p-6">
+              <h3 className="font-bold text-ink-950">Gagal memuat fasilitas</h3>
+              <p className="mt-2 text-sm text-ink-600">
+                Data fasilitas sedang tidak tersedia. Silakan coba lagi.
+              </p>
+              <RetryButton />
+            </div>
+          ) : facilities.length === 0 ? (
+            <div className="rounded-3xl border border-brand-100 bg-white p-6">
+              <h3 className="font-bold text-ink-950">Belum ada fasilitas aktif</h3>
+              <p className="mt-2 text-sm text-ink-600">
+                Fasilitas aktif akan tampil di halaman ini.
+              </p>
+              <Link
+                href="/facilities"
+                className={cn(buttonVariants(), "mt-4 rounded-full")}
+              >
+                Lihat fasilitas
+              </Link>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {facilities.map((facility) => (
+                <FacilityPreviewCard key={facility.id} facility={facility} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section id="tentang" className="scroll-mt-24 space-y-4">
+          <WorkflowCards />
+          <div className="flex justify-center">
+            <Link
+              href="/tentang"
+              className="inline-flex min-h-11 items-center rounded-full px-3 text-sm font-bold text-brand-600 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              Pelajari lebih lanjut tentang KampusSpace →
+            </Link>
+          </div>
+        </section>
+        <HowItWorks />
+        <FinalCta isLoggedIn={heroUser !== null} />
       </main>
+      <PublicFooter />
     </div>
   );
 }

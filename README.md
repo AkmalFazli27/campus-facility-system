@@ -1,5 +1,55 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Setup Database Lokal (MySQL)
+
+Prasyarat: MySQL 8+ berjalan (cek `mysql --version` atau service MySQL di Windows).
+
+```bash
+# 1) Buat database dev
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS campus_facility_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 2) Isi env (Prisma CLI baca `.env`, Next.js baca `.env.local` juga)
+cp .env.example .env.local
+cp .env.example .env
+# lalu isi DATABASE_URL + JWT_SECRET (min 32 karakter) di kedua file
+
+# 3) Migration + seed
+npm install
+npx prisma generate
+npx prisma migrate dev --name init
+npm run db:seed
+
+# 4) Verifikasi
+npx prisma studio
+npm run dev # http://localhost:3000
+```
+
+Akun seed: `admin@example.com / Admin123!`, `officer@example.com / Officer123!`, `user@example.com / User123!`, `pending@example.com / User123!`.
+
+Jangan commit `.env` / `.env.local`. Yang di-commit hanya `prisma/schema.prisma` + `prisma/migrations/` + `.env.example`.
+
+## Setup Database Bersama / Staging (Aiven MySQL)
+
+DB bersama hanya untuk integrasi dan demo. Dev harian tetap pakai MySQL lokal
+(Free tier Aiven lambat dan koneksinya terbatas).
+
+```bash
+# 1) Simpan URL staging di file terpisah (tidak di-commit)
+cp .env.example .env.staging.local
+# isi DATABASE_URL staging, contoh:
+# DATABASE_URL="mysql://campus_app:PASSWORD@HOST:PORT/campus_facility?ssl-mode=REQUIRED"
+
+# 2) Terapkan migration yang sudah ada (jangan migrate dev ke staging)
+$env:DATABASE_URL = "<isi-URL-staging>"
+npx prisma migrate deploy
+npm run db:seed  # sekali saja
+```
+
+Aturan DB bersama:
+* Dilarang `npx prisma migrate reset` dan `npx prisma migrate dev` ke staging.
+* Perubahan skema lewat lokal → PR → `develop` → `migrate deploy` ke staging.
+* Kredensial staging hanya dibagikan via jalur private, tidak pernah di-commit.
+
 ## Getting Started
 
 First, run the development server:

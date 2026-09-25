@@ -96,6 +96,24 @@ Validasi waktu reservasi (jam 07.00–20.00, slot 30 menit, kelipatan 30 menit) 
 
 **Status akun pengguna:** `pending` → `active` (diverifikasi admin) atau `rejected`. Pengguna `pending`/`rejected`/`inactive` tidak bisa login untuk fitur terproteksi. Pesan error harus jelas.
 
+### 4.1 Dashboard & Sidebar per Role (acuan `docs/dashboard-user-ref.html`)
+
+Setelah login, klik **Dashboard** di navbar membuka satu route `/dashboard` yang isinya **bercabang total per role**. Sidebar memakai **filter ketat per role**: tiap role **hanya me-render section miliknya** — menu role lain tidak dirender (bukan di-disable), supaya RBAC bersih di demo.
+
+| Role | Section sidebar | Item menu | Target link (halaman detail) |
+|---|---|---|---|
+| **user** | Pengguna | Dashboard, **Reservasi Saya**, **Laporan Saya** | `/dashboard`, `/reservations`, `/reports` |
+| **officer** | Petugas | Dashboard, **Antrian Petugas** | `/dashboard`, `/officer/queue` |
+| **admin** | Admin | Dashboard, **Kelola Fasilitas**, **Rekap Admin** | `/dashboard`, `/admin/facilities`, `/admin/recap` |
+
+Isi ringkas tiap dashboard (ikut ref HTML):
+
+- **user** — banner sapaan (NIM/prodi), 4 kartu metrik (Reservasi Aktif, Menunggu Persetujuan, Laporan Kerusakan, Riwayat Selesai), Jadwal Peminjaman Terdekat, Status Laporan Terkini, quick action *Pesan Ruang Baru*/*Laporkan Kerusakan*, panduan operasional.
+- **officer** — counter antrian (`pending` reservasi + `new` laporan), tabel antrean dengan aksi **approve/reject/cancel reservasi** + **proses laporan** + tandai maintenance. Petugas **tidak** CRUD master fasilitas.
+- **admin** — shortcut Kelola Fasilitas (CRUD + badge maintenance) + widget Rekap dengan **preview tabel okupansi & kerusakan + tombol Export PDF** langsung di dashboard (bukan sekadar link).
+
+**Proteksi ganda (wajib):** guard optimistic di `proxy.ts` (matcher `/dashboard/:path*`) **+** secure check `getSessionUser()` di server component `app/dashboard/page.tsx` — `null`/`pending`/`rejected`/`inactive` → redirect `/login?next=/dashboard`. Sidebar di-render **di server** sesuai `user.role` (jangan di-trust dari query/cookie).
+
 ---
 
 ## 5. Ruang Lingkup
@@ -194,6 +212,13 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
 ## 8. User Story + Acceptance Criteria (US01–US17)
 
 Format AC memakai Given/When/Then agar bisa jadi test case.
+
+> **Catatan dashboard (§4.1):** `/dashboard` **bukan user story baru** — hanya presentasi/ ringkasan dari US yang sudah ada agar tetap demo US01–US17:
+> - Dashboard **user** = ringkasan dari US05 (riwayat reservasi) + US07 (status laporan).
+> - Dashboard **officer** = US08 (antrian — sudah jadi FR-DASH-01).
+> - Dashboard **admin** = US16 (shortcut kelola fasilitas) + US17 (preview rekap + Export PDF).
+>
+> Test/demo tetap berjalan di US01–US17; dashboard hanya kumpulan counter + link ke halaman detail yang sudah didefinisikan di tiap US.
 
 ### US01 — Lihat daftar fasilitas + ketersediaan per slot (tanpa detail pemohon)
 
@@ -310,7 +335,10 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 | FR-RPT-02 | Status laporan milik sendiri | US07 |
 | FR-RPT-03 | Proses laporan petugas | US11 |
 | FR-RPT-04 | Tandai maintenance & kembalikan | US12 |
-| FR-DASH-01 | Dashboard antrian petugas | US08 |
+| FR-DASH-01 | Dashboard antrian petugas (counter + tabel pending/new) | US08 |
+| FR-DASH-02 | Dashboard user (banner, 4 kartu metrik, jadwal & laporan terkini) — reuse `GET /reservations/my`, `GET /reports/my` | US05, US07 |
+| FR-DASH-03 | Dashboard admin (shortcut kelola fasilitas + preview rekap + tombol Export PDF) — reuse `GET /admin/recap/*` & `.../export` | US16, US17 |
+| FR-DASH-04 | `/dashboard` guard ganda + sidebar render ketat per role di server (`proxy.ts` + `getSessionUser()`) | Semua (RBAC) |
 | FR-REKAP-01 | Rekap okupansi & kerusakan + export PDF | US17 |
 
 ---
@@ -336,19 +364,19 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 
 ### Pengguna → reservasi
 
-Login → `/facilities/:id` → pilih tanggal & slot → isi tujuan → submit → toast pending → `/reservations` (riwayat) → detail → cancel (jika perlu)
+Login → **`/dashboard` (role user)** → lihat kartu *Reservasi Aktif*/*Menunggu* + *Jadwal Terdekat* → klik `Reservasi Saya` (`/reservations`) → detail → cancel (jika perlu); atau *Pesan Ruang Baru* → `/facilities/:id` → pilih tanggal & slot → isi tujuan → submit → toast pending
 
-### Petugas → proses reservasi
+### Petugas → proses reservasi & laporan
 
-Login officer → `/officer/queue` → tab Reservasi pending → approve/reject (cek bentrok) → cancel approved (dengan alasan)
+Login officer → **`/dashboard` (role officer)** → counter antrian (`pending`/`new`) → tab Reservasi pending → approve/reject (cek bentrok) / cancel approved (dengan alasan); tab Laporan → new→in_progress→resolved/rejected + tandai maintenance
 
 ### Pengguna → lapor kerusakan
 
-Login → `/facilities/:id` → "Laporkan" → kategori+deskripsi+foto → submit → `/reports` pantau status
+Login → **`/dashboard`** (atau langsung `/facilities/:id`) → *Laporkan Kerusakan* / "Laporkan" → kategori+deskripsi+foto → submit → `Laporan Saya` (`/reports`) pantau status
 
 ### Admin → kelola & rekap
 
-Login admin → `/admin/facilities` (CRUD) → `/admin/users` (create/verify) → `/admin/recap` → filter → Export PDF
+Login admin → **`/dashboard` (role admin)** → widget *Kelola Fasilitas* (CRUD) / widget *Rekap Admin* → filter → preview tabel → **Export PDF** (bisa langsung dari dashboard)
 
 ---
 
@@ -527,6 +555,18 @@ GET /admin/recap/damage/export?from=&to=&facility_id=&location=     -> applicati
 
 Semua endpoint terproteksi memakai `proxy.ts` (`authenticate` + `authorize(role)`) + pengecekan ulang role di Route Handler. Validasi payload memakai `zod`.
 
+### Dashboard (`/dashboard`) — tanpa endpoint baru
+
+`/dashboard` adalah **Server Component** yang memanggil service/query existing (bukan fetch API sendiri). Data yang dibutuhkan per role:
+
+| Role | Data | Sumber (existing) |
+|---|---|---|
+| user | 4 kartu metrik, jadwal terdekat, laporan terkini | `GET /reservations/my?status=&limit`, `GET /reports/my?limit` (query Prisma langsung di page) |
+| officer | counter `pending`/`new`, tabel antrean | `GET /officer/reservations?status=pending`, `GET /officer/reports?status=new` (query Prisma langsung) |
+| admin | preview rekap okupansi/kerusakan + export | `GET /admin/recap/occupancy?from=&to=`, `.../damage`, `.../export` (reuse service rekap) |
+
+Sidebar & guard tidak butuh API: render di server dari `getSessionUser().role` + matcher `proxy.ts`.
+
 ---
 
 ## 14. Struktur Folder (memenuhi ketentuan tugas)
@@ -544,7 +584,14 @@ campus-facility-system/          # root repo (Next.js app)
 │   │   └── facilities/[id]/page.tsx  # detail + slot + CTA reservasi/lapor
 │   ├── (auth)/login/page.tsx
 │   ├── (auth)/register/page.tsx
-│   ├── reservations/page.tsx    # US05 (user)
+│   ├── dashboard/
+│   │   ├── page.tsx               # server, guard ganda, cabang per role (§4.1)
+│   │   └── _components/
+│   │       ├── DashboardSidebar.tsx   # kontrak sidebar filter ketat per role (pemilik A1)
+│   │       ├── UserDashboard.tsx      # milik A3
+│   │       ├── OfficerDashboard.tsx   # milik A4
+│   │       └── AdminDashboard.tsx     # milik A2 (widget Kelola) + A4 (widget Rekap)
+│   ├── reservations/page.tsx    # US05 (user) — target link "Reservasi Saya"
 │   ├── reports/page.tsx         # US07 (user)
 │   ├── officer/queue/page.tsx   # US08 tab reservasi + laporan
 │   ├── admin/
@@ -611,12 +658,16 @@ campus-facility-system/          # root repo (Next.js app)
 - `/facilities` List + filter + badge ketersediaan (tanpa login)
 - `/facilities/:id` Detail + kalender slot per tanggal + CTA reservasi/laporkan (guard login)
 - `/login`, `/register`, `/pending-verification`
-- `/reservations` (user) — list + filter status + detail + cancel
-- `/reports` (user) — list + detail + form buat laporan
-- `/officer/queue` — dua tab: Reservasi pending & Laporan new/in_progress + aksi
-- `/admin/facilities` — CRUD + status
+- `/dashboard` (login) — **entry point utama, bercabang per role** (§4.1):
+  - `role=user` → banner + 4 kartu metrik + Jadwal Terdekat + Laporan Terkini; sidebar *Reservasi Saya*, *Laporan Saya*
+  - `role=officer` → counter antrian + tabel approve/reject/cancel reservasi & proses laporan; sidebar *Antrian Petugas*
+  - `role=admin` → shortcut Kelola Fasilitas + preview rekap + Export PDF; sidebar *Kelola Fasilitas*, *Rekap Admin*
+- `/reservations` (user) — list + filter status + detail + cancel *(target link sidebar "Reservasi Saya")*
+- `/reports` (user) — list + detail + form buat laporan *(target link sidebar "Laporan Saya")*
+- `/officer/queue` — dua tab: Reservasi pending & Laporan new/in_progress + aksi *(target link "Antrian Petugas")*
+- `/admin/facilities` — CRUD + status *(target link "Kelola Fasilitas")*
 - `/admin/users` — create officer/user + verify/reject pending
-- `/admin/recap` — filter + preview tabel + Export PDF
+- `/admin/recap` — filter + preview tabel + Export PDF *(target link "Rekap Admin"; preview juga muncul di dashboard admin)*
 
 Setiap halaman wajib punya: loading, empty, error state; form punya inline error + toast.
 
@@ -721,10 +772,10 @@ Nama placeholder — ganti dengan nama/NIM anggota.
 
 | Anggota | Peran | Tanggung jawab utama | Branch utama | Reviewer |
 |---|---|---|---|---|
-| **A1 — Anggota 1** | Tech Lead + Auth | Setup repo (create-next-app), `prisma/schema.prisma` + `migrate dev`, `lib/db.ts`, `proxy.ts`, `users` + seed, register/login/logout (Route Handlers + JWT httpOnly via `jose`), akun demo, `.env.example`, README | `feature/setup`, `feature/auth` | A2 |
-| **A2 — Anggota 2** | Fasilitas & Ketersediaan | CRUD fasilitas, pencarian tipe/lokasi/kapasitas, availability per tanggal/slot, badge status, halaman user & admin fasilitas | `feature/facilities`, `feature/availability` | A3 |
-| **A3 — Anggota 3** | Reservasi | Form reservasi, validasi slot 30 menit & jam, cek konflik, riwayat/detail/cancel user, antrian & approve/reject/cancel petugas | `feature/reservations` | A4 |
-| **A4 — Anggota 4** | Laporan, Rekap & Rilis | Laporan+foto, proses laporan, maintenance fasilitas, dashboard petugas, rekap & export PDF, screenshot, dokumen Word, materi demo | `feature/reports`, `feature/recap-pdf`, `docs/submission` | A1 |
+| **A1 — Anggota 1** | Tech Lead + Auth | Setup repo (create-next-app), `prisma/schema.prisma` + `migrate dev`, `lib/db.ts`, `proxy.ts` (+ matcher `/dashboard/:path*`), `users` + seed, register/login/logout (Route Handlers + JWT httpOnly via `jose`), akun demo, `.env.example`, README, **kontrak `DashboardSidebar.tsx` (guard + filter role)** | `feature/setup`, `feature/auth` | A2 |
+| **A2 — Anggota 2** | Fasilitas & Ketersediaan | CRUD fasilitas, pencarian tipe/lokasi/kapasitas, availability per tanggal/slot, badge status, halaman user & admin fasilitas, **widget *Kelola Fasilitas* di AdminDashboard** | `feature/facilities`, `feature/availability` | A3 |
+| **A3 — Anggota 3** | Reservasi + Dashboard User | Form reservasi, validasi slot 30 menit & jam, cek konflik, riwayat/detail/cancel user, antrian & approve/reject/cancel petugas, **`UserDashboard.tsx` (banner, 4 kartu metrik, jadwal & laporan terkini)** | `feature/reservations`, `feature/dashboard-user` | A4 |
+| **A4 — Anggota 4** | Laporan, Rekap & Rilis + Dashboard Officer/Admin | Laporan+foto, proses laporan, maintenance fasilitas, rekap & export PDF, screenshot, dokumen Word, materi demo, **`OfficerDashboard.tsx` (antrian) + widget *Rekap* di AdminDashboard** | `feature/reports`, `feature/recap-pdf`, `feature/dashboard-officer`, `docs/submission` | A1 |
 
 RACI singkat: setiap fitur — **R** = pemilik branch, **A** = Tech Lead (A1) untuk keputusan arsitektur, **C** = reviewer, **I** = semua anggota via PR.
 
@@ -747,6 +798,12 @@ Kepemilikan file (CODEOWNERS — buat di `.github/CODEOWNERS`):
 /proxy.ts               @A1
 /prisma/**              @A1
 /database/              @A1
+# Dashboard (kontrak A1, isi per role lepas)
+/app/dashboard/page.tsx                  @A1
+/app/dashboard/_components/DashboardSidebar.tsx @A1
+/app/dashboard/_components/UserDashboard.tsx    @A3
+/app/dashboard/_components/OfficerDashboard.tsx @A4
+/app/dashboard/_components/AdminDashboard.tsx   @A2 @A4
 ```
 
 ---
@@ -768,13 +825,13 @@ Kepemilikan file (CODEOWNERS — buat di `.github/CODEOWNERS`):
 
 ### Alur mingguan per anggota
 
-**A1 (minggu 1–2 berat di awal):** setup → auth → seed → RBAC → jaga `develop` tetap hijau, bantu unblock A2–A4.
+**A1 (minggu 1–2 berat di awal):** setup → auth → seed → RBAC → **kontrak `DashboardSidebar.tsx` + guard `/dashboard` (matcher `proxy.ts`)** → jaga `develop` tetap hijau, bantu unblock A2–A4.
 
-**A2:** tunggu `facilities` table dari A1 (atau buat migration sendiri lalu PR) → CRUD → search → availability → serah ke A3 untuk dipakai di reservasi.
+**A2:** tunggu `facilities` table dari A1 (atau buat migration sendiri lalu PR) → CRUD → search → availability → serah ke A3 untuk dipakai di reservasi → **widget *Kelola Fasilitas* di `AdminDashboard.tsx`**.
 
-**A3:** tunggu availability API dari A2 → validasi slot → create reservasi → riwayat/cancel → antrian petugas + anti-bentrok.
+**A3:** tunggu availability API dari A2 → validasi slot → create reservasi → riwayat/cancel → antrian petugas + anti-bentrok → **`UserDashboard.tsx` (setelah kontrak sidebar A1 siap)**.
 
-**A4:** tunggu facilities dari A2 → laporan+upload → proses laporan → maintenance → rekap → PDF → dokumen Word (mulai cicil dari minggu 3).
+**A4:** tunggu facilities dari A2 → laporan+upload → proses laporan → maintenance → rekap → PDF → **`OfficerDashboard.tsx` + widget *Rekap* di `AdminDashboard.tsx`** → dokumen Word (mulai cicil dari minggu 3).
 
 ### Aturan integrasi
 
@@ -962,19 +1019,20 @@ curl -X POST http://localhost:3000/api/reservations \
 5. Link Google Drive: source code + SQL hasil `migrate dev` (`prisma/migrations/`) + aset yang dibutuhkan.
 6. Cara menjalankan program (dari §28).
 7. Akun login tiap aktor (dari §28).
-8. Screenshot tiap fitur + penjelasan singkat (urut US01–US17).
+8. Screenshot tiap fitur + penjelasan singkat (urut US01–US17, **mulai dari `/dashboard` per role** — lihat checklist demo).
 9. Kendala & solusi.
 10. Link repo GitHub/GitLab (jika diminta).
 
 ### Checklist demo 10 menit
 
 ```
-0:00–1:30  Latar belakang & arsitektur (1 slide)
-1:30–4:00  Pengunjung: katalog + filter + ketersediaan
-4:00–6:00  Pengguna: reservasi + laporan + riwayat
-6:00–8:00  Petugas: antrian, approve/reject/cancel, proses laporan, maintenance
-8:00–9:30  Admin: CRUD fasilitas, verify akun, rekap & Export PDF
-9:30–10:00 Kendala & mitigasi + penutup
+0:00–1:00  Latar belakang & arsitektur (1 slide)
+1:00–2:00  Login user → /dashboard (sidebar ketat: Reservasi Saya, Laporan Saya)
+2:00–4:00  Pengunjung: katalog + filter + ketersediaan (US01–US02)
+4:00–5:30  Pengguna: ajukan reservasi + lapor kerusakan dari dashboard (US03–US07)
+5:30–7:30  Petugas: /dashboard antrian, approve/reject/cancel, proses laporan, maintenance (US08–US12)
+7:30–9:00  Admin: /dashboard, CRUD fasilitas, verify akun, rekap & Export PDF (US13–US17)
+9:00–10:00 Kendala & mitigasi + penutup
 ```
 
 Cadangan tanya jawab: validasi slot, anti-bentrok, RBAC, upload, PDF, Git workflow.
@@ -1040,6 +1098,7 @@ npm run dev        # http://localhost:3000 (halaman + /api/*)
 - Anggota: **placeholder** (nama/NIM diisi belakangan).
 - Template Word: **tidak ada** dari dosen — pakai struktur §27.
 - Zona waktu: Asia/Jakarta. Jam operasional 07.00–20.00, slot 30 menit, validasi server otoritatif.
+- Dashboard: **satu route `/dashboard` bercabang per role** (acuan `docs/dashboard-user-ref.html`), sidebar **filter ketat per role** (render hanya section milik role di server), guard ganda `proxy.ts` + `getSessionUser()`. **Tanpa US/endpoint baru** — reuse data existing (lihat §4.1, §8 catatan, §13). Pemilik: A1 kontrak sidebar/guard, isi lepas per role (A3 user, A4 officer, A2+A4 admin). Admin dashboard = preview rekap + tombol Export PDF.
 
 ---
 
