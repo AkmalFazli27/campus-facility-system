@@ -16,9 +16,10 @@ export default async function DashboardPage() {
   if (!user) redirect("/login?next=/dashboard");
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 lg:flex-row">
-      <DashboardSidebar role={user.role} />
-      <main className="flex min-w-0 flex-1 flex-col">
+    <div className="w-full lg:pl-[250px]">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
+        <DashboardSidebar role={user.role} user={user} />
+        <main className="flex min-w-0 flex-1 flex-col">
         {user.role === "USER" ? (
           <UserDashboard user={user} />
         ) : user.role === "OFFICER" ? (
@@ -27,6 +28,7 @@ export default async function DashboardPage() {
           <AdminDashboard user={user} />
         )}
       </main>
+      </div>
     </div>
   );
 }
