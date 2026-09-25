@@ -1,29 +1,33 @@
 import type { Role } from "@/lib/authorize";
 
-export type DashboardNavItem = { href: string; label: string };
+export type DashboardNavItem = { href: string; label: string; section: string };
 
 const USER_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Ringkasan" },
-  { href: "/facilities", label: "Cari fasilitas" },
-  { href: "/reservations", label: "Reservasi saya" },
-  { href: "/reports", label: "Laporan saya" },
+  { href: "/dashboard", label: "Dashboard", section: "Pengguna" },
+  { href: "/reservations", label: "Reservasi Saya", section: "Pengguna" },
+  { href: "/reports", label: "Laporan Saya", section: "Pengguna" },
 ];
 
 const OFFICER_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Antrean" },
-  { href: "/officer/queue", label: "Antrian petugas" },
+  { href: "/dashboard", label: "Dashboard", section: "Petugas" },
+  { href: "/officer/queue", label: "Antrian Petugas", section: "Petugas" },
 ];
 
 const ADMIN_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Ringkasan" },
-  { href: "/officer/queue", label: "Antrian petugas" },
-  { href: "/admin/facilities", label: "Kelola fasilitas" },
-  { href: "/admin/recap", label: "Rekap" },
-  { href: "/admin/users", label: "Verifikasi pengguna" },
+  { href: "/dashboard", label: "Dashboard", section: "Admin" },
+  { href: "/admin/facilities", label: "Kelola Fasilitas", section: "Admin" },
+  { href: "/admin/recap", label: "Rekap Admin", section: "Admin" },
+  { href: "/admin/users", label: "Verifikasi Pengguna", section: "Admin" },
 ];
 
 export function getDashboardNav(role: Role): DashboardNavItem[] {
   if (role === "ADMIN") return ADMIN_NAV;
   if (role === "OFFICER") return OFFICER_NAV;
   return USER_NAV;
+}
+
+export function roleLabel(role: Role): string {
+  if (role === "ADMIN") return "Admin";
+  if (role === "OFFICER") return "Petugas";
+  return "Pengguna";
 }
