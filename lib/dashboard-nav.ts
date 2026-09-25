@@ -26,6 +26,10 @@ export function getDashboardNav(role: Role): DashboardNavItem[] {
   return USER_NAV;
 }
 
+export function isDashboardNavItemActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function roleLabel(role: Role): string {
   if (role === "ADMIN") return "Admin";
   if (role === "OFFICER") return "Petugas";

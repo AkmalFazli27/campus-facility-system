@@ -5,7 +5,7 @@ export type Role = "USER" | "OFFICER" | "ADMIN";
 const RULES: Array<{ prefix: string; roles: Role[] }> = [
   { prefix: "/admin", roles: ["ADMIN"] },
   { prefix: "/officer", roles: ["OFFICER", "ADMIN"] },
-  { prefix: "/reservations", roles: ["USER", "OFFICER", "ADMIN"] },
+  { prefix: "/reservations", roles: ["USER"] },
   { prefix: "/reports", roles: ["USER", "OFFICER", "ADMIN"] },
 ];
 

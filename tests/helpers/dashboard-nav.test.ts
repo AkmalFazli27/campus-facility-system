@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { getDashboardNav, roleLabel } from "@/lib/dashboard-nav";
+import {
+  getDashboardNav,
+  isDashboardNavItemActive,
+  roleLabel,
+} from "@/lib/dashboard-nav";
 
 test("pengguna hanya dapat nav pengguna", () => {
   const hrefs = getDashboardNav("USER").map((i) => i.href);
@@ -46,4 +50,12 @@ test("label peran dan seksi sesuai referensi", () => {
     assert.equal(items[0].section, roleLabel(role));
     assert.ok(items.every((i) => i.section === roleLabel(role)));
   }
+});
+
+test("item navigasi aktif mengikuti pathname", () => {
+  assert.equal(isDashboardNavItemActive("/dashboard", "/dashboard"), true);
+  assert.equal(isDashboardNavItemActive("/reservations", "/reservations"), true);
+  assert.equal(isDashboardNavItemActive("/reservations/123", "/reservations"), true);
+  assert.equal(isDashboardNavItemActive("/reservations", "/dashboard"), false);
+  assert.equal(isDashboardNavItemActive("/dashboard/settings", "/dashboard"), true);
 });
