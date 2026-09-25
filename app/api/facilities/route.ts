@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
+import { buildFacilityAvailabilitySummary } from "@/lib/services/facilityAvailabilityService";
+import { availabilityQuerySchema } from "@/lib/validations/facility";
 import { FacilityStatus } from "@prisma/client";
 import { NextRequest } from "next/server";
 
@@ -31,8 +33,13 @@ export async function GET(request: NextRequest) {
       return fail(400, "Kapasitas minimum tidak boleh lebih besar dari kapasitas maksimum");
     }
 
-    if (date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return fail(400, "Tanggal harus menggunakan format YYYY-MM-DD");
+    let parsedDate: string | undefined;
+    if (date !== undefined) {
+      const parsed = availabilityQuerySchema.safeParse({ date });
+      if (!parsed.success) {
+        return fail(400, "Tanggal harus valid dengan format YYYY-MM-DD", parsed.error.flatten().fieldErrors);
+      }
+      parsedDate = parsed.data.date;
     }
 
     const facilities = await db.facility.findMany({
@@ -67,7 +74,34 @@ export async function GET(request: NextRequest) {
       select: { location: true },
     });
 
-    return ok(facilities, {
+    let data = facilities;
+    if (parsedDate && facilities.length > 0) {
+      const approvedReservations = await db.reservation.findMany({
+        where: {
+          facilityId: { in: facilities.map((facility) => facility.id) },
+          reservationDate: new Date(`${parsedDate}T00:00:00.000Z`),
+          status: "APPROVED",
+        },
+        select: { facilityId: true, startTime: true, endTime: true },
+      });
+      const reservationsByFacility = new Map<number, typeof approvedReservations>();
+      for (const reservation of approvedReservations) {
+        const reservations = reservationsByFacility.get(reservation.facilityId) ?? [];
+        reservations.push(reservation);
+        reservationsByFacility.set(reservation.facilityId, reservations);
+      }
+
+      data = facilities.map((facility) => ({
+        ...facility,
+        availability: buildFacilityAvailabilitySummary(
+          facility.status,
+          parsedDate,
+          reservationsByFacility.get(facility.id) ?? [],
+        ),
+      }));
+    }
+
+    return ok(data, {
       meta: {
         filters: {
           q: query ?? null,
@@ -75,7 +109,7 @@ export async function GET(request: NextRequest) {
           location: location ?? null,
           capacity_min: capacityMin ?? null,
           capacity_max: capacityMax ?? null,
-          date: date ?? null,
+          date: parsedDate ?? null,
         },
         locations: locations.map(({ location }) => location),
         statuses: Object.values(FacilityStatus),

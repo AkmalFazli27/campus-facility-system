@@ -6,7 +6,7 @@ import ReservationForm from "@/components/custom/reservations/ReservationForm";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { statusCopy } from "@/lib/facilities/constants";
-import { db } from "@/lib/db";
+import { getFacilityById } from "@/lib/services/facilityService";
 import { facilityIdSchema } from "@/lib/validations/facility";
 import { todayInJakarta } from "@/lib/reservation-ui";
 
@@ -21,10 +21,7 @@ export async function generateMetadata({
   const parsedId = facilityIdSchema.safeParse(rawId);
   if (!parsedId.success) return { title: "Fasilitas tidak ditemukan | KampusSpace" };
 
-  const facility = await db.facility.findUnique({
-    where: { id: parsedId.data },
-    select: { name: true, description: true },
-  });
+  const facility = await getFacilityById(parsedId.data);
 
   return {
     title: facility ? `${facility.name} | KampusSpace` : "Fasilitas tidak ditemukan | KampusSpace",
@@ -41,18 +38,7 @@ export default async function FacilityDetailPage({
   const parsedId = facilityIdSchema.safeParse(rawId);
   if (!parsedId.success) notFound();
 
-  const facility = await db.facility.findUnique({
-    where: { id: parsedId.data },
-    select: {
-      id: true,
-      name: true,
-      type: true,
-      location: true,
-      capacity: true,
-      description: true,
-      status: true,
-    },
-  });
+  const facility = await getFacilityById(parsedId.data);
 
   if (!facility) notFound();
 

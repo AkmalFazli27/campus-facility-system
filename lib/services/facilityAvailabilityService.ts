@@ -25,6 +25,10 @@ type ApprovedReservation = {
   endTime: Date;
 };
 
+export type FacilitySummaryReservation = ApprovedReservation & {
+  facilityId: number;
+};
+
 export type FacilityAvailabilityReader = {
   facility: {
     findUnique(args: unknown): Promise<FacilitySummary | null>;
@@ -69,6 +73,69 @@ function unavailableReason(status: Exclude<FacilityStatus, "ACTIVE">): string {
     : "Fasilitas sedang dalam perbaikan";
 }
 
+function mergeUnavailableRanges(slots: AvailabilitySlot[]) {
+  return slots.reduce<Array<{ start: string; end: string; reason: string }>>(
+    (ranges, slot) => {
+      if (slot.available) return ranges;
+
+      const previous = ranges.at(-1);
+      if (previous && previous.end === slot.start && previous.reason === slot.reason) {
+        previous.end = slot.end;
+      } else {
+        ranges.push({
+          start: slot.start,
+          end: slot.end,
+          reason: slot.reason ?? "Tidak tersedia",
+        });
+      }
+      return ranges;
+    },
+    [],
+  );
+}
+
+export function buildFacilityAvailabilitySlots(
+  status: FacilityStatus,
+  approvedReservations: ApprovedReservation[],
+): AvailabilitySlot[] {
+  const slots = buildAvailabilitySlots();
+
+  if (status !== "ACTIVE") {
+    const reason = unavailableReason(status);
+    return slots.map((slot) => ({ ...slot, available: false, reason }));
+  }
+
+  return slots.map((slot) => {
+    const isReserved = approvedReservations.some((reservation) => {
+      const startTime = formatReservationTime(reservation.startTime);
+      const endTime = formatReservationTime(reservation.endTime);
+      return hasOverlap(slot.start, slot.end, startTime, endTime);
+    });
+
+    return isReserved
+      ? { ...slot, available: false, reason: "Sudah disetujui" }
+      : slot;
+  });
+}
+
+export function buildFacilityAvailabilitySummary(
+  status: FacilityStatus,
+  date: string,
+  approvedReservations: ApprovedReservation[],
+) {
+  const slots = buildFacilityAvailabilitySlots(status, approvedReservations);
+  const unavailable = slots.filter((slot) => !slot.available);
+
+  return {
+    date,
+    totalSlots: slots.length,
+    availableSlots: slots.length - unavailable.length,
+    unavailableSlots: unavailable.length,
+    slots,
+    unavailableRanges: mergeUnavailableRanges(slots),
+  };
+}
+
 export async function getFacilityAvailability(
   database: FacilityAvailabilityReader,
   params: { facilityId: number; reservationDate: Date },
@@ -79,16 +146,6 @@ export async function getFacilityAvailability(
   });
 
   if (!facility) return null;
-
-  const slots = buildAvailabilitySlots();
-
-  if (facility.status !== "ACTIVE") {
-    const reason = unavailableReason(facility.status);
-    return {
-      facility,
-      slots: slots.map((slot) => ({ ...slot, available: false, reason })),
-    };
-  }
 
   const approvedReservations = await database.reservation.findMany({
     where: {
@@ -101,16 +158,6 @@ export async function getFacilityAvailability(
 
   return {
     facility,
-    slots: slots.map((slot) => {
-      const isReserved = approvedReservations.some((reservation) => {
-        const startTime = formatReservationTime(reservation.startTime);
-        const endTime = formatReservationTime(reservation.endTime);
-        return hasOverlap(slot.start, slot.end, startTime, endTime);
-      });
-
-      return isReserved
-        ? { ...slot, available: false, reason: "Sudah disetujui" }
-        : slot;
-    }),
+    slots: buildFacilityAvailabilitySlots(facility.status, approvedReservations),
   };
 }
