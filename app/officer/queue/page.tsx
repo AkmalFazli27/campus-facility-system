@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { CalendarCheck2, ChevronRight, ClipboardList } from "lucide-react";
+import { CalendarCheck2, ClipboardList } from "lucide-react";
+import DashboardSidebar from "@/app/dashboard/_components/DashboardSidebar";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -29,84 +30,77 @@ export default async function OfficerQueuePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-12 sm:py-16">
-      <section className="max-w-3xl space-y-4">
-        <Badge className="border-sky-200 bg-sky-50 text-sky-700">
-          Dasbor petugas
-        </Badge>
-        <div className="space-y-3">
-          <h1 className="text-4xl font-semibold tracking-tight text-ink-950 sm:text-5xl">
-            Antrian petugas
-          </h1>
-          <p className="text-base leading-7 text-ink-600 sm:text-lg">
-            Proses pengajuan reservasi dan laporan kerusakan yang menunggu
-            tindakan.
-          </p>
-        </div>
-      </section>
+    <div className="w-full lg:pl-[250px]">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
+        <DashboardSidebar role={user.role} user={user} />
+        <main className="flex min-w-0 flex-1 flex-col gap-8">
+          <section className="max-w-3xl space-y-4">
+            <Badge className="border-sky-200 bg-sky-50 text-sky-700">
+              Ruang kerja petugas
+            </Badge>
+            <div className="space-y-3">
+              <h1 className="text-4xl font-semibold tracking-tight text-ink-950 sm:text-5xl">
+                Antrian petugas
+              </h1>
+              <p className="text-base leading-7 text-ink-600 sm:text-lg">
+                Proses pengajuan reservasi dan laporan kerusakan yang menunggu
+                tindakan.
+              </p>
+            </div>
+          </section>
 
-      <Tabs
-        defaultValue="reservasi"
-        orientation="vertical"
-        className="flex flex-col gap-6 lg:flex-row lg:items-start"
-      >
-        <TabsList
-          aria-label="Pilih jenis antrian"
-          className="grid h-auto w-full shrink-0 grid-cols-1 gap-3 rounded-none bg-transparent p-0 lg:sticky lg:top-24 lg:w-72"
-        >
-          <TabsTrigger
-            value="reservasi"
-            className="group h-auto min-h-24 w-full justify-start rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm hover:border-sky-200 hover:bg-sky-50/50 data-active:border-sky-300 data-active:bg-sky-50 data-active:text-sky-950 data-active:shadow-md"
-          >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 group-data-active:bg-sky-600 group-data-active:text-white">
-              <CalendarCheck2 aria-hidden className="size-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink-950">Reservasi</span>
-              <span className="mt-0.5 block text-xs font-normal leading-5 whitespace-normal text-ink-500">
-                Setujui, tolak, dan cek bentrok jadwal.
-              </span>
-            </span>
-            <ChevronRight
-              aria-hidden
-              className="size-4 shrink-0 text-ink-300 group-data-active:text-sky-600"
-            />
-          </TabsTrigger>
-          <TabsTrigger
-            value="laporan"
-            className="group h-auto min-h-24 w-full justify-start rounded-2xl border border-slate-200 bg-white px-4 py-4 text-left shadow-sm hover:border-sky-200 hover:bg-sky-50/50 data-active:border-sky-300 data-active:bg-sky-50 data-active:text-sky-950 data-active:shadow-md"
-          >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700 group-data-active:bg-sky-600 group-data-active:text-white">
-              <ClipboardList aria-hidden className="size-5" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink-950">Laporan</span>
-              <span className="mt-0.5 block text-xs font-normal leading-5 whitespace-normal text-ink-500">
-                Proses laporan kerusakan dan maintenance.
-              </span>
-            </span>
-            <ChevronRight
-              aria-hidden
-              className="size-4 shrink-0 text-ink-300 group-data-active:text-sky-600"
-            />
-          </TabsTrigger>
-        </TabsList>
+          <Tabs defaultValue="reservasi" className="gap-6">
+            <TabsList
+              aria-label="Pilih jenis antrian"
+              className="grid h-auto w-full grid-cols-2 gap-3 rounded-none bg-transparent p-0"
+            >
+              <TabsTrigger
+                value="reservasi"
+                className="group h-auto min-h-14 w-full justify-start rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm hover:border-sky-200 hover:bg-sky-50/50 sm:min-h-20 sm:px-4 data-active:border-sky-300 data-active:bg-sky-50 data-active:text-sky-950 data-active:shadow-md"
+              >
+                <span className="hidden size-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 group-data-active:bg-sky-600 group-data-active:text-white sm:flex">
+                  <CalendarCheck2 aria-hidden className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-ink-950">Reservasi</span>
+                  <span className="mt-0.5 hidden text-xs font-normal leading-5 whitespace-normal text-ink-500 sm:block">
+                    Setujui, tolak, dan cek bentrok jadwal.
+                  </span>
+                </span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="laporan"
+                className="group h-auto min-h-14 w-full justify-start rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left shadow-sm hover:border-sky-200 hover:bg-sky-50/50 sm:min-h-20 sm:px-4 data-active:border-sky-300 data-active:bg-sky-50 data-active:text-sky-950 data-active:shadow-md"
+              >
+                <span className="hidden size-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-violet-700 group-data-active:bg-sky-600 group-data-active:text-white sm:flex">
+                  <ClipboardList aria-hidden className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-ink-950">Laporan</span>
+                  <span className="mt-0.5 hidden text-xs font-normal leading-5 whitespace-normal text-ink-500 sm:block">
+                    Proses laporan kerusakan dan maintenance.
+                  </span>
+                </span>
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="reservasi" className="min-w-0 w-full">
-          <ReservationQueue />
-        </TabsContent>
+            <TabsContent value="reservasi" className="min-w-0 w-full">
+              <ReservationQueue />
+            </TabsContent>
 
-        <TabsContent value="laporan" className="min-w-0 w-full">
-          <Card className="border-slate-200">
-            <CardHeader>
-              <CardTitle>Antrian laporan</CardTitle>
-              <CardDescription>
-                Tab ini dikerjakan A4 (aliran laporan &amp; maintenance).
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </main>
+            <TabsContent value="laporan" className="min-w-0 w-full">
+              <Card className="border-slate-200">
+                <CardHeader>
+                  <CardTitle>Antrian laporan</CardTitle>
+                  <CardDescription>
+                    Tab ini dikerjakan A4 (aliran laporan &amp; maintenance).
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div>
+    </div>
   );
 }

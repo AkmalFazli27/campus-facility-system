@@ -9,7 +9,6 @@ const USER_NAV: DashboardNavItem[] = [
 ];
 
 const OFFICER_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard", section: "Petugas" },
   { href: "/officer/queue", label: "Antrian Petugas", section: "Petugas" },
 ];
 
