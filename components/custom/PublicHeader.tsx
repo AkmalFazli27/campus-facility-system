@@ -4,7 +4,14 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, LayoutDashboard, LogOut, Menu } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarCheck2,
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+} from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/components/assets/logo.svg";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -137,11 +144,38 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 </div>
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+                  className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
                 >
-                  <LayoutDashboard aria-hidden className="size-4" />
+                  <LayoutDashboard aria-hidden className="size-4 text-brand-600" />
                   Dashboard
                 </Link>
+                {user.role === "USER" && (
+                  <>
+                    <Link
+                      href="/reservations"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+                    >
+                      <CalendarCheck2 aria-hidden className="size-4 text-sky-600" />
+                      Reservasi Saya
+                    </Link>
+                    <Link
+                      href="/reports"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+                    >
+                      <AlertTriangle aria-hidden className="size-4 text-amber-600" />
+                      Laporan Kerusakan
+                    </Link>
+                  </>
+                )}
+                {user.role === "OFFICER" && (
+                  <Link
+                    href="/officer/queue"
+                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+                  >
+                    <CalendarCheck2 aria-hidden className="size-4 text-sky-600" />
+                    Antrian Petugas
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => setConfirmOpen(true)}
@@ -229,6 +263,30 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                     </Link>
                   }
                 />
+                {user.role === "USER" && (
+                  <>
+                    <DialogClose
+                      render={
+                        <Link
+                          href="/reservations"
+                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
+                        >
+                          Reservasi Saya
+                        </Link>
+                      }
+                    />
+                    <DialogClose
+                      render={
+                        <Link
+                          href="/reports"
+                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
+                        >
+                          Laporan Kerusakan
+                        </Link>
+                      }
+                    />
+                  </>
+                )}
                 <Button
                   variant="outline"
                   onClick={() => setConfirmOpen(true)}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import DashboardSidebar from "@/app/dashboard/_components/DashboardSidebar";
 import ReportForm from "@/components/custom/reports/ReportForm";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
@@ -37,31 +38,36 @@ export default async function NewReportPage(props: {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-6 py-10 sm:py-14">
-      <div>
-        <Link
-          href="/reports"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-ink-950 transition-colors mb-4"
-        >
-          <ArrowLeft className="size-3.5" />
-          Kembali ke Daftar Laporan
-        </Link>
-        <h1 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl">
-          Laporkan Kerusakan Fasilitas
-        </h1>
-        <p className="mt-1.5 text-sm text-ink-600">
-          Bantu kami menjaga fasilitas kampus tetap nyaman dengan melaporkan kerusakan secara akurat disertai bukti foto.
-        </p>
-      </div>
+    <div className="w-full lg:pl-[250px]">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10">
+        <DashboardSidebar role={user.role} user={user} />
+        <main className="flex min-w-0 flex-1 flex-col gap-6">
+          <div>
+            <Link
+              href="/reports"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-500 hover:text-ink-950 transition-colors mb-4"
+            >
+              <ArrowLeft className="size-3.5" />
+              Kembali ke Daftar Laporan
+            </Link>
+            <h1 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl">
+              Laporkan Kerusakan Fasilitas
+            </h1>
+            <p className="mt-1.5 text-sm text-ink-600">
+              Bantu kami menjaga fasilitas kampus tetap nyaman dengan melaporkan kerusakan secara akurat disertai bukti foto.
+            </p>
+          </div>
 
-      <ReportForm
-        facilities={facilities}
-        preselectedFacilityId={
-          preselectedFacilityId && !Number.isNaN(preselectedFacilityId)
-            ? preselectedFacilityId
-            : undefined
-        }
-      />
-    </main>
+          <ReportForm
+            facilities={facilities}
+            preselectedFacilityId={
+              preselectedFacilityId && !Number.isNaN(preselectedFacilityId)
+                ? preselectedFacilityId
+                : undefined
+            }
+          />
+        </main>
+      </div>
+    </div>
   );
 }
