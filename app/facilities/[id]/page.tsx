@@ -75,7 +75,15 @@ export default async function FacilityDetailPage({
               <Badge variant="outline" className="capitalize">
                 {facility.type}
               </Badge>
-              <Badge className={status.className}>{status.label}</Badge>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/reports/new?facility_id=${facility.id}`}
+                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                >
+                  Laporkan Kerusakan
+                </Link>
+                <Badge className={status.className}>{status.label}</Badge>
+              </div>
             </div>
             <CardTitle className="text-3xl sm:text-4xl">{facility.name}</CardTitle>
             <p className="leading-7 text-muted-foreground">

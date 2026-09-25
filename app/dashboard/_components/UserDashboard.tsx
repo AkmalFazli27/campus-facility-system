@@ -218,9 +218,14 @@ export default async function UserDashboard({
         </Card>
 
         <Card className="border-slate-200 bg-white shadow-sm">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle>Status laporan terkini</CardTitle>
-            <CardDescription>Tiga laporan terakhir yang kamu kirim.</CardDescription>
+          <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Status laporan terkini</CardTitle>
+              <CardDescription>Tiga laporan terakhir yang kamu kirim.</CardDescription>
+            </div>
+            <Link href="/reports" className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+              Lihat semua →
+            </Link>
           </CardHeader>
           <CardContent className="space-y-3">
             {reports.length > 0 ? (
