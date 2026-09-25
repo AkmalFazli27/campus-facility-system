@@ -49,10 +49,10 @@ export default async function OfficerQueuePage() {
             </div>
           </section>
 
-          <Tabs defaultValue="reservasi" className="gap-6">
+          <Tabs defaultValue="reservasi" className="flex flex-col gap-6">
             <TabsList
               aria-label="Pilih jenis antrian"
-              className="grid h-auto w-full grid-cols-2 gap-3 rounded-none bg-transparent p-0"
+              className="grid h-auto w-full grid-cols-2 gap-3 rounded-none bg-transparent p-0 group-data-horizontal/tabs:h-auto"
             >
               <TabsTrigger
                 value="reservasi"
