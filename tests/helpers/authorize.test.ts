@@ -14,9 +14,14 @@ test("/officer untuk OFFICER dan ADMIN", () => {
   assert.equal(isAuthorized("/officer/queue", "USER"), false);
 });
 
-test("/reservations dan /reports untuk semua role login", () => {
+test("/reservations hanya untuk USER", () => {
+  assert.equal(isAuthorized("/reservations", "USER"), true);
+  assert.equal(isAuthorized("/reservations", "OFFICER"), false);
+  assert.equal(isAuthorized("/reservations/123", "ADMIN"), false);
+});
+
+test("/reports untuk semua role login", () => {
   for (const role of ["USER", "OFFICER", "ADMIN"]) {
-    assert.equal(isAuthorized("/reservations", role), true);
     assert.equal(isAuthorized("/reports/123", role), true);
   }
 });

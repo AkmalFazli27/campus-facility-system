@@ -38,7 +38,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   }
 
   const pathname = (await headers()).get("x-pathname") ?? "";
-  const hideHeader = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  const hideHeader =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/reservations" ||
+    pathname.startsWith("/reservations/") ||
+    pathname === "/officer" ||
+    pathname.startsWith("/officer/");
 
   return (
     <html

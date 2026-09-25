@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import DashboardLogoutButton from "@/app/dashboard/_components/DashboardLogoutButton";
-import { getDashboardNav, roleLabel } from "@/lib/dashboard-nav";
+import { getDashboardNav, isDashboardNavItemActive, roleLabel } from "@/lib/dashboard-nav";
 import type { Role } from "@/lib/authorize";
 import type { SessionUser } from "@/lib/session";
 import { userTypeLabel } from "@/lib/user-dashboard";
@@ -14,26 +17,30 @@ function UserSubtitle({ user, role }: { user: SidebarUser; role: Role }) {
 }
 
 function SidebarNav({ role, orientation }: { role: Role; orientation: "vertical" | "horizontal" }) {
+  const pathname = usePathname();
   const items = getDashboardNav(role);
   const section = items[0]?.section ?? roleLabel(role);
   return (
     <nav aria-label={`Navigasi dashboard ${role.toLowerCase()}`} className={orientation === "vertical" ? "flex flex-col gap-1" : "flex gap-2 overflow-x-auto"}>
       <p className="px-3 pt-1 text-xs font-semibold tracking-wider text-ink-400 uppercase">{section}</p>
-      {items.map((item, index) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          aria-current={index === 0 ? "page" : undefined}
-          className={cn(
-            "rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap",
-            index === 0
-              ? "bg-brand-500 font-semibold text-white shadow-sm"
-              : "text-ink-600 hover:bg-slate-100 hover:text-ink-950",
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
+      {items.map((item) => {
+        const isActive = isDashboardNavItemActive(pathname, item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "rounded-full px-3 py-2 text-sm font-medium whitespace-nowrap",
+              isActive
+                ? "bg-brand-500 font-semibold text-white shadow-sm"
+                : "text-ink-600 hover:bg-slate-100 hover:text-ink-950",
+            )}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
