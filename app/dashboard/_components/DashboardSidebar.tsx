@@ -38,7 +38,7 @@ function UserSubtitle({ user, role }: { user: SidebarUser; role: Role }) {
   return roleLabel(role);
 }
 
-function SidebarNav({
+export function SidebarNav({
   role,
   orientation,
   collapsed = false,
@@ -95,20 +95,6 @@ export default function DashboardSidebar({
   const initial = user.name.trim().charAt(0).toUpperCase() || "?";
   return (
     <>
-      <div className="lg:hidden">
-        <div className="mb-4 flex items-center gap-3">
-          <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
-            {initial}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-ink-950">{user.name}</p>
-            <p className="truncate text-xs text-ink-600">
-              <UserSubtitle user={user} role={role} />
-            </p>
-          </div>
-        </div>
-        <SidebarNav role={role} orientation="horizontal" />
-      </div>
       <aside
         aria-label={`Panel dashboard ${role.toLowerCase()}`}
         className={cn(
