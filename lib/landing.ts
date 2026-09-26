@@ -74,3 +74,17 @@ export function isAuthRoute(pathname: string): boolean {
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }
+
+const DASHBOARD_ROUTES = [
+  "/dashboard",
+  "/reservations",
+  "/reports",
+  "/officer",
+  "/admin",
+];
+
+export function isDashboardRoute(pathname: string): boolean {
+  return DASHBOARD_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}

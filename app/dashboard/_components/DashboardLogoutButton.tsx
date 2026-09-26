@@ -7,7 +7,7 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function DashboardLogoutButton({ className }: { className?: string }) {
+export default function DashboardLogoutButton({ className, iconOnly = false }: { className?: string; iconOnly?: boolean }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
@@ -34,10 +34,12 @@ export default function DashboardLogoutButton({ className }: { className?: strin
       size="sm"
       onClick={handleLogout}
       disabled={submitting}
-      className={cn("w-full justify-start gap-2 text-ink-600 hover:text-ink-950", className)}
+      title={iconOnly ? "Keluar" : undefined}
+      aria-label={iconOnly ? "Keluar" : undefined}
+      className={cn("w-full justify-start gap-2 text-ink-600 hover:text-ink-950", iconOnly && "justify-center px-2", className)}
     >
       <LogOut aria-hidden className="size-4" />
-      {submitting ? "Keluar..." : "Keluar"}
+      {iconOnly ? null : submitting ? "Keluar..." : "Keluar"}
     </Button>
   );
 }

@@ -24,7 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { isAuthRoute } from "@/lib/landing";
+import { isAuthRoute, isDashboardRoute } from "@/lib/landing";
 
 export type HeaderUser = {
   name: string;
@@ -45,6 +45,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   if (isAuthRoute(pathname)) return null;
+  if (isDashboardRoute(pathname)) return null;
 
   async function handleLogout() {
     if (loggingOut) return;
