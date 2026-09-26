@@ -43,8 +43,12 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     pathname.startsWith("/dashboard/") ||
     pathname === "/reservations" ||
     pathname.startsWith("/reservations/") ||
+    pathname === "/reports" ||
+    pathname.startsWith("/reports/") ||
     pathname === "/officer" ||
-    pathname.startsWith("/officer/");
+    pathname.startsWith("/officer/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
 
   return (
     <html

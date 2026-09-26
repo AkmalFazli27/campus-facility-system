@@ -38,10 +38,15 @@ function redirectToLogin(request: NextRequest, pathname: string) {
 
 export const config = {
   matcher: [
-    "/reservations/:path*",
-    "/reports/:path*",
-    "/officer/:path*",
-    "/admin/:path*",
+    "/dashboard",
     "/dashboard/:path*",
+    "/reservations",
+    "/reservations/:path*",
+    "/reports",
+    "/reports/:path*",
+    "/officer",
+    "/officer/:path*",
+    "/admin",
+    "/admin/:path*",
   ],
 };
