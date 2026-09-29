@@ -685,6 +685,7 @@ Setiap halaman wajib punya: loading, empty, error state; form punya inline error
 ### Client (Next.js Client Components)
 
 - Required, panjang, format email, kekuatan password, file type/size, jam 07.00–20.00, kelipatan 30 menit (UX).
+- Slot bar reservasi memakai dua klik: klik pertama menetapkan awal dan durasi 30 menit; klik kedua menetapkan slot terakhir yang ikut dipakai (termasuk klik mundur yang diurutkan otomatis). Klik berikutnya memulai pilihan baru. Rentang yang melewati slot tidak tersedia ditolak tanpa menghapus pilihan awal. Input jam manual dan tombol ±30 menit tetap tersedia.
 - Disable submit bila invalid, tampilkan pesan dekat field.
 
 ### Server (otoritatif — tidak bisa di-bypass)
