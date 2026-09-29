@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import DashboardSidebar from "@/app/dashboard/_components/DashboardSidebar";
+import DashboardShell from "@/app/dashboard/_components/DashboardShell";
 import UserDashboard from "@/app/dashboard/_components/UserDashboard";
 import OfficerDashboard from "@/app/dashboard/_components/OfficerDashboard";
 import AdminDashboard from "@/app/dashboard/_components/AdminDashboard";
@@ -16,19 +16,15 @@ export default async function DashboardPage() {
   if (!user) redirect("/login?next=/dashboard");
 
   return (
-    <div className="w-full lg:pl-[250px]">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10">
-        <DashboardSidebar role={user.role} user={user} />
-        <main className="flex min-w-0 flex-1 flex-col">
-          {user.role === "USER" ? (
-            <UserDashboard user={user} />
-          ) : user.role === "OFFICER" ? (
-            <OfficerDashboard user={user} />
-          ) : (
-            <AdminDashboard user={user} />
-          )}
-        </main>
-      </div>
-    </div>
+     <DashboardShell role={user.role} user={user}>
+      {user.role === "USER" ? (
+        <UserDashboard user={user} />
+      ) : user.role === "OFFICER" ? (
+        <OfficerDashboard user={user} />
+      ) : (
+        <AdminDashboard user={user} />
+      )}
+    </DashboardShell>
+
   );
 }

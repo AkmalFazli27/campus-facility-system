@@ -29,6 +29,14 @@ export function isDashboardNavItemActive(pathname: string, href: string): boolea
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+export function getDashboardPageTitle(pathname: string): string {
+  if (pathname === "/officer" || pathname.startsWith("/officer/")) return "Antrian petugas";
+  if (pathname === "/reservations" || pathname.startsWith("/reservations/")) return "Reservasi saya";
+  if (pathname === "/reports" || pathname.startsWith("/reports/")) return "Laporan saya";
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return "Admin";
+  return "Dashboard";
+}
+
 export function roleLabel(role: Role): string {
   if (role === "ADMIN") return "Admin";
   if (role === "OFFICER") return "Petugas";

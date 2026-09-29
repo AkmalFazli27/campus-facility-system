@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   getDashboardNav,
+  getDashboardPageTitle,
   isDashboardNavItemActive,
   roleLabel,
 } from "@/lib/dashboard-nav";
@@ -59,4 +60,14 @@ test("item navigasi aktif mengikuti pathname", () => {
   assert.equal(isDashboardNavItemActive("/reservations/123", "/reservations"), true);
   assert.equal(isDashboardNavItemActive("/reservations", "/dashboard"), false);
   assert.equal(isDashboardNavItemActive("/dashboard/settings", "/dashboard"), true);
+});
+
+test("judul halaman mobile mengikuti pathname", () => {
+  assert.equal(getDashboardPageTitle("/dashboard"), "Dashboard");
+  assert.equal(getDashboardPageTitle("/dashboard/settings"), "Dashboard");
+  assert.equal(getDashboardPageTitle("/reservations"), "Reservasi saya");
+  assert.equal(getDashboardPageTitle("/reservations/123"), "Reservasi saya");
+  assert.equal(getDashboardPageTitle("/reports"), "Laporan saya");
+  assert.equal(getDashboardPageTitle("/officer/queue"), "Antrian petugas");
+  assert.equal(getDashboardPageTitle("/admin/users"), "Admin");
 });
