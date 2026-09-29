@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -21,7 +22,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { buildFacilitySearchUrl, buildTimeSlots } from "@/lib/landing";
+import {
+  buildEndOptions,
+  buildFacilitySearchUrl,
+  buildStartOptions,
+} from "@/lib/landing";
+import { validateSlot } from "@/lib/services/reservationService";
+import { addDuration } from "@/lib/helpers/slots";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "Semua jenis" },
@@ -32,7 +39,11 @@ const TYPE_OPTIONS = [
   { value: "lapangan", label: "Lapangan" },
 ];
 
-const TIME_SLOTS = buildTimeSlots();
+const START_OPTIONS = buildStartOptions();
+
+function formatTimeLabel(value: string): string {
+  return value.replace(":", ".");
+}
 
 function SearchField({
   icon: Icon,
@@ -79,12 +90,37 @@ export type QuickSearchFormProps = {
 
 export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
   const router = useRouter();
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
+  const [timeError, setTimeError] = useState("");
+
+  const endOptions = buildEndOptions(startTime);
+
+  const handleStartChange = (value: string | null) => {
+    if (value == null) return;
+    setStartTime(value);
+    if (endTime <= value) {
+      const nextEnd = addDuration(value, 30);
+      if (nextEnd) setEndTime(nextEnd);
+    }
+    setTimeError("");
+  };
+
+  const handleEndChange = (value: string | null) => {
+    if (value == null) return;
+    setEndTime(value);
+    setTimeError("");
+  };
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    const slot = String(data.get("slot") ?? "");
-    const [startTime, endTime] = slot.split("|");
+    const result = validateSlot(startTime, endTime);
+    if (!result.valid) {
+      setTimeError(result.message);
+      return;
+    }
+    setTimeError("");
     const location = String(data.get("location") ?? "");
     router.push(
       buildFacilitySearchUrl({
@@ -158,30 +194,57 @@ export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
 
       <SearchField
         icon={Clock3}
-        label="Waktu (30 menit)"
-        htmlFor="quick-slot"
+        label="Jam Mulai – Selesai"
+        htmlFor="quick-start"
         withDivider={false}
       >
-        <Select name="slot" defaultValue="07:00|07:30">
-          <SelectTrigger
-            id="quick-slot"
-            className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          >
-            <SelectValue placeholder="Pilih slot">
-              {(value) =>
-                TIME_SLOTS.find((slot) => `${slot.start}|${slot.end}` === value)
-                  ?.label ?? "Pilih slot"
-              }
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {TIME_SLOTS.map((slot) => (
-              <SelectItem key={slot.start} value={`${slot.start}|${slot.end}`}>
-                {slot.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={startTime} onValueChange={handleStartChange}>
+            <SelectTrigger
+              id="quick-start"
+              className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              <SelectValue placeholder="Jam mulai">
+                {(value) => formatTimeLabel(String(value))}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {START_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {formatTimeLabel(option)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span aria-hidden className="shrink-0 text-sm text-ink-400">
+            –
+          </span>
+          <Select value={endTime} onValueChange={handleEndChange}>
+            <SelectTrigger
+              id="quick-end"
+              className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              <SelectValue placeholder="Jam selesai">
+                {(value) => formatTimeLabel(String(value))}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {endOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {formatTimeLabel(option)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="mt-1 text-[11px] text-ink-400">
+          Kelipatan 30 menit • 07.00–20.00
+        </p>
+        {timeError && (
+          <p role="alert" className="mt-1 text-xs font-medium text-red-600">
+            {timeError}
+          </p>
+        )}
       </SearchField>
 
       <div className="flex lg:shrink-0 lg:pl-3">
