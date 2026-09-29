@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  buildEndOptions,
   buildFacilitySearchUrl,
+  buildStartOptions,
   buildTimeSlots,
   facilityStatusLabel,
   isAuthRoute,
@@ -78,4 +80,31 @@ test("isAuthRoute mengenali route auth", () => {
   assert.equal(isAuthRoute("/facilities"), false);
   assert.equal(isAuthRoute("/login-evil"), false);
   assert.equal(isAuthRoute("/login/"), true);
+});
+
+test("buildStartOptions menghasilkan 26 opsi mulai 07:00-19:30", () => {
+  const options = buildStartOptions();
+  assert.equal(options.length, 26);
+  assert.equal(options[0], "07:00");
+  assert.equal(options[25], "19:30");
+  for (const option of options) {
+    assert.match(option, /^\d{2}:(00|30)$/);
+  }
+});
+
+test("buildEndOptions menyaring opsi akhir setelah jam mulai", () => {
+  const options = buildEndOptions("09:00");
+  assert.equal(options.length, 22);
+  assert.equal(options[0], "09:30");
+  assert.equal(options[options.length - 1], "20:00");
+  for (const option of options) {
+    assert.ok(option > "09:00");
+  }
+});
+
+test("buildEndOptions mengembalikan daftar penuh bila start tidak valid", () => {
+  const options = buildEndOptions("invalid");
+  assert.equal(options.length, 26);
+  assert.equal(options[0], "07:30");
+  assert.equal(options[25], "20:00");
 });
