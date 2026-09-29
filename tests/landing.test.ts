@@ -108,3 +108,16 @@ test("buildEndOptions mengembalikan daftar penuh bila start tidak valid", () => 
   assert.equal(options[0], "07:30");
   assert.equal(options[25], "20:00");
 });
+
+test("buildFacilitySearchUrl menyertakan rentang waktu multi-jam", () => {
+  assert.equal(
+    buildFacilitySearchUrl({
+      type: "lab",
+      location: "Gedung A",
+      date: "2026-09-20",
+      startTime: "09:00",
+      endTime: "12:00",
+    }),
+    "/facilities?type=lab&location=Gedung+A&date=2026-09-20&start_time=09%3A00&end_time=12%3A00"
+  );
+});
