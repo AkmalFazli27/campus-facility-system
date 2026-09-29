@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  hasMinimumReservationLeadTime,
   isPastStart,
+  minimumReservationDate,
   validateSlot,
 } from "@/lib/services/reservationService";
 
@@ -40,4 +42,23 @@ test("isPastStart membandingkan tanggal dan waktu dalam WIB", () => {
   assert.equal(isPastStart("2026-09-24", "10:00", now), true);
   assert.equal(isPastStart("2026-09-24", "10:30", now), false);
   assert.equal(isPastStart("2026-09-25", "07:00", now), false);
+});
+
+test("pengajuan H-3 menggunakan kalender WIB, termasuk pergantian hari", () => {
+  const beforeMidnight = new Date("2026-10-07T16:59:59.000Z"); // 23:59:59 WIB
+  const atMidnight = new Date("2026-10-07T17:00:00.000Z"); // 00:00 WIB 8 Oktober
+
+  assert.equal(minimumReservationDate(beforeMidnight), "2026-10-10");
+  assert.equal(hasMinimumReservationLeadTime("2026-10-09", beforeMidnight), false);
+  assert.equal(hasMinimumReservationLeadTime("2026-10-10", beforeMidnight), true);
+  assert.equal(hasMinimumReservationLeadTime("2026-10-11", beforeMidnight), true);
+  assert.equal(minimumReservationDate(atMidnight), "2026-10-11");
+  assert.equal(hasMinimumReservationLeadTime("2026-10-10", atMidnight), false);
+});
+
+test("batas H-3 tetap benar saat pergantian tahun", () => {
+  const now = new Date("2026-12-30T17:00:00.000Z"); // 31 Desember WIB
+  assert.equal(minimumReservationDate(now), "2027-01-03");
+  assert.equal(hasMinimumReservationLeadTime("2027-01-02", now), false);
+  assert.equal(hasMinimumReservationLeadTime("2027-01-03", now), true);
 });

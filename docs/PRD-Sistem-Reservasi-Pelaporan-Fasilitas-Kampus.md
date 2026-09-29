@@ -168,6 +168,7 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
 
 ### 7.1 Waktu reservasi
 
+- Pengajuan reservasi paling lambat **H-3 hari kalender Asia/Jakarta**: untuk penggunaan 10 Oktober, pengajuan terakhir 7 Oktober pukul 23.59 WIB. Aturan ini divalidasi di client dan server saat create; tidak dihitung sebagai 72 jam sebelum `start_time`.
 - Jam operasional: **07.00–20.00 Asia/Jakarta**, slot tetap **30 menit**: 07.00–07.30, 07.30–08.00, …, 19.30–20.00.
 - `start_time` dan `end_time` wajib di rentang operasional dan **kelipatan 30 menit**. Validasi di **server** (client hanya UX).
 - `end_time` > `start_time`. Tidak boleh lintas hari. `reservation_date` adalah 1 hari.
@@ -238,6 +239,7 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 - **AC1:** Pengguna login mengisi facility, tanggal, `start_time`, `end_time`, `purpose` → sukses `pending` bila valid.
 - **AC2:** `start/end` tidak kelipatan 30 menit atau di luar 07.00–20.00 → ditolak server 422 meski client di-bypass.
 - **AC3:** Fasilitas `inactive`/`maintenance` → ditolak.
+- **AC4:** Tanggal peminjaman lebih awal dari H-3 kalender WIB → ditolak server 422 meski batas tanggal di form di-bypass.
 
 ### US04 — Batalkan reservasi sendiri sebelum batas waktu
 

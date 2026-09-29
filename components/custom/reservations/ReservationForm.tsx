@@ -13,11 +13,14 @@ import {
   durationBetween,
   SLOT_STEP_MINUTES,
 } from "@/lib/helpers/slots";
-import { validateSlot } from "@/lib/services/reservationService";
+import {
+  hasMinimumReservationLeadTime,
+  minimumReservationDate,
+  validateSlot,
+} from "@/lib/services/reservationService";
 import { createReservationSchema } from "@/lib/validations/reservation";
 import {
   type AvailabilitySlot,
-  todayInJakarta,
   unavailableReasonForRange,
 } from "@/lib/reservation-ui";
 import ReservationSlotBar from "@/components/custom/reservations/ReservationSlotBar";
@@ -130,6 +133,12 @@ export default function ReservationForm({
       return;
     }
 
+    if (!hasMinimumReservationLeadTime(parsed.data.reservation_date)) {
+      setFieldErrors({ date: "Tanggal peminjaman minimal H-3 kalender (WIB)" });
+      toast.error("Pengajuan paling lambat H-3 sebelum tanggal peminjaman");
+      return;
+    }
+
     const slot = validateSlot(parsed.data.start_time, parsed.data.end_time);
     if (!slot.valid) {
       setFieldErrors({ time: slot.message });
@@ -208,9 +217,12 @@ export default function ReservationForm({
           id="resv-date"
           type="date"
           required
-          min={todayInJakarta()}
+          min={minimumReservationDate()}
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => {
+            setDate(e.target.value);
+            setFieldErrors((prev) => ({ ...prev, date: undefined }));
+          }}
           aria-invalid={Boolean(fieldErrors.date)}
           className="h-11 bg-white"
         />
@@ -348,6 +360,7 @@ export default function ReservationForm({
       </div>
 
       <p className="text-xs leading-5 text-ink-400">
+        Ajukan paling lambat H-3 kalender sebelum tanggal peminjaman (WIB).
         Jam operasional 07:00–20:00 dengan kelipatan 30 menit. Pengajuan
         berstatus menunggu persetujuan petugas.
       </p>
