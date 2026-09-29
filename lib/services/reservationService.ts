@@ -1,4 +1,22 @@
 import { isThirtyMinuteSlot, withinOperatingHours } from "@/lib/helpers/slots";
+import { todayInJakarta } from "@/lib/reservation-ui";
+
+export const MIN_RESERVATION_LEAD_DAYS = 3;
+
+// H-3 dihitung dari tanggal kalender WIB, bukan 72 jam sebelum jam mulai.
+export function minimumReservationDate(now: Date = new Date()): string {
+  const today = new Date(`${todayInJakarta(now)}T00:00:00.000Z`);
+  today.setUTCDate(today.getUTCDate() + MIN_RESERVATION_LEAD_DAYS);
+  return today.toISOString().slice(0, 10);
+}
+
+export function hasMinimumReservationLeadTime(
+  reservationDate: string,
+  now: Date = new Date(),
+): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(reservationDate) &&
+    reservationDate >= minimumReservationDate(now);
+}
 
 export type SlotValidationResult =
   | { valid: true }

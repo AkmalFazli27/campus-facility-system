@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { isPendingReservationExpired } from "@/lib/services/reservationExpiryService";
 import { checkConflict, validateSlot } from "@/lib/services/reservationService";
 
 const approvedReservationSelect = {
@@ -23,6 +24,7 @@ type ApprovedReservation = Prisma.ReservationGetPayload<{
 export type ApprovalResult =
   | { kind: "not-found" }
   | { kind: "not-pending" }
+  | { kind: "expired" }
   | { kind: "facility-unavailable" }
   | { kind: "invalid-slot"; message: string }
   | { kind: "conflict" }
@@ -43,22 +45,27 @@ export async function approveReservation(
   database: TransactionHost,
   reservationId: number,
   officerId: number,
+  now: () => Date = () => new Date(),
 ): Promise<ApprovalResult> {
   return database.$transaction(async (tx) => {
-    const lockedReservations = await tx.$queryRaw<Array<{ facilityId: number }>>`
-      SELECT facility_id AS facilityId
-      FROM reservations
-      WHERE id = ${reservationId}
-      FOR UPDATE
-    `;
-    const lockedReservation = lockedReservations[0];
-    if (!lockedReservation) return { kind: "not-found" };
+    const target = await tx.reservation.findUnique({
+      where: { id: reservationId },
+      select: { facilityId: true },
+    });
+    if (!target) return { kind: "not-found" };
 
-    // Semua approval pada fasilitas yang sama harus menunggu lock ini.
+    // Kunci fasilitas dahulu agar dua approval tidak saling menunggu baris
+    // reservasi masing-masing saat menolak pending yang bertabrakan.
     await tx.$queryRaw`
       SELECT id
       FROM facilities
-      WHERE id = ${lockedReservation.facilityId}
+      WHERE id = ${target.facilityId}
+      FOR UPDATE
+    `;
+    await tx.$queryRaw`
+      SELECT id
+      FROM reservations
+      WHERE id = ${reservationId}
       FOR UPDATE
     `;
 
@@ -75,6 +82,9 @@ export async function approveReservation(
     });
     if (!reservation) return { kind: "not-found" };
     if (reservation.status !== "PENDING") return { kind: "not-pending" };
+    if (isPendingReservationExpired(reservation.reservationDate, now())) {
+      return { kind: "expired" };
+    }
     if (reservation.facility.status !== "ACTIVE") {
       return { kind: "facility-unavailable" };
     }
@@ -93,19 +103,43 @@ export async function approveReservation(
     });
     if (conflict) return { kind: "conflict" };
 
+    const decisionTime = now();
+    if (isPendingReservationExpired(reservation.reservationDate, decisionTime)) {
+      return { kind: "expired" };
+    }
+
     const updated = await tx.reservation.update({
       where: { id: reservation.id },
       data: {
         status: "APPROVED",
         cancellationReason: null,
         processedBy: officerId,
-        processedAt: new Date(),
+        processedAt: decisionTime,
       },
       select: approvedReservationSelect,
     });
 
+    // Hanya pengajuan PENDING pada fasilitas/tanggal yang sama dan benar-benar
+    // overlap yang ditolak otomatis. Slot yang bersentuhan di tepi tetap bisa diproses.
+    await tx.reservation.updateMany({
+      where: {
+        id: { not: reservation.id },
+        facilityId: reservation.facility.id,
+        reservationDate: reservation.reservationDate,
+        status: "PENDING",
+        startTime: { lt: reservation.endTime },
+        endTime: { gt: reservation.startTime },
+      },
+      data: {
+        status: "REJECTED",
+        cancellationReason: `Ditolak otomatis karena jadwal bentrok dengan reservasi #${reservation.id} yang telah disetujui`,
+        processedBy: null,
+        processedAt: decisionTime,
+      },
+    });
+
     return { kind: "approved", reservation: updated };
-  });
+  }, { isolationLevel: "ReadCommitted" });
 }
 
 export async function rejectReservation(

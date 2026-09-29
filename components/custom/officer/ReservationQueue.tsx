@@ -388,7 +388,9 @@ export default function ReservationQueue() {
           <div className="flex items-end justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold text-ink-950">Daftar antrian</h2>
-              <p className="text-sm text-ink-600">{items.length} pengajuan ditemukan</p>
+              <p className="text-sm text-ink-600">
+                {items.length} pengajuan ditemukan · pengajuan terlama lebih dulu
+              </p>
             </div>
             {conflictCount > 0 && (
               <Badge className="border-red-200 bg-red-50 text-red-700">

@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { db } from "@/lib/db";
+import { expirePendingReservations } from "@/lib/services/reservationExpiryService";
 import {
   formatReservationDate,
   RESERVATION_STATUS_META,
@@ -63,6 +64,7 @@ export default async function UserDashboard({
   user: Pick<SessionUser, "id" | "name" | "userType" | "identityNumber">;
 }) {
   const now = new Date();
+  await expirePendingReservations(db, now);
   const [pendingCount, approvedReservations, completedCount, reportCount, reports] =
     await Promise.all([
       db.reservation.count({ where: { userId: user.id, status: "PENDING" } }),

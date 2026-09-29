@@ -32,6 +32,8 @@ export async function PATCH(
         return fail(404, "Reservasi tidak ditemukan");
       case "not-pending":
         return fail(422, "Hanya reservasi pending yang bisa disetujui");
+      case "expired":
+        return fail(422, "Batas persetujuan telah lewat (H-1 pukul 00.00 WIB)");
       case "facility-unavailable":
         return fail(422, "Fasilitas sedang tidak aktif atau dalam perbaikan");
       case "invalid-slot":

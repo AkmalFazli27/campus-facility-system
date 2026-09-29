@@ -10,10 +10,12 @@ const USER_NAV: DashboardNavItem[] = [
 
 const OFFICER_NAV: DashboardNavItem[] = [
   { href: "/officer/queue", label: "Antrian Petugas", section: "Petugas" },
+  { href: "/officer/reservations/history", label: "Riwayat Peminjaman", section: "Petugas" },
 ];
 
 const ADMIN_NAV: DashboardNavItem[] = [
   { href: "/dashboard", label: "Dashboard", section: "Admin" },
+  { href: "/officer/reservations/history", label: "Riwayat Peminjaman", section: "Admin" },
   { href: "/admin/facilities", label: "Kelola Fasilitas", section: "Admin" },
   { href: "/admin/recap", label: "Rekap Admin", section: "Admin" },
   { href: "/admin/users", label: "Verifikasi Pengguna", section: "Admin" },
@@ -30,6 +32,7 @@ export function isDashboardNavItemActive(pathname: string, href: string): boolea
 }
 
 export function getDashboardPageTitle(pathname: string): string {
+  if (pathname === "/officer/reservations/history") return "Riwayat peminjaman";
   if (pathname === "/officer" || pathname.startsWith("/officer/")) return "Antrian petugas";
   if (pathname === "/reservations" || pathname.startsWith("/reservations/")) return "Reservasi saya";
   if (pathname === "/reports" || pathname.startsWith("/reports/")) return "Laporan saya";

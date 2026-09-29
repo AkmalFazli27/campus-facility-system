@@ -4,6 +4,7 @@ export const RESERVATION_STATUSES = [
   "REJECTED",
   "CANCELLED_BY_USER",
   "CANCELLED_BY_OFFICER",
+  "CANCELLED_BY_SYSTEM",
   "COMPLETED",
 ] as const;
 
@@ -95,6 +96,10 @@ export const RESERVATION_STATUS_META: Record<
   CANCELLED_BY_OFFICER: {
     label: "Dibatalkan petugas",
     className: "border-red-200 bg-red-50 text-red-700",
+  },
+  CANCELLED_BY_SYSTEM: {
+    label: "Batal otomatis",
+    className: "border-slate-200 bg-slate-100 text-slate-700",
   },
   COMPLETED: {
     label: "Selesai",
