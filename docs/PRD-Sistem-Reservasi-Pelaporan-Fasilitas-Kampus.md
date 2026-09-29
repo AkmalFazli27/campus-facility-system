@@ -183,7 +183,7 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
   1. Saat **approve** (otoritatif — harus menolak jika bentrok).
   2. Saat **create** boleh memberi peringatan dini, tapi tidak menggantikan cek saat approve (karena race condition).
 - Transaksi approve harus `SELECT ... FOR UPDATE` atau unique constraint + retry untuk mencegah race.
-- Setelah satu reservasi di-approve, seluruh reservasi `pending` pada fasilitas dan tanggal yang sama dengan interval waktu tumpang tindih otomatis menjadi `cancelled_by_system` beserta alasan. Interval yang hanya bersentuhan di tepi tidak dibatalkan; persetujuan dan pembatalan dilakukan dalam satu transaksi.
+- Setelah satu reservasi di-approve, seluruh reservasi `pending` pada fasilitas dan tanggal yang sama dengan interval waktu tumpang tindih otomatis menjadi `rejected` dengan alasan bentrok dan tanpa petugas pemroses (keputusan sistem). Interval yang hanya bersentuhan di tepi tetap dapat diproses; persetujuan dan penolakan terjadi dalam satu transaksi. Riwayat pembatalan otomatis lama tetap sebagaimana tersimpan.
 - Mulai **H-1 pukul 00.00 WIB**, reservasi yang masih `pending` tidak boleh disetujui. Saat pengguna atau petugas membuka dashboard/daftar/detail reservasi, sistem menyinkronkan statusnya menjadi `cancelled_by_system` beserta alasan kedaluwarsa. Tanpa kunjungan, perubahan di database baru terjadi pada akses berikutnya.
 
 ### 7.3 Pembatalan
@@ -276,6 +276,7 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 - **AC1:** Petugas approve `pending` yang tidak bentrok → `approved`.
 - **AC2:** Jika bentrok dengan `approved` lain di facility+tanggal yang overlap → approve ditolak 409.
 - **AC3:** Reject `pending` → `rejected` dengan alasan.
+- **AC4:** Saat satu `pending` di-approve, `pending` lain yang overlap pada fasilitas dan tanggal yang sama otomatis `rejected` dengan alasan bentrok; slot yang hanya bersentuhan tidak ikut ditolak.
 
 ### US10 — Batalkan reservasi yang sudah disetujui (kondisi mendesak)
 

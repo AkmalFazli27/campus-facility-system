@@ -24,7 +24,7 @@ function createDatabase(options?: {
   const events: string[] = [];
   let rawQueryCount = 0;
   let updated = false;
-  let cancelledIds: number[] = [];
+  let rejectedIds: number[] = [];
 
   const transaction = {
     $queryRaw: async () => {
@@ -76,13 +76,15 @@ function createDatabase(options?: {
           startTime: { lt: Date };
           endTime: { gt: Date };
         };
-        data: { status: string; cancellationReason: string; processedBy: number | null };
+        data: { status: string; cancellationReason: string; processedBy: number | null; processedAt: Date };
       }) => {
-        events.push("cancel-overlapping-pending");
-        assert.equal(args.data.status, "CANCELLED_BY_SYSTEM");
+        events.push("reject-overlapping-pending");
+        assert.equal(args.data.status, "REJECTED");
+        assert.match(args.data.cancellationReason, /Ditolak otomatis karena jadwal bentrok/);
         assert.match(args.data.cancellationReason, /#21/);
         assert.equal(args.data.processedBy, null);
-        cancelledIds = (options?.pendingCandidates ?? [])
+        assert.ok(args.data.processedAt instanceof Date);
+        rejectedIds = (options?.pendingCandidates ?? [])
           .filter((row) => row.id !== args.where.id.not)
           .filter((row) => row.facilityId === args.where.facilityId)
           .filter((row) => row.reservationDate.getTime() === args.where.reservationDate.getTime())
@@ -90,7 +92,7 @@ function createDatabase(options?: {
           .filter((row) => row.startTime < args.where.startTime.lt)
           .filter((row) => row.endTime > args.where.endTime.gt)
           .map((row) => row.id);
-        return { count: cancelledIds.length };
+        return { count: rejectedIds.length };
       },
     },
   };
@@ -100,10 +102,10 @@ function createDatabase(options?: {
       callback(transaction),
   } as unknown as ApprovalDatabase;
 
-  return { database, events, wasUpdated: () => updated, cancelledIds: () => cancelledIds };
+  return { database, events, wasUpdated: () => updated, rejectedIds: () => rejectedIds };
 }
 
-test("approve mengunci fasilitas sebelum reservasi dan membatalkan bentrok dalam transaksi", async () => {
+test("approve mengunci fasilitas sebelum reservasi dan menolak bentrok dalam transaksi", async () => {
   const mock = createDatabase();
 
   const result = await approveReservation(mock.database, 21, 3, beforeExpiry);
@@ -116,12 +118,12 @@ test("approve mengunci fasilitas sebelum reservasi dan membatalkan bentrok dalam
     "read-reservation",
     "check-conflict",
     "update",
-    "cancel-overlapping-pending",
+    "reject-overlapping-pending",
   ]);
   assert.equal(mock.wasUpdated(), true);
 });
 
-test("approval hanya membatalkan pending yang overlap di fasilitas dan tanggal sama", async () => {
+test("approval hanya menolak pending yang overlap di fasilitas dan tanggal sama", async () => {
   const date = new Date("2026-10-01T00:00:00.000Z");
   const otherDate = new Date("2026-10-02T00:00:00.000Z");
   const candidate = (
@@ -153,7 +155,7 @@ test("approval hanya membatalkan pending yang overlap di fasilitas dan tanggal s
   });
 
   assert.equal((await approveReservation(mock.database, 21, 3, beforeExpiry)).kind, "approved");
-  assert.deepEqual(mock.cancelledIds(), [22, 23]);
+  assert.deepEqual(mock.rejectedIds(), [22, 23]);
 });
 
 test("approve tidak mengubah data ketika jadwal bentrok", async () => {
@@ -197,7 +199,7 @@ test("approve menolak H-1 tepat pukul 00.00 WIB tanpa mengubah status", async ()
 
   assert.deepEqual(result, { kind: "expired" });
   assert.equal(mock.wasUpdated(), false);
-  assert.deepEqual(mock.cancelledIds(), []);
+  assert.deepEqual(mock.rejectedIds(), []);
 });
 
 test("approve yang melewati batas saat pemeriksaan bentrok tidak jadi disetujui", async () => {

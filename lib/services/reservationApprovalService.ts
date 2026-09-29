@@ -55,7 +55,7 @@ export async function approveReservation(
     if (!target) return { kind: "not-found" };
 
     // Kunci fasilitas dahulu agar dua approval tidak saling menunggu baris
-    // reservasi masing-masing saat membatalkan pending yang bertabrakan.
+    // reservasi masing-masing saat menolak pending yang bertabrakan.
     await tx.$queryRaw`
       SELECT id
       FROM facilities
@@ -120,7 +120,7 @@ export async function approveReservation(
     });
 
     // Hanya pengajuan PENDING pada fasilitas/tanggal yang sama dan benar-benar
-    // overlap yang kalah. Slot yang bersentuhan di tepi tetap bisa diproses.
+    // overlap yang ditolak otomatis. Slot yang bersentuhan di tepi tetap bisa diproses.
     await tx.reservation.updateMany({
       where: {
         id: { not: reservation.id },
@@ -131,8 +131,8 @@ export async function approveReservation(
         endTime: { gt: reservation.startTime },
       },
       data: {
-        status: "CANCELLED_BY_SYSTEM",
-        cancellationReason: `Jadwal bentrok dengan reservasi #${reservation.id} yang telah disetujui`,
+        status: "REJECTED",
+        cancellationReason: `Ditolak otomatis karena jadwal bentrok dengan reservasi #${reservation.id} yang telah disetujui`,
         processedBy: null,
         processedAt: decisionTime,
       },
