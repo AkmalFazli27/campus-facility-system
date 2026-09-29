@@ -3,14 +3,9 @@ import { redirect } from "next/navigation";
 import { CalendarCheck2, ClipboardList } from "lucide-react";
 import DashboardShell from "@/app/dashboard/_components/DashboardShell";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReservationQueue from "@/components/custom/officer/ReservationQueue";
+import ReportQueue from "@/components/custom/officer/ReportQueue";
 import { getSessionUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -86,17 +81,11 @@ export default async function OfficerQueuePage() {
             <ReservationQueue />
           </TabsContent>
 
-          <TabsContent value="laporan" className="min-w-0 w-full">
-            <Card className="border-slate-200">
-              <CardHeader>
-                <CardTitle>Antrian laporan</CardTitle>
-                <CardDescription>
-                  Tab ini dikerjakan A4 (aliran laporan &amp; maintenance).
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="laporan" className="min-w-0 w-full">
+              <ReportQueue />
+            </TabsContent>
+          </Tabs>
+        </main>
       </div>
     </DashboardShell>
   );
