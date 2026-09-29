@@ -7,6 +7,7 @@ import {
   Building2,
   CalendarDays,
   Clock3,
+  ClockCheck,
   MapPin,
   Search,
 } from "lucide-react";
@@ -50,19 +51,22 @@ function SearchField({
   label,
   htmlFor,
   withDivider = true,
+  className,
   children,
 }: {
   icon: LucideIcon;
   label: string;
   htmlFor: string;
   withDivider?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
     <div
       className={cn(
         "flex min-w-0 flex-1 basis-0 items-center gap-3 px-3 py-2 lg:px-4",
-        withDivider && "lg:border-r lg:border-brand-100"
+        withDivider && "lg:border-r lg:border-brand-100",
+        className
       )}
     >
       <span
@@ -194,51 +198,53 @@ export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
 
       <SearchField
         icon={Clock3}
-        label="Jam Mulai – Selesai"
+        label="Jam Mulai"
         htmlFor="quick-start"
-        withDivider={false}
+        className="lg:max-w-40"
       >
-        <div className="flex items-center gap-2">
-          <Select value={startTime} onValueChange={handleStartChange}>
-            <SelectTrigger
-              id="quick-start"
-              aria-label="Jam mulai"
-              className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <SelectValue placeholder="Jam mulai">
-                {(value) => formatTimeLabel(String(value))}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {START_OPTIONS.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {formatTimeLabel(option)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span aria-hidden className="shrink-0 text-sm text-ink-400">
-            –
-          </span>
-          <Select value={endTime} onValueChange={handleEndChange}>
-            <SelectTrigger
-              id="quick-end"
-              aria-label="Jam selesai"
-              className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <SelectValue placeholder="Jam selesai">
-                {(value) => formatTimeLabel(String(value))}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {endOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {formatTimeLabel(option)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={startTime} onValueChange={handleStartChange}>
+          <SelectTrigger
+            id="quick-start"
+            className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <SelectValue placeholder="Jam mulai">
+              {(value) => formatTimeLabel(String(value))}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {START_OPTIONS.map((option) => (
+              <SelectItem key={option} value={option}>
+                {formatTimeLabel(option)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </SearchField>
+
+      <SearchField
+        icon={ClockCheck}
+        label="Jam Selesai"
+        htmlFor="quick-end"
+        withDivider={false}
+        className="lg:max-w-44"
+      >
+        <Select value={endTime} onValueChange={handleEndChange}>
+          <SelectTrigger
+            id="quick-end"
+            className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <SelectValue placeholder="Jam selesai">
+              {(value) => formatTimeLabel(String(value))}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {endOptions.map((option) => (
+              <SelectItem key={option} value={option}>
+                {formatTimeLabel(option)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="mt-1 text-[11px] text-ink-400">
           Kelipatan 30 menit • 07.00–20.00
         </p>
