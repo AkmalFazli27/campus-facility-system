@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import DashboardSidebar from "@/app/dashboard/_components/DashboardSidebar";
 import UserDashboard from "@/app/dashboard/_components/UserDashboard";
+import OfficerDashboard from "@/app/dashboard/_components/OfficerDashboard";
 import AdminDashboard from "@/app/dashboard/_components/AdminDashboard";
 import { getSessionUser } from "@/lib/session";
 
@@ -13,7 +14,6 @@ export default async function DashboardPage() {
   // Satu redirect ini memenuhi kontrak penjagaan ganda
   // (lapis 1: proxy.ts matcher /dashboard/:path*, lapis 2: di sini).
   if (!user) redirect("/login?next=/dashboard");
-  if (user.role === "OFFICER") redirect("/officer/queue");
 
   return (
     <div className="w-full lg:pl-[250px]">
@@ -22,6 +22,8 @@ export default async function DashboardPage() {
         <main className="flex min-w-0 flex-1 flex-col">
           {user.role === "USER" ? (
             <UserDashboard user={user} />
+          ) : user.role === "OFFICER" ? (
+            <OfficerDashboard user={user} />
           ) : (
             <AdminDashboard user={user} />
           )}
