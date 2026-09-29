@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
+import { expirePendingReservations } from "@/lib/services/reservationExpiryService";
 import {
   findOverlappingRanges,
   serializeReservation,
@@ -10,7 +11,7 @@ import { officerQueueQuerySchema } from "@/lib/validations/reservation";
 export const runtime = "nodejs";
 
 // US08 / FR-DASH-01 (parsial): antrian reservasi untuk petugas.
-// Default menampilkan PENDING terlama dulu (yang butuh aksi).
+// Default menampilkan PENDING; semua filter diurutkan menurut waktu pengajuan.
 export async function GET(request: Request) {
   const user = await getSessionUser();
   if (!user) return fail(401, "Belum login");
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
   const status = parsed.data.status ?? "PENDING";
 
   try {
+    await expirePendingReservations(db);
     const reservations = await db.reservation.findMany({
       where: {
         status:
@@ -54,9 +56,8 @@ export async function GET(request: Request) {
           : {}),
       },
       orderBy: [
-        { reservationDate: "asc" },
-        { startTime: "asc" },
         { createdAt: "asc" },
+        { id: "asc" },
       ],
       select: {
         id: true,

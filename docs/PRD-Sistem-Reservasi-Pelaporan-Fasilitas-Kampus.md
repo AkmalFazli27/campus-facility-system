@@ -184,6 +184,7 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
   2. Saat **create** boleh memberi peringatan dini, tapi tidak menggantikan cek saat approve (karena race condition).
 - Transaksi approve harus `SELECT ... FOR UPDATE` atau unique constraint + retry untuk mencegah race.
 - Setelah satu reservasi di-approve, seluruh reservasi `pending` pada fasilitas dan tanggal yang sama dengan interval waktu tumpang tindih otomatis menjadi `cancelled_by_system` beserta alasan. Interval yang hanya bersentuhan di tepi tidak dibatalkan; persetujuan dan pembatalan dilakukan dalam satu transaksi.
+- Mulai **H-1 pukul 00.00 WIB**, reservasi yang masih `pending` tidak boleh disetujui. Saat pengguna atau petugas membuka dashboard/daftar/detail reservasi, sistem menyinkronkan statusnya menjadi `cancelled_by_system` beserta alasan kedaluwarsa. Tanpa kunjungan, perubahan di database baru terjadi pada akses berikutnya.
 
 ### 7.3 Pembatalan
 
@@ -266,7 +267,7 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 
 ### US08 — Dashboard/antrian petugas (reservasi & laporan pending)
 
-- **AC1:** Petugas melihat antrian `pending`/`new` terurut (terlama dulu atau prioritas), dengan counter.
+- **AC1:** Petugas melihat antrian `pending` reservasi berdasarkan waktu pengajuan (`created_at` terlama dahulu, lalu `id`), serta antrian laporan `new`, dengan counter. Riwayat pengguna tetap diurutkan terbarunya dahulu.
 - **AC2:** Tidak ada yang terlewat: filter default menampilkan yang butuh aksi.
 
 ### US09 — Setujui/tolak reservasi manual + cegah bentrok

@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { isPendingReservationExpired } from "@/lib/services/reservationExpiryService";
 import { checkConflict, validateSlot } from "@/lib/services/reservationService";
 
 const approvedReservationSelect = {
@@ -23,6 +24,7 @@ type ApprovedReservation = Prisma.ReservationGetPayload<{
 export type ApprovalResult =
   | { kind: "not-found" }
   | { kind: "not-pending" }
+  | { kind: "expired" }
   | { kind: "facility-unavailable" }
   | { kind: "invalid-slot"; message: string }
   | { kind: "conflict" }
@@ -43,6 +45,7 @@ export async function approveReservation(
   database: TransactionHost,
   reservationId: number,
   officerId: number,
+  now: () => Date = () => new Date(),
 ): Promise<ApprovalResult> {
   return database.$transaction(async (tx) => {
     const target = await tx.reservation.findUnique({
@@ -79,6 +82,9 @@ export async function approveReservation(
     });
     if (!reservation) return { kind: "not-found" };
     if (reservation.status !== "PENDING") return { kind: "not-pending" };
+    if (isPendingReservationExpired(reservation.reservationDate, now())) {
+      return { kind: "expired" };
+    }
     if (reservation.facility.status !== "ACTIVE") {
       return { kind: "facility-unavailable" };
     }
@@ -97,13 +103,18 @@ export async function approveReservation(
     });
     if (conflict) return { kind: "conflict" };
 
+    const decisionTime = now();
+    if (isPendingReservationExpired(reservation.reservationDate, decisionTime)) {
+      return { kind: "expired" };
+    }
+
     const updated = await tx.reservation.update({
       where: { id: reservation.id },
       data: {
         status: "APPROVED",
         cancellationReason: null,
         processedBy: officerId,
-        processedAt: new Date(),
+        processedAt: decisionTime,
       },
       select: approvedReservationSelect,
     });
@@ -123,12 +134,12 @@ export async function approveReservation(
         status: "CANCELLED_BY_SYSTEM",
         cancellationReason: `Jadwal bentrok dengan reservasi #${reservation.id} yang telah disetujui`,
         processedBy: null,
-        processedAt: new Date(),
+        processedAt: decisionTime,
       },
     });
 
     return { kind: "approved", reservation: updated };
-  });
+  }, { isolationLevel: "ReadCommitted" });
 }
 
 export async function rejectReservation(

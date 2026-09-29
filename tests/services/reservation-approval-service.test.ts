@@ -6,6 +6,7 @@ import {
 } from "@/lib/services/reservationApprovalService";
 
 type ApprovalDatabase = Parameters<typeof approveReservation>[0];
+const beforeExpiry = () => new Date("2026-09-29T16:59:59.000Z");
 
 function createDatabase(options?: {
   status?: "PENDING" | "APPROVED";
@@ -105,7 +106,7 @@ function createDatabase(options?: {
 test("approve mengunci fasilitas sebelum reservasi dan membatalkan bentrok dalam transaksi", async () => {
   const mock = createDatabase();
 
-  const result = await approveReservation(mock.database, 21, 3);
+  const result = await approveReservation(mock.database, 21, 3, beforeExpiry);
 
   assert.equal(result.kind, "approved");
   assert.deepEqual(mock.events, [
@@ -151,7 +152,7 @@ test("approval hanya membatalkan pending yang overlap di fasilitas dan tanggal s
     ],
   });
 
-  assert.equal((await approveReservation(mock.database, 21, 3)).kind, "approved");
+  assert.equal((await approveReservation(mock.database, 21, 3, beforeExpiry)).kind, "approved");
   assert.deepEqual(mock.cancelledIds(), [22, 23]);
 });
 
@@ -165,7 +166,7 @@ test("approve tidak mengubah data ketika jadwal bentrok", async () => {
     ],
   });
 
-  const result = await approveReservation(mock.database, 21, 3);
+  const result = await approveReservation(mock.database, 21, 3, beforeExpiry);
 
   assert.deepEqual(result, { kind: "conflict" });
   assert.equal(mock.wasUpdated(), false);
@@ -175,14 +176,37 @@ test("approve memvalidasi ulang status reservasi dan fasilitas setelah lock", as
   const processed = createDatabase({ status: "APPROVED" });
   const maintenance = createDatabase({ facilityStatus: "UNDER_MAINTENANCE" });
 
-  assert.deepEqual(await approveReservation(processed.database, 21, 3), {
+  assert.deepEqual(await approveReservation(processed.database, 21, 3, beforeExpiry), {
     kind: "not-pending",
   });
-  assert.deepEqual(await approveReservation(maintenance.database, 21, 3), {
+  assert.deepEqual(await approveReservation(maintenance.database, 21, 3, beforeExpiry), {
     kind: "facility-unavailable",
   });
   assert.equal(processed.wasUpdated(), false);
   assert.equal(maintenance.wasUpdated(), false);
+});
+
+test("approve menolak H-1 tepat pukul 00.00 WIB tanpa mengubah status", async () => {
+  const mock = createDatabase();
+  const result = await approveReservation(
+    mock.database,
+    21,
+    3,
+    () => new Date("2026-09-29T17:00:00.000Z"), // 30 Sep 00:00 WIB
+  );
+
+  assert.deepEqual(result, { kind: "expired" });
+  assert.equal(mock.wasUpdated(), false);
+  assert.deepEqual(mock.cancelledIds(), []);
+});
+
+test("approve yang melewati batas saat pemeriksaan bentrok tidak jadi disetujui", async () => {
+  const mock = createDatabase();
+  const times = [beforeExpiry(), new Date("2026-09-29T17:00:00.000Z")];
+  const result = await approveReservation(mock.database, 21, 3, () => times.shift()!);
+
+  assert.deepEqual(result, { kind: "expired" });
+  assert.equal(mock.wasUpdated(), false);
 });
 
 test("reject memakai update bersyarat agar tidak menimpa keputusan concurrent", async () => {
