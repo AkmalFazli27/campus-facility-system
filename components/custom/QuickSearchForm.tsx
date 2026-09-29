@@ -245,9 +245,6 @@ export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
             ))}
           </SelectContent>
         </Select>
-        <p className="mt-1 text-[11px] text-ink-400">
-          Kelipatan 30 menit • 07.00–20.00
-        </p>
         {timeError && (
           <p role="alert" className="mt-1 text-xs font-medium text-red-600">
             {timeError}
