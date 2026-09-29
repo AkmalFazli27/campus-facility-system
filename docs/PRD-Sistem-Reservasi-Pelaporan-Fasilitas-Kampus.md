@@ -269,6 +269,7 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 
 - **AC1:** Petugas melihat antrian `pending` reservasi berdasarkan waktu pengajuan (`created_at` terlama dahulu, lalu `id`), serta antrian laporan `new`, dengan counter. Riwayat pengguna tetap diurutkan terbarunya dahulu.
 - **AC2:** Tidak ada yang terlewat: filter default menampilkan yang butuh aksi.
+- **AC3:** Petugas dapat membuka riwayat seluruh reservasi lintas petugas, memfilter status dan tanggal penggunaan, serta melihat alasan dan petugas pemroses.
 
 ### US09 — Setujui/tolak reservasi manual + cegah bentrok
 
@@ -532,6 +533,7 @@ GET    /reservations/:id                (owner|officer|admin)
 PATCH  /reservations/:id/cancel         (owner, sebelum start_time)
 
 GET    /officer/reservations?status=pending|approved&facility_id=&date=
+GET    /officer/reservations/history?status=&from=&to=&page=  (officer|admin; semua pemohon, terbaru dahulu)
 PATCH  /officer/reservations/:id/approve   (officer) -> 409 jika bentrok
 PATCH  /officer/reservations/:id/reject    { reason }
 PATCH  /officer/reservations/:id/cancel    { reason } (dari approved)
@@ -669,6 +671,7 @@ campus-facility-system/          # root repo (Next.js app)
 - `/reservations` (user) — list + filter status + detail + cancel *(target link sidebar "Reservasi Saya")*
 - `/reports` (user) — list + detail + form buat laporan *(target link sidebar "Laporan Saya")*
 - `/officer/queue` — dua tab: Reservasi pending & Laporan new/in_progress + aksi *(target link "Antrian Petugas")*
+- `/officer/reservations/history` — riwayat reservasi lintas petugas dengan filter status/tanggal, detail, dan pagination *(target link "Riwayat Peminjaman")*
 - `/admin/facilities` — CRUD + status *(target link "Kelola Fasilitas")*
 - `/admin/users` — create officer/user + verify/reject pending
 - `/admin/recap` — filter + preview tabel + Export PDF *(target link "Rekap Admin"; preview juga muncul di dashboard admin)*
