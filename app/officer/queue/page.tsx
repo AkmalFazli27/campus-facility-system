@@ -85,7 +85,6 @@ export default async function OfficerQueuePage() {
               <ReportQueue />
             </TabsContent>
           </Tabs>
-        </main>
       </div>
     </DashboardShell>
   );
