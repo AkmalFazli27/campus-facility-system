@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
 import {
@@ -75,7 +76,12 @@ export async function PATCH(
     const { userId: _owner, ...rest } = reservation;
     void _owner;
     const updated = await db.reservation.update({
-      where: { id: reservation.id },
+      // Jangan menimpa pembatalan otomatis apabila approval berjalan bersamaan.
+      where: {
+        id: reservation.id,
+        userId: user.id,
+        status: { in: ["PENDING", "APPROVED"] },
+      },
       data: {
         status: "CANCELLED_BY_USER",
         cancellationReason: parsedBody.data.reason || null,
@@ -96,6 +102,9 @@ export async function PATCH(
     void rest;
     return ok({ reservation: serializeReservation(updated) });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return fail(422, "Status reservasi sudah berubah, muat ulang riwayat reservasi");
+    }
     console.error(`PATCH /api/reservations/${parsedId.data}/cancel failed`, error);
     return fail(500, "Gagal membatalkan reservasi");
   }

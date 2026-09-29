@@ -183,6 +183,7 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
   1. Saat **approve** (otoritatif — harus menolak jika bentrok).
   2. Saat **create** boleh memberi peringatan dini, tapi tidak menggantikan cek saat approve (karena race condition).
 - Transaksi approve harus `SELECT ... FOR UPDATE` atau unique constraint + retry untuk mencegah race.
+- Setelah satu reservasi di-approve, seluruh reservasi `pending` pada fasilitas dan tanggal yang sama dengan interval waktu tumpang tindih otomatis menjadi `cancelled_by_system` beserta alasan. Interval yang hanya bersentuhan di tepi tidak dibatalkan; persetujuan dan pembatalan dilakukan dalam satu transaksi.
 
 ### 7.3 Pembatalan
 
@@ -443,7 +444,7 @@ Index: `INDEX(type)`, `INDEX(location)`, `INDEX(status)`, `INDEX(capacity)`
 | start_time | TIME | NOT NULL |
 | end_time | TIME | NOT NULL |
 | purpose | TEXT | NOT NULL |
-| status | ENUM('pending','approved','rejected','cancelled_by_user','cancelled_by_officer','completed') | NOT NULL, DEFAULT 'pending' |
+| status | ENUM('pending','approved','rejected','cancelled_by_user','cancelled_by_officer','cancelled_by_system','completed') | NOT NULL, DEFAULT 'pending' |
 | cancellation_reason | TEXT | NULL |
 | processed_by | BIGINT UNSIGNED | FK → users.id, NULL |
 | processed_at | DATETIME | NULL |

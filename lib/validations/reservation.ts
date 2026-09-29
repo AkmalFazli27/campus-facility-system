@@ -23,6 +23,7 @@ export const reservationStatusSchema = z.preprocess(
       "REJECTED",
       "CANCELLED_BY_USER",
       "CANCELLED_BY_OFFICER",
+      "CANCELLED_BY_SYSTEM",
       "COMPLETED",
     ],
     { error: "Status reservasi tidak valid" },
