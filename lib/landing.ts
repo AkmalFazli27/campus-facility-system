@@ -54,6 +54,33 @@ export function buildTimeSlots(): TimeSlot[] {
   return slots;
 }
 
+// Opsi jam mulai: 07.00-19.30 step 30 menit (26 opsi, start tiap slot).
+export function buildStartOptions(): string[] {
+  const options: string[] = [];
+  for (let minutes = 7 * 60; minutes < 20 * 60; minutes += 30) {
+    const value = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(
+      minutes % 60
+    ).padStart(2, "0")}`;
+    options.push(value);
+  }
+  return options;
+}
+
+// Opsi jam selesai: 07.30-20.00 step 30 menit (26 opsi, end tiap slot),
+// disaring > start. Start tidak valid → daftar penuh.
+export function buildEndOptions(start: string): string[] {
+  const options: string[] = [];
+  for (let minutes = 7 * 60; minutes < 20 * 60; minutes += 30) {
+    const endMinutes = minutes + 30;
+    const value = `${String(Math.floor(endMinutes / 60)).padStart(2, "0")}:${String(
+      endMinutes % 60
+    ).padStart(2, "0")}`;
+    options.push(value);
+  }
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(start)) return options;
+  return options.filter((time) => time > start);
+}
+
 export function facilityStatusLabel(
   status: "ACTIVE" | "UNDER_MAINTENANCE" | "INACTIVE"
 ): string {
