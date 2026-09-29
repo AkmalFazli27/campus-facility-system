@@ -202,6 +202,7 @@ export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
           <Select value={startTime} onValueChange={handleStartChange}>
             <SelectTrigger
               id="quick-start"
+              aria-label="Jam mulai"
               className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <SelectValue placeholder="Jam mulai">
@@ -222,6 +223,7 @@ export default function QuickSearchForm({ locations }: QuickSearchFormProps) {
           <Select value={endTime} onValueChange={handleEndChange}>
             <SelectTrigger
               id="quick-end"
+              aria-label="Jam selesai"
               className="h-8 w-full min-w-0 border-none bg-transparent px-0 text-sm font-semibold text-ink-950 shadow-none focus-visible:ring-2 focus-visible:ring-brand-500"
             >
               <SelectValue placeholder="Jam selesai">
