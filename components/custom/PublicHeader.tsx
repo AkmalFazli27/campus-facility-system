@@ -5,8 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  AlertTriangle,
-  CalendarCheck2,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -232,37 +230,13 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 <DialogClose
                   render={
                     <Link
-                      href="/dashboard"
+                      href={getHeaderDashboardHref(user.role as Role)}
                       className={cn(buttonVariants(), "w-full rounded-full bg-brand-500 hover:bg-brand-600")}
                     >
                       Dashboard
                     </Link>
                   }
                 />
-                {user.role === "USER" && (
-                  <>
-                    <DialogClose
-                      render={
-                        <Link
-                          href="/reservations"
-                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
-                        >
-                          Reservasi Saya
-                        </Link>
-                      }
-                    />
-                    <DialogClose
-                      render={
-                        <Link
-                          href="/reports"
-                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
-                        >
-                          Laporan Kerusakan
-                        </Link>
-                      }
-                    />
-                  </>
-                )}
                 <Button
                   variant="outline"
                   onClick={() => setConfirmOpen(true)}
