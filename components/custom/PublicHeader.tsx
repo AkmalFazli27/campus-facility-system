@@ -5,8 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  AlertTriangle,
-  CalendarCheck2,
   ChevronDown,
   LayoutDashboard,
   LogOut,
@@ -32,6 +30,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { isAuthRoute, isDashboardRoute } from "@/lib/landing";
+import { getHeaderDashboardHref } from "@/lib/dashboard-nav";
+import type { Role } from "@/lib/authorize";
 
 export type HeaderUser = {
   name: string;
@@ -144,39 +144,12 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                   <p className="truncate text-xs text-ink-500">{user.email}</p>
                 </div>
                 <Link
-                  href="/dashboard"
+                  href={getHeaderDashboardHref(user.role as Role)}
                   className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
                 >
                   <LayoutDashboard aria-hidden className="size-4 text-brand-600" />
                   Dashboard
                 </Link>
-                {user.role === "USER" && (
-                  <>
-                    <Link
-                      href="/reservations"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-                    >
-                      <CalendarCheck2 aria-hidden className="size-4 text-sky-600" />
-                      Reservasi Saya
-                    </Link>
-                    <Link
-                      href="/reports"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-                    >
-                      <AlertTriangle aria-hidden className="size-4 text-amber-600" />
-                      Laporan Kerusakan
-                    </Link>
-                  </>
-                )}
-                {user.role === "OFFICER" && (
-                  <Link
-                    href="/officer/queue"
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-                  >
-                    <CalendarCheck2 aria-hidden className="size-4 text-sky-600" />
-                    Antrian Petugas
-                  </Link>
-                )}
                 <button
                   type="button"
                   onClick={() => setConfirmOpen(true)}
@@ -257,37 +230,13 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 <DialogClose
                   render={
                     <Link
-                      href="/dashboard"
+                      href={getHeaderDashboardHref(user.role as Role)}
                       className={cn(buttonVariants(), "w-full rounded-full bg-brand-500 hover:bg-brand-600")}
                     >
                       Dashboard
                     </Link>
                   }
                 />
-                {user.role === "USER" && (
-                  <>
-                    <DialogClose
-                      render={
-                        <Link
-                          href="/reservations"
-                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
-                        >
-                          Reservasi Saya
-                        </Link>
-                      }
-                    />
-                    <DialogClose
-                      render={
-                        <Link
-                          href="/reports"
-                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
-                        >
-                          Laporan Kerusakan
-                        </Link>
-                      }
-                    />
-                  </>
-                )}
                 <Button
                   variant="outline"
                   onClick={() => setConfirmOpen(true)}

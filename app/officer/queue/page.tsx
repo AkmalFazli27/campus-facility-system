@@ -81,11 +81,10 @@ export default async function OfficerQueuePage() {
             <ReservationQueue />
           </TabsContent>
 
-            <TabsContent value="laporan" className="min-w-0 w-full">
-              <ReportQueue />
-            </TabsContent>
+          <TabsContent value="laporan" className="min-w-0 w-full">
+            <ReportQueue />
+          </TabsContent>
           </Tabs>
-        </main>
       </div>
     </DashboardShell>
   );
