@@ -27,6 +27,11 @@ export function getDashboardNav(role: Role): DashboardNavItem[] {
   return USER_NAV;
 }
 
+export function getHeaderDashboardHref(role: Role): string {
+  if (role === "OFFICER") return "/officer/queue";
+  return "/dashboard";
+}
+
 export function isDashboardNavItemActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
