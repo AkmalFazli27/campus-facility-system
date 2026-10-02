@@ -154,6 +154,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 </div>
                 <Link
                   href={getHeaderDashboardHref(user.role as Role)}
+                  onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
                 >
                   <LayoutDashboard aria-hidden className="size-4 text-brand-600" />
@@ -161,7 +162,10 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 </Link>
                 <button
                   type="button"
-                  onClick={() => setConfirmOpen(true)}
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setConfirmOpen(true);
+                  }}
                   disabled={loggingOut}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none disabled:opacity-60"
                 >
@@ -247,14 +251,18 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                     </Link>
                   }
                 />
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmOpen(true)}
-                  disabled={loggingOut}
-                  className="w-full rounded-full"
-                >
-                  {loggingOut ? "Keluar..." : "Keluar"}
-                </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmOpen(true)}
+                      disabled={loggingOut}
+                      className="w-full rounded-full"
+                    >
+                      {loggingOut ? "Keluar..." : "Keluar"}
+                    </Button>
+                  }
+                />
               </div>
             ) : (
               <div className="flex gap-2 pt-2">
