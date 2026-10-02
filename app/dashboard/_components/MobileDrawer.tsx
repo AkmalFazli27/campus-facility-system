@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Home, X } from "lucide-react";
 import DashboardLogoutButton from "@/app/dashboard/_components/DashboardLogoutButton";
+import AccountSwitcher from "@/components/custom/AccountSwitcher";
 import { SidebarNav, type SidebarUser } from "@/app/dashboard/_components/DashboardSidebar";
 import type { Role } from "@/lib/authorize";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,7 @@ export default function MobileDrawer({
               <p className="truncate text-xs text-ink-600">{role === "ADMIN" ? "Admin" : role === "OFFICER" ? "Petugas" : "Pengguna"}</p>
             </div>
           </div>
+          <AccountSwitcher className="rounded-2xl border border-slate-100 bg-white p-1" />
           <DashboardLogoutButton className="rounded-full" />
         </div>
       </div>

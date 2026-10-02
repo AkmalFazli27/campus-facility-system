@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,6 +17,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import DashboardLogoutButton from "@/app/dashboard/_components/DashboardLogoutButton";
+import AccountSwitcher from "@/components/custom/AccountSwitcher";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { getDashboardNav, isDashboardNavItemActive, roleLabel } from "@/lib/dashboard-nav";
 import type { Role } from "@/lib/authorize";
 import type { SessionUser } from "@/lib/session";
@@ -95,6 +102,7 @@ export default function DashboardSidebar({
   onToggle?: () => void;
 }) {
   const initial = user.name.trim().charAt(0).toUpperCase() || "?";
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   return (
     <>
       <aside
@@ -157,19 +165,44 @@ export default function DashboardSidebar({
           </Link>
         </div>
         <div className={cn("flex w-full flex-col gap-2 rounded-2xl bg-slate-50 p-3", collapsed && "items-center bg-transparent p-0")}>
-          <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-            <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
-              {initial}
-            </span>
-            {!collapsed && (
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ink-950">{user.name}</p>
-                <p className="truncate text-xs text-ink-600">
-                  <UserSubtitle user={user} role={role} />
-                </p>
-              </div>
-            )}
-          </div>
+          <Popover open={accountMenuOpen} onOpenChange={setAccountMenuOpen}>
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl text-left transition-colors hover:bg-white focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none",
+                    collapsed && "justify-center",
+                  )}
+                >
+                  <span
+                    aria-hidden
+                    className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white"
+                  >
+                    {initial}
+                  </span>
+                  {!collapsed && (
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-ink-950">
+                        {user.name}
+                      </p>
+                      <p className="truncate text-xs text-ink-600">
+                        <UserSubtitle user={user} role={role} />
+                      </p>
+                    </div>
+                  )}
+                </button>
+              }
+            />
+            <PopoverContent
+              align="start"
+              side="top"
+              sideOffset={8}
+              className="w-72 rounded-2xl p-2"
+            >
+              <AccountSwitcher onDone={() => setAccountMenuOpen(false)} />
+            </PopoverContent>
+          </Popover>
           <DashboardLogoutButton className="rounded-full" iconOnly={collapsed} />
         </div>
       </aside>

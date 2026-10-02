@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { isAuthRoute, isDashboardRoute } from "@/lib/landing";
 import { getHeaderDashboardHref } from "@/lib/dashboard-nav";
 import type { Role } from "@/lib/authorize";
+import AccountSwitcher from "@/components/custom/AccountSwitcher";
 
 export type HeaderUser = {
   name: string;
@@ -50,6 +51,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   if (isAuthRoute(pathname)) return null;
   if (isDashboardRoute(pathname)) return null;
@@ -60,8 +62,10 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (!res.ok) throw new Error("logout gagal");
+      const json = (await res.json()) as { data?: { activeId?: number | null } };
+      const activeId = json?.data?.activeId ?? null;
       setConfirmOpen(false);
-      router.push("/");
+      router.push(activeId != null ? "/dashboard" : "/");
       router.refresh();
     } catch {
       toast.error("Gagal keluar");
@@ -119,7 +123,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
 
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
-            <Popover>
+            <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
               <PopoverTrigger
                 aria-haspopup="menu"
                 className="inline-flex max-h-11 min-h-11 items-center gap-1.5 rounded-full bg-brand-50 px-4 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
@@ -137,6 +141,11 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 sideOffset={8}
                 className="w-64 rounded-2xl p-2"
               >
+                <AccountSwitcher
+                  onDone={() => setUserMenuOpen(false)}
+                  className="pb-1"
+                />
+                <div className="my-1 h-px bg-slate-100" />
                 <div className="px-3 py-2">
                   <p className="truncate text-sm font-semibold text-ink-950">
                     {user.name}
@@ -227,6 +236,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                   </p>
                   <p className="truncate text-xs text-ink-500">{user.email}</p>
                 </div>
+                <AccountSwitcher className="rounded-2xl border border-slate-100 p-1" />
                 <DialogClose
                   render={
                     <Link

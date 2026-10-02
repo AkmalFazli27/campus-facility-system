@@ -2,7 +2,16 @@ import { cookies } from "next/headers";
 import type { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
-import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "@/lib/constants";
+import {
+  ACCOUNTS_COOKIE,
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+} from "@/lib/constants";
+import {
+  parseSavedTokens,
+  serializeSavedTokens,
+  type SavedAccountToken,
+} from "@/lib/accounts";
 
 // Pasang cookie sesi httpOnly (PRD §17: SameSite=Lax, Secure di prod).
 export function setSessionCookie(response: NextResponse, token: string) {
@@ -19,6 +28,39 @@ export function setSessionCookie(response: NextResponse, token: string) {
 // Hapus cookie sesi (logout).
 export function clearSessionCookie(response: NextResponse) {
   response.cookies.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+  return response;
+}
+
+// Baca daftar token akun tersimpan dari cookie (bukan verifikasi).
+export async function getSavedTokens(): Promise<SavedAccountToken[]> {
+  const raw = (await cookies()).get(ACCOUNTS_COOKIE)?.value;
+  return parseSavedTokens(raw);
+}
+
+// Simpan daftar token akun tersimpan (httpOnly, SameSite=Lax).
+export function setSavedAccountsCookie(
+  response: NextResponse,
+  tokens: SavedAccountToken[],
+) {
+  response.cookies.set(ACCOUNTS_COOKIE, serializeSavedTokens(tokens), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: SESSION_MAX_AGE_SECONDS,
+  });
+  return response;
+}
+
+// Hapus cookie daftar akun (logout semua).
+export function clearSavedAccountsCookie(response: NextResponse) {
+  response.cookies.set(ACCOUNTS_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

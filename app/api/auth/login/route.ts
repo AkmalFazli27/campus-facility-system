@@ -3,7 +3,12 @@ import { db } from "@/lib/db";
 import { signSession, verifyPassword } from "@/lib/auth";
 import { loginSchema } from "@/lib/validations/auth";
 import { fail } from "@/lib/http";
-import { setSessionCookie } from "@/lib/session";
+import {
+  setSessionCookie,
+  getSavedTokens,
+  setSavedAccountsCookie,
+} from "@/lib/session";
+import { mergeAccountToken } from "@/lib/accounts";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -42,6 +47,9 @@ export async function POST(request: Request) {
   }
 
   const token = await signSession({ id: user.id, role: user.role });
+  const saved = await getSavedTokens();
+  const nextSaved = mergeAccountToken(saved, { id: user.id, token });
+
   const response = NextResponse.json({
     success: true,
     data: {
@@ -58,5 +66,7 @@ export async function POST(request: Request) {
       token,
     },
   });
-  return setSessionCookie(response, token);
+  setSessionCookie(response, token);
+  setSavedAccountsCookie(response, nextSaved);
+  return response;
 }
