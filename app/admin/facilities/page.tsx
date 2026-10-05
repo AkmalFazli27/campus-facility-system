@@ -2,48 +2,44 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardSidebar from "@/app/dashboard/_components/DashboardSidebar";
 import { Badge } from "@/components/ui/badge";
-import RecapAdminView from "@/components/custom/admin/RecapAdminView";
+import FacilityManagementView from "@/components/custom/admin/FacilityManagementView";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
-import {
-  getDamageRecap,
-  getOccupancyRecap,
-} from "@/lib/services/recapService";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rekap Admin & Ekspor PDF | KampusSpace",
-  description: "Laporan rekapitulasi okupansi fasilitas dan frekuensi kerusakan kampus.",
+  title: "Kelola Master Data Fasilitas | KampusSpace",
+  description: "Tambah, edit, dan kelola status operasional fasilitas kampus.",
 };
 
-export default async function AdminRecapPage() {
+export default async function AdminFacilitiesPage() {
   const user = await getSessionUser();
   if (!user) {
-    redirect("/login?next=/admin/recap");
+    redirect("/login?next=/admin/facilities");
   }
 
   if (user.role !== "ADMIN") {
     redirect("/?error=forbidden");
   }
 
-  const [facilities, initialOccupancy, initialDamage] = await Promise.all([
-    db.facility.findMany({
-      select: {
-        id: true,
-        name: true,
-        location: true,
-        type: true,
-      },
-      orderBy: { name: "asc" },
-    }),
-    getOccupancyRecap({}),
-    getDamageRecap({}),
-  ]);
+  const facilities = await db.facility.findMany({
+    select: {
+      id: true,
+      name: true,
+      type: true,
+      location: true,
+      capacity: true,
+      description: true,
+      status: true,
+      createdAt: true,
+    },
+    orderBy: [{ status: "asc" }, { name: "asc" }],
+  });
 
   return (
     <div className="w-full lg:pl-[250px]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 sm:px-6 py-8 sm:py-10">
         <DashboardSidebar role={user.role} user={user} />
         <main className="flex min-w-0 flex-1 flex-col gap-8">
           {/* Header Section */}
@@ -54,19 +50,15 @@ export default async function AdminRecapPage() {
               </Badge>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl">
-              Rekapitulasi &amp; Ekspor Laporan
+              Kelola Master Data Fasilitas
             </h1>
             <p className="text-sm text-ink-600 sm:text-base max-w-2xl">
-              Pantau utilisasi ruang serta statistik kerusakan sarana prasarana. Ekspor rekapitulasi data resmi dalam format PDF standar kampus.
+              Tambah fasilitas baru, ubah kapasitas dan deskripsi, serta atur status operasional fasilitas (Aktif, Perbaikan, atau Nonaktif).
             </p>
           </section>
 
-          {/* Interactive Recap & Export Component */}
-          <RecapAdminView
-            facilities={facilities}
-            initialOccupancy={initialOccupancy}
-            initialDamage={initialDamage}
-          />
+          {/* Interactive Facility Management View */}
+          <FacilityManagementView initialFacilities={facilities} />
         </main>
       </div>
     </div>
