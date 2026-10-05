@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
+import { expirePendingReservations } from "@/lib/services/reservationExpiryService";
 import { serializeReservation } from "@/lib/services/reservationService";
 import { getSessionUser } from "@/lib/session";
 import { reservationIdSchema } from "@/lib/validations/reservation";
@@ -18,6 +19,7 @@ export async function GET(
   if (!parsedId.success) return fail(400, "ID reservasi tidak valid");
 
   try {
+    await expirePendingReservations(db);
     const reservation = await db.reservation.findUnique({
       where: { id: parsedId.data },
       select: {

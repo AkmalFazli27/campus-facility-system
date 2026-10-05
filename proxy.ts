@@ -25,9 +25,7 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
-  return NextResponse.next({ request: { headers: requestHeaders } });
+  return NextResponse.next();
 }
 
 function redirectToLogin(request: NextRequest, pathname: string) {
@@ -38,10 +36,15 @@ function redirectToLogin(request: NextRequest, pathname: string) {
 
 export const config = {
   matcher: [
-    "/reservations/:path*",
-    "/reports/:path*",
-    "/officer/:path*",
-    "/admin/:path*",
+    "/dashboard",
     "/dashboard/:path*",
+    "/reservations",
+    "/reservations/:path*",
+    "/reports",
+    "/reports/:path*",
+    "/officer",
+    "/officer/:path*",
+    "/admin",
+    "/admin/:path*",
   ],
 };
