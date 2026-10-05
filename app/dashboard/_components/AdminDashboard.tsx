@@ -28,6 +28,7 @@ import {
   getOccupancyRecap,
 } from "@/lib/services/recapService";
 import AdminDashboardExportButton from "@/components/custom/admin/AdminDashboardExportButton";
+import AdminPendingUsersWidget from "@/components/custom/admin/AdminPendingUsersWidget";
 
 export default async function AdminDashboard({
   user,
@@ -43,6 +44,7 @@ export default async function AdminDashboard({
     activeReportsCount,
     occupancyRecap,
     damageRecap,
+    pendingUsers,
   ] = await Promise.all([
     db.facility.count({ where: { status: "ACTIVE" } }),
     db.facility.count({ where: { status: "UNDER_MAINTENANCE" } }),
@@ -52,6 +54,19 @@ export default async function AdminDashboard({
     db.report.count({ where: { status: { in: ["NEW", "IN_PROGRESS"] } } }),
     getOccupancyRecap({}),
     getDamageRecap({}),
+    db.user.findMany({
+      where: { accountStatus: "PENDING" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        userType: true,
+        identityNumber: true,
+        createdAt: true,
+      },
+    }),
   ]);
 
   const totalFacilities =
@@ -129,6 +144,9 @@ export default async function AdminDashboard({
         })}
       </section>
 
+      {/* Widget Verifikasi Akun Pengguna (US15) */}
+      <AdminPendingUsersWidget initialUsers={pendingUsers} />
+
       {/* Grid: Widget Kelola Fasilitas (A2) + Widget Rekap & Export (A4) */}
       <div className="grid gap-6 xl:grid-cols-2">
         {/* Widget 1: Kelola Fasilitas (A2 shortcut + status) */}
@@ -144,9 +162,6 @@ export default async function AdminDashboard({
                   Master data ruang kelas, lab, aula, dan status operasional.
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="text-xs">
-                US16 &amp; FR-FAC-01
-              </Badge>
             </div>
           </CardHeader>
           <CardContent className="p-5 space-y-5 flex-1">
@@ -211,9 +226,6 @@ export default async function AdminDashboard({
                   Statistik pemakaian ruang dan unduh dokumen resmi.
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="text-xs">
-                US17 &amp; FR-DASH-03
-              </Badge>
             </div>
           </CardHeader>
           <CardContent className="p-5 space-y-4 flex-1">
@@ -345,46 +357,67 @@ export default async function AdminDashboard({
       </Card>
 
       {/* Pintasan Aksi Cepat Admin */}
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-3">
         <Link
           href="/admin/users"
-          className="group flex items-center gap-4 rounded-2xl border border-sky-100 bg-sky-50 p-5 transition-colors hover:border-sky-300"
+          className="group flex items-center gap-4 rounded-2xl border border-sky-100 bg-sky-50 p-5 transition-colors hover:border-sky-300 shadow-2xs"
         >
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-sky-600 text-white">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-sky-600 text-white shrink-0">
             <Users aria-hidden className="size-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-semibold text-ink-950">
-              Verifikasi Pendaftaran Civitas
+              Kelola Pengguna
             </span>
-            <span className="mt-1 block text-sm text-ink-600">
-              {pendingUsersCount} pengguna baru menunggu persetujuan akun.
+            <span className="mt-1 block text-xs text-ink-600">
+              {pendingUsersCount} pengguna baru menunggu persetujuan.
             </span>
           </span>
           <ArrowRight
             aria-hidden
-            className="size-5 text-sky-600 transition-transform group-hover:translate-x-1"
+            className="size-5 text-sky-600 transition-transform group-hover:translate-x-1 shrink-0"
+          />
+        </Link>
+
+        <Link
+          href="/admin/facilities"
+          className="group flex items-center gap-4 rounded-2xl border border-brand-100 bg-brand-50 p-5 transition-colors hover:border-brand-300 shadow-2xs"
+        >
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-brand-600 text-white shrink-0">
+            <Building2 aria-hidden className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-ink-950">
+              Kelola Fasilitas
+            </span>
+            <span className="mt-1 block text-xs text-ink-600">
+              Tambah, edit ruang, dan atur pemeliharaan sarana.
+            </span>
+          </span>
+          <ArrowRight
+            aria-hidden
+            className="size-5 text-brand-600 transition-transform group-hover:translate-x-1 shrink-0"
           />
         </Link>
 
         <Link
           href="/admin/recap"
-          className="group flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 transition-colors hover:border-emerald-300"
+          className="group flex items-center gap-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 transition-colors hover:border-emerald-300 shadow-2xs"
         >
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-600 text-white">
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-600 text-white shrink-0">
             <FileSpreadsheet aria-hidden className="size-5" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-semibold text-ink-950">
-              Laporan &amp; Rekapitulasi Lengkap
+              Rekapitulasi Laporan
             </span>
-            <span className="mt-1 block text-sm text-ink-600">
-              Filter tanggal, lihat histori kerusakan, dan cetak PDF.
+            <span className="mt-1 block text-xs text-ink-600">
+              Filter utilisasi, histori kerusakan, &amp; ekspor PDF.
             </span>
           </span>
           <ArrowRight
             aria-hidden
-            className="size-5 text-emerald-600 transition-transform group-hover:translate-x-1"
+            className="size-5 text-emerald-600 transition-transform group-hover:translate-x-1 shrink-0"
           />
         </Link>
       </section>

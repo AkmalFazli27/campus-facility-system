@@ -43,15 +43,20 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     pathname.startsWith("/dashboard/") ||
     pathname === "/reservations" ||
     pathname.startsWith("/reservations/") ||
+    pathname === "/reports" ||
+    pathname.startsWith("/reports/") ||
     pathname === "/officer" ||
-    pathname.startsWith("/officer/");
+    pathname.startsWith("/officer/") ||
+    pathname === "/admin" ||
+    pathname.startsWith("/admin/");
 
   return (
     <html
       lang="id"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-canvas-public">
+      <body suppressHydrationWarning className="min-h-full flex flex-col bg-canvas-public">
         {hideHeader ? null : <PublicHeader user={headerUser} />}
         {children}
         <Toaster position="top-center" richColors />

@@ -63,7 +63,7 @@ export default function DashboardSidebar({ role, user }: { role: Role; user: Sid
         </div>
         <SidebarNav role={role} orientation="horizontal" />
       </div>
-      <aside aria-label={`Panel dashboard ${role.toLowerCase()}`} className="fixed top-0 left-0 hidden h-screen w-[250px] shrink-0 flex-col justify-between border-r border-slate-200 bg-white p-4 max-lg:hidden lg:flex">
+      <aside aria-label={`Panel dashboard ${role.toLowerCase()}`} className="fixed top-0 left-0 hidden h-screen w-[250px] shrink-0 flex-col justify-between border-r border-slate-200 bg-white p-4 pb-6 max-lg:hidden lg:flex">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-2 px-1">
             <p className="text-lg font-bold tracking-tight text-ink-950">
@@ -76,9 +76,9 @@ export default function DashboardSidebar({ role, user }: { role: Role; user: Sid
           </div>
           <SidebarNav role={role} orientation="vertical" />
         </div>
-        <div className="flex flex-col gap-2 rounded-2xl bg-slate-50 p-3">
+        <div className="flex flex-col gap-2.5 rounded-2xl bg-slate-50 p-3.5 border border-slate-100 mb-2">
           <div className="flex items-center gap-3">
-            <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white">
+            <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-500 text-sm font-bold text-white shadow-xs">
               {initial}
             </span>
             <div className="min-w-0 flex-1">
@@ -88,7 +88,7 @@ export default function DashboardSidebar({ role, user }: { role: Role; user: Sid
               </p>
             </div>
           </div>
-          <DashboardLogoutButton className="rounded-full" />
+          <DashboardLogoutButton className="rounded-xl border border-slate-200 bg-white hover:bg-slate-100 shadow-2xs" />
         </div>
       </aside>
     </>

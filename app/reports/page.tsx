@@ -46,7 +46,6 @@ export default async function ReportsPage() {
                 <Badge className="border-amber-200 bg-amber-50 text-amber-800">
                   Portal pengguna
                 </Badge>
-                <span className="text-xs text-ink-400">• US06 &amp; US07</span>
               </div>
               <h1 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl">
                 Laporan Kerusakan Saya
