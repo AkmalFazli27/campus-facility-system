@@ -19,7 +19,11 @@ test("pengguna hanya dapat nav pengguna", () => {
 
 test("petugas hanya dapat nav petugas", () => {
   const hrefs = getDashboardNav("OFFICER").map((i) => i.href);
-  assert.deepEqual(hrefs, ["/officer/queue", "/officer/reservations/history"]);
+  assert.deepEqual(hrefs, [
+    "/officer/queue",
+    "/officer/reports",
+    "/officer/reservations/history",
+  ]);
   assert.ok(!hrefs.includes("/reservations"));
   assert.ok(!hrefs.includes("/admin/users"));
 });
@@ -71,6 +75,7 @@ test("judul halaman mobile mengikuti pathname", () => {
   assert.equal(getDashboardPageTitle("/reservations/123"), "Reservasi saya");
   assert.equal(getDashboardPageTitle("/reports"), "Laporan saya");
   assert.equal(getDashboardPageTitle("/officer/queue"), "Antrian petugas");
+  assert.equal(getDashboardPageTitle("/officer/reports"), "Laporan kerusakan");
   assert.equal(getDashboardPageTitle("/officer/reservations/history"), "Riwayat peminjaman");
   assert.equal(getDashboardPageTitle("/admin/users"), "Admin");
 });
