@@ -532,15 +532,23 @@ export default function ReportQueue() {
                           )
                         }
                         disabled={actionLoading}
-                        className={`w-full rounded-xl text-xs font-medium border ${
+                        className={`inline-flex w-full items-center justify-center gap-1.5 rounded-xl border text-xs font-medium ${
                           isMaintenance
                             ? "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                             : "border-amber-200 text-amber-700 hover:bg-amber-50"
                         }`}
                       >
-                        {isMaintenance
-                          ? "✓ Aktifkan Fasilitas"
-                          : "⚠️ Set Pemeliharaan"}
+                        {isMaintenance ? (
+                          <>
+                            <CheckCircle2 className="size-3.5" />
+                            Aktifkan Fasilitas
+                          </>
+                        ) : (
+                          <>
+                            <Wrench className="size-3.5" />
+                            Set Pemeliharaan
+                          </>
+                        )}
                       </Button>
                     </div>
                   </div>
