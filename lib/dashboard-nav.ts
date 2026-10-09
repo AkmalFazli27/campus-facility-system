@@ -3,7 +3,7 @@ import type { Role } from "@/lib/authorize";
 export type DashboardNavItem = { href: string; label: string; section: string };
 
 const USER_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard", section: "Pengguna" },
+  { href: "/dashboard", label: "Ringkasan", section: "Pengguna" },
   { href: "/reservations", label: "Reservasi Saya", section: "Pengguna" },
   { href: "/reports", label: "Laporan Saya", section: "Pengguna" },
 ];
@@ -14,7 +14,7 @@ const OFFICER_NAV: DashboardNavItem[] = [
 ];
 
 const ADMIN_NAV: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Dashboard", section: "Admin" },
+  { href: "/dashboard", label: "Ringkasan", section: "Admin" },
   { href: "/officer/reservations/history", label: "Riwayat Peminjaman", section: "Admin" },
   { href: "/admin/facilities", label: "Kelola Fasilitas", section: "Admin" },
   { href: "/admin/recap", label: "Rekap Admin", section: "Admin" },
@@ -42,7 +42,7 @@ export function getDashboardPageTitle(pathname: string): string {
   if (pathname === "/reservations" || pathname.startsWith("/reservations/")) return "Reservasi saya";
   if (pathname === "/reports" || pathname.startsWith("/reports/")) return "Laporan saya";
   if (pathname === "/admin" || pathname.startsWith("/admin/")) return "Admin";
-  return "Dashboard";
+  return "Ringkasan";
 }
 
 export function roleLabel(role: Role): string {

@@ -48,7 +48,7 @@ test("label peran dan seksi sesuai referensi", () => {
     const items = getDashboardNav(role);
     assert.ok(items.length > 0);
     assert.equal(items[0].href, "/dashboard");
-    assert.equal(items[0].label, "Dashboard");
+    assert.equal(items[0].label, "Ringkasan");
   }
   for (const role of ["USER", "OFFICER", "ADMIN"] as const) {
     const items = getDashboardNav(role);
@@ -65,8 +65,8 @@ test("item navigasi aktif mengikuti pathname", () => {
 });
 
 test("judul halaman mobile mengikuti pathname", () => {
-  assert.equal(getDashboardPageTitle("/dashboard"), "Dashboard");
-  assert.equal(getDashboardPageTitle("/dashboard/settings"), "Dashboard");
+  assert.equal(getDashboardPageTitle("/dashboard"), "Ringkasan");
+  assert.equal(getDashboardPageTitle("/dashboard/settings"), "Ringkasan");
   assert.equal(getDashboardPageTitle("/reservations"), "Reservasi saya");
   assert.equal(getDashboardPageTitle("/reservations/123"), "Reservasi saya");
   assert.equal(getDashboardPageTitle("/reports"), "Laporan saya");
