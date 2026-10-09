@@ -2,22 +2,22 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardShell from "@/app/dashboard/_components/DashboardShell";
 import { Badge } from "@/components/ui/badge";
-import ReservationQueue from "@/components/custom/officer/ReservationQueue";
+import ReportQueue from "@/components/custom/officer/ReportQueue";
 import { getSessionUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Antrian petugas | KampusSpace",
-  description: "Proses antrian reservasi ruang kampus.",
+  title: "Laporan kerusakan | KampusSpace",
+  description: "Tindak lanjuti laporan kerusakan dan kelola status pemeliharaan fasilitas.",
 };
 
-// US08: halaman antrian petugas. Guard ganda: proxy.ts (matcher /officer/:path*)
-// + secure check di sini. Antrian laporan kerusakan punya halaman sendiri di
-// /officer/reports.
-export default async function OfficerQueuePage() {
+// US12/A4: antrian laporan kerusakan berdiri sendiri, terpisah dari antrian
+// reservasi di /officer/queue. Guard ganda: proxy.ts (matcher /officer/:path*)
+// + secure check di sini.
+export default async function OfficerReportsPage() {
   const user = await getSessionUser();
-  if (!user) redirect("/login?next=/officer/queue");
+  if (!user) redirect("/login?next=/officer/reports");
   if (user.role !== "OFFICER" && user.role !== "ADMIN") {
     redirect("/?error=forbidden");
   }
@@ -31,15 +31,15 @@ export default async function OfficerQueuePage() {
           </Badge>
           <div className="space-y-3">
             <h1 className="text-4xl font-semibold tracking-tight text-ink-950 sm:text-5xl">
-              Antrian petugas
+              Laporan kerusakan
             </h1>
             <p className="text-base leading-7 text-ink-600 sm:text-lg">
-              Proses pengajuan reservasi ruang yang menunggu tindakan.
+              Tindak lanjuti laporan kerusakan dan kelola status pemeliharaan fasilitas.
             </p>
           </div>
         </section>
 
-        <ReservationQueue />
+        <ReportQueue />
       </div>
     </DashboardShell>
   );
