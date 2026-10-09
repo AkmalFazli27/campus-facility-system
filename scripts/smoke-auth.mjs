@@ -24,11 +24,17 @@ function cookieFrom(response) {
 const unique = Date.now();
 const newEmail = `smoke_${unique}@example.com`;
 
-// 1) register -> 201 pending
+// 1) register -> 201 pending (kontrak registerSchema: wajib userType + NIM/NIP)
 const registerRes = await fetch(`${BASE}/api/auth/register`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name: "Smoke Test", email: newEmail, password: "User1234" }),
+  body: JSON.stringify({
+    name: "Smoke Test",
+    email: newEmail,
+    password: "User1234",
+    userType: "MAHASISWA",
+    identityNumber: `S${unique}`.slice(0, 16),
+  }),
 });
 const registerBody = await registerRes.json();
 check("register 201", registerRes.status === 201, `status=${registerRes.status}`);
