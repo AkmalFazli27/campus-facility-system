@@ -9,7 +9,8 @@ const read = (p: string) => readFileSync(join(root, p), "utf8");
 test("route /tentang ada dengan metadata Indonesia", () => {
   assert.equal(existsSync(join(root, "app", "tentang", "page.tsx")), true);
   const src = read("app/tentang/page.tsx");
-  assert.match(src, /Tentang — KampusSpace/);
+  // Judul singkat; suffix "| KampusSpace" ditambahkan template di app/layout.tsx.
+  assert.match(src, /title: "Tentang"/);
   assert.match(src, /Satu tempat untuk fasilitas kampus/);
   assert.match(src, /07\.00–20\.00/);
   assert.match(src, /30 menit/);
