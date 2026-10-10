@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -82,8 +83,16 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
       >
         <Link
           href="/"
-          className="flex items-center rounded-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+          className="flex items-center gap-2 rounded-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
         >
+          <Image
+            src="/kampusspace-logo.png"
+            alt=""
+            aria-hidden
+            width={28}
+            height={28}
+            className="h-7 w-7 shrink-0"
+          />
           <span className="text-lg font-bold tracking-tight text-ink-950">
             Kampus<span className="text-brand-500">Space</span>
           </span>
