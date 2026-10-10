@@ -5,7 +5,7 @@ import FinalCta from "@/components/custom/FinalCta";
 import PublicFooter from "@/components/custom/PublicFooter";
 import WorkflowCards from "@/components/custom/WorkflowCards";
 export const metadata: Metadata = {
-  title: "Tentang — KampusSpace",
+  title: "Tentang",
   description: "KampusSpace adalah portal kampus untuk melihat ketersediaan fasilitas, mengajukan reservasi, dan melaporkan kerusakan dalam satu tempat.",
 };
 const OPS_CARDS = [

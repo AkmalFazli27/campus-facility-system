@@ -19,12 +19,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id: rawId } = await params;
   const parsedId = facilityIdSchema.safeParse(rawId);
-  if (!parsedId.success) return { title: "Fasilitas tidak ditemukan | KampusSpace" };
+  if (!parsedId.success) return { title: "Fasilitas tidak ditemukan" };
 
   const facility = await getFacilityById(parsedId.data);
 
   return {
-    title: facility ? `${facility.name} | KampusSpace` : "Fasilitas tidak ditemukan | KampusSpace",
+    title: facility ? facility.name : "Fasilitas tidak ditemukan",
     description: facility?.description ?? "Detail dan ketersediaan fasilitas kampus.",
   };
 }

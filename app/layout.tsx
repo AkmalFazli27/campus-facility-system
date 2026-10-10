@@ -16,7 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistem Reservasi & Pelaporan Fasilitas Kampus",
+  title: {
+    default: "KampusSpace | Portal Fasilitas Kampus",
+    template: "%s | KampusSpace",
+  },
   description:
     "Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan dalam satu aplikasi.",
 };
