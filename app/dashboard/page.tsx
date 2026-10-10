@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import DashboardShell from "@/app/dashboard/_components/DashboardShell";
 import UserDashboard from "@/app/dashboard/_components/UserDashboard";
@@ -6,6 +7,11 @@ import AdminDashboard from "@/app/dashboard/_components/AdminDashboard";
 import { getSessionUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Kelola reservasi, laporan, dan operasional fasilitas kampus.",
+};
 
 export default async function DashboardPage() {
   const user = await getSessionUser();

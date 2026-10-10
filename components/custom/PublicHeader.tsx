@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -11,7 +10,6 @@ import {
   Menu,
 } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/components/assets/logo.svg";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -84,23 +82,10 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
       >
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+          className="flex items-center rounded-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
         >
-          <Image
-            src={logo}
-            alt="Logo KampusSpace"
-            width={40}
-            height={40}
-            className="h-10 w-10"
-            priority
-          />
-          <span className="flex flex-col leading-none">
-            <span className="text-lg font-bold tracking-tight text-ink-950">
-              Kampus<span className="text-brand-500">Space</span>
-            </span>
-            <span className="text-[10px] font-medium tracking-widest text-ink-400 uppercase">
-              Portal Fasilitas
-            </span>
+          <span className="text-lg font-bold tracking-tight text-ink-950">
+            Kampus<span className="text-brand-500">Space</span>
           </span>
         </Link>
 

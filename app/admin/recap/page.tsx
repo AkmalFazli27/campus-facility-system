@@ -13,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rekap Admin & Ekspor PDF | KampusSpace",
+  title: "Rekap Admin & Ekspor PDF",
   description: "Laporan rekapitulasi okupansi fasilitas dan frekuensi kerusakan kampus.",
 };
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   Card,
@@ -8,6 +9,11 @@ import {
 } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Menunggu Verifikasi",
+  description: "Status akun menunggu verifikasi administrator kampus.",
+};
 
 export default function PendingVerificationPage() {
   return (

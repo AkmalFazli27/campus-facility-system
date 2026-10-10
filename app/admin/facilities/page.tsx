@@ -9,7 +9,7 @@ import { getSessionUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Kelola Master Data Fasilitas | KampusSpace",
+  title: "Kelola Master Data Fasilitas",
   description: "Tambah, edit, dan kelola status operasional fasilitas kampus.",
 };
 

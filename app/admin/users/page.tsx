@@ -9,7 +9,7 @@ import { getSessionUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Kelola Pengguna & Verifikasi Akun | KampusSpace",
+  title: "Kelola Pengguna & Verifikasi Akun",
   description: "Verifikasi pendaftaran mandiri civitas kampus dan kelola akun pengguna atau petugas.",
 };
 
