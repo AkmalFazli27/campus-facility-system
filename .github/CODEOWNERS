@@ -2,7 +2,6 @@
 /app/dashboard/page.tsx @AkmalFazli27
 /app/dashboard/_components/DashboardSidebar.tsx @AkmalFazli27
 /app/dashboard/_components/UserDashboard* @devanooo
-/app/dashboard/_components/OfficerDashboard.tsx @franx-hlmmm
 /app/dashboard/_components/AdminDashboard.tsx @21d4n @franx-hlmmm
 /components/ui/** @AkmalFazli27
 /app/api/*facility* @21d4n
