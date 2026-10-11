@@ -98,6 +98,9 @@ export async function GET(request: Request) {
               reservationDate: true,
               startTime: true,
               endTime: true,
+              createdAt: true,
+              processedAt: true,
+              user: { select: { id: true, name: true } },
             },
           });
 
@@ -121,6 +124,9 @@ export async function GET(request: Request) {
                     id: candidate.id,
                     startTime: candidate.startTime.toISOString().slice(11, 16),
                     endTime: candidate.endTime.toISOString().slice(11, 16),
+                    createdAt: candidate.createdAt.toISOString(),
+                    processedAt: candidate.processedAt?.toISOString() ?? null,
+                    user: candidate.user,
                   })),
               );
 
