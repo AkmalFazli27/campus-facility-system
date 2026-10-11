@@ -23,6 +23,7 @@ export const reservationStatusSchema = z.preprocess(
       "REJECTED",
       "CANCELLED_BY_USER",
       "CANCELLED_BY_OFFICER",
+      "CANCELLED_BY_SYSTEM",
       "COMPLETED",
     ],
     { error: "Status reservasi tidak valid" },
@@ -97,7 +98,25 @@ export const officerQueueQuerySchema = z.object({
   date: dateSchema.optional(),
 });
 
+export const officerHistoryQuerySchema = z
+  .object({
+    status: reservationStatusSchema.optional(),
+    from: dateSchema.optional(),
+    to: dateSchema.optional(),
+    page: z
+      .string()
+      .regex(/^[1-9]\d*$/, { error: "Halaman tidak valid" })
+      .transform(Number)
+      .pipe(z.number().int().max(10000))
+      .optional(),
+  })
+  .refine((value) => !value.from || !value.to || value.from <= value.to, {
+    error: "Tanggal awal tidak boleh setelah tanggal akhir",
+    path: ["to"],
+  });
+
 export type CreateReservationInput = z.infer<typeof createReservationSchema>;
 export type ListReservationsQuery = z.infer<typeof listReservationsQuerySchema>;
 export type OfficerDecisionInput = z.infer<typeof officerDecisionSchema>;
 export type OfficerQueueQuery = z.infer<typeof officerQueueQuerySchema>;
+export type OfficerHistoryQuery = z.infer<typeof officerHistoryQuerySchema>;

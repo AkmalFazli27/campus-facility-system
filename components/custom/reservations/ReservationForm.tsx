@@ -13,19 +13,19 @@ import {
   durationBetween,
   SLOT_STEP_MINUTES,
 } from "@/lib/helpers/slots";
-import { validateSlot } from "@/lib/services/reservationService";
+import {
+  hasMinimumReservationLeadTime,
+  minimumReservationDate,
+  validateSlot,
+} from "@/lib/services/reservationService";
 import { createReservationSchema } from "@/lib/validations/reservation";
 import {
   type AvailabilitySlot,
-  todayInJakarta,
   unavailableReasonForRange,
 } from "@/lib/reservation-ui";
 import ReservationSlotBar from "@/components/custom/reservations/ReservationSlotBar";
 
-// Form reservasi inti (US03): input manual start/end + stepper durasi ±30 menit.
-// Dipasang A2 di app/facilities/[id]/page.tsx dalam section id="reservasi":
-//   <ReservationForm facilityId={facility.id} bookable={facility.status === "ACTIVE"} />
-// Drag bar slot menyusul di commit terpisah.
+// Form reservasi: input jam manual, stepper ±30 menit, dan slot bar dua klik.
 
 function formatDurationId(totalMinutes: number | null): string {
   if (totalMinutes === null || totalMinutes <= 0) return "—";
@@ -47,8 +47,9 @@ export default function ReservationForm({
 }) {
   const router = useRouter();
   const [date, setDate] = useState(defaultDate);
-  const [start, setStart] = useState("09:00");
-  const [end, setEnd] = useState("10:00");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [selectionVersion, setSelectionVersion] = useState(0);
   const [purpose, setPurpose] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{
     date?: string;
@@ -63,10 +64,21 @@ export default function ReservationForm({
   }>({ date: "", slots: [], error: null });
 
   const duration = durationBetween(start, end);
+  const currentDuration = duration !== null && duration > 0 ? duration : 0;
+  const canIncreaseDuration =
+    addDuration(start, currentDuration + SLOT_STEP_MINUTES) !== null;
+  const canDecreaseDuration =
+    currentDuration > SLOT_STEP_MINUTES &&
+    addDuration(start, currentDuration - SLOT_STEP_MINUTES) !== null;
   const availabilityLoading = Boolean(date) && availability.date !== date;
   const availabilityError =
     availability.date === date ? availability.error : null;
   const slots = availability.date === date ? availability.slots : [];
+  const availabilityRangeError =
+    date && !availabilityLoading && !availabilityError
+      ? unavailableReasonForRange(start, end, slots)
+      : null;
+  const timeError = fieldErrors.time ?? availabilityRangeError;
 
   useEffect(() => {
     if (!date) return;
@@ -100,10 +112,10 @@ export default function ReservationForm({
   }, [date, facilityId]);
 
   function stepDuration(delta: number) {
-    const current = durationBetween(start, end) ?? SLOT_STEP_MINUTES;
-    const next = addDuration(start, current + delta);
+    const next = addDuration(start, currentDuration + delta);
     if (next) {
       setEnd(next);
+      setSelectionVersion((version) => version + 1);
       setFieldErrors((prev) => ({ ...prev, time: undefined }));
     }
   }
@@ -127,6 +139,12 @@ export default function ReservationForm({
         purpose: flat.purpose?.[0],
       });
       toast.error("Periksa kembali data reservasi");
+      return;
+    }
+
+    if (!hasMinimumReservationLeadTime(parsed.data.reservation_date)) {
+      setFieldErrors({ date: "Tanggal peminjaman minimal H-3 kalender (WIB)" });
+      toast.error("Pengajuan paling lambat H-3 sebelum tanggal peminjaman");
       return;
     }
 
@@ -208,9 +226,12 @@ export default function ReservationForm({
           id="resv-date"
           type="date"
           required
-          min={todayInJakarta()}
+          min={minimumReservationDate()}
           value={date}
-          onChange={(e) => setDate(e.target.value)}
+          onChange={(e) => {
+            setDate(e.target.value);
+            setFieldErrors((prev) => ({ ...prev, date: undefined, time: undefined }));
+          }}
           aria-invalid={Boolean(fieldErrors.date)}
           className="h-11 bg-white"
         />
@@ -228,12 +249,17 @@ export default function ReservationForm({
             id="resv-start"
             type="time"
             required
+            autoComplete="off"
             step={SLOT_STEP_MINUTES * 60}
             min="07:00"
             max="20:00"
             value={start}
-            onChange={(e) => setStart(e.target.value)}
-            aria-invalid={Boolean(fieldErrors.time)}
+            onChange={(e) => {
+              setStart(e.target.value);
+              setSelectionVersion((version) => version + 1);
+              setFieldErrors((prev) => ({ ...prev, time: undefined }));
+            }}
+            aria-invalid={Boolean(timeError)}
             className="h-11 bg-white"
           />
         </div>
@@ -243,26 +269,33 @@ export default function ReservationForm({
             id="resv-end"
             type="time"
             required
+            autoComplete="off"
             step={SLOT_STEP_MINUTES * 60}
             min="07:00"
             max="20:00"
             value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            aria-invalid={Boolean(fieldErrors.time)}
+            onChange={(e) => {
+              setEnd(e.target.value);
+              setSelectionVersion((version) => version + 1);
+              setFieldErrors((prev) => ({ ...prev, time: undefined }));
+            }}
+            aria-invalid={Boolean(timeError)}
             className="h-11 bg-white"
           />
         </div>
       </div>
-      {fieldErrors.time && (
+      {timeError && (
         <p role="alert" className="-mt-2 text-xs text-danger">
-          {fieldErrors.time}
+          {timeError}
         </p>
       )}
 
       <ReservationSlotBar
+        key={`${date}:${selectionVersion}`}
         start={start}
         end={end}
         slots={slots}
+        disabled={availabilityLoading}
         onRangeChange={(nextStart, nextEnd) => {
           setStart(nextStart);
           setEnd(nextEnd);
@@ -312,6 +345,7 @@ export default function ReservationForm({
             size="icon"
             className="size-9"
             aria-label="Kurangi durasi 30 menit"
+            disabled={!canDecreaseDuration}
             onClick={() => stepDuration(-SLOT_STEP_MINUTES)}
           >
             <Minus aria-hidden className="size-4" />
@@ -322,6 +356,7 @@ export default function ReservationForm({
             size="icon"
             className="size-9"
             aria-label="Tambah durasi 30 menit"
+            disabled={!canIncreaseDuration}
             onClick={() => stepDuration(SLOT_STEP_MINUTES)}
           >
             <Plus aria-hidden className="size-4" />
@@ -348,6 +383,7 @@ export default function ReservationForm({
       </div>
 
       <p className="text-xs leading-5 text-ink-400">
+        Ajukan paling lambat H-3 kalender sebelum tanggal peminjaman (WIB).
         Jam operasional 07:00–20:00 dengan kelipatan 30 menit. Pengajuan
         berstatus menunggu persetujuan petugas.
       </p>

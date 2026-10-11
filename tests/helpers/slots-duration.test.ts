@@ -43,6 +43,7 @@ test("addDuration null bila start/durasi tidak valid", () => {
 });
 
 test("durationBetween menghitung selisih menit", () => {
+  assert.equal(durationBetween("", ""), null);
   assert.equal(durationBetween("09:00", "10:30"), 90);
   assert.equal(durationBetween("09:00", "09:30"), 30);
   assert.equal(durationBetween("09:00", "09:00"), 0);

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
 import {
   checkConflict,
+  hasMinimumReservationLeadTime,
   isPastStart,
   validateSlot,
 } from "@/lib/services/reservationService";
@@ -33,6 +34,11 @@ export async function POST(request: Request) {
 
   const slot = validateSlot(parsed.data.start_time, parsed.data.end_time);
   if (!slot.valid) return fail(422, slot.message);
+  if (!hasMinimumReservationLeadTime(parsed.data.reservation_date)) {
+    return fail(422, "Pengajuan paling lambat H-3 kalender sebelum tanggal peminjaman (WIB)", {
+      reservation_date: ["Tanggal peminjaman minimal H-3 kalender (WIB)"],
+    });
+  }
   if (isPastStart(parsed.data.reservation_date, parsed.data.start_time)) {
     return fail(422, "Waktu mulai reservasi sudah lewat");
   }

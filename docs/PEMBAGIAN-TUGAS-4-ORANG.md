@@ -100,20 +100,20 @@
 ### A4 — Anggota 4: Laporan, Rekap PDF & Rilis
 
 **Minggu 5**
-- [ ] `POST /api/reports` (`request.formData()`, 1 foto, 5MB, mime whitelist, simpan ke `public/uploads`) + `GET /api/reports/my`, `GET /api/reports/[id]`.
-- [ ] Halaman form laporan + list laporan user.
-- [ ] `GET /api/officer/reports`, `PATCH /api/officer/reports/[id]/status` (new→in_progress→resolved/rejected, resolved wajib notes).
-- [ ] `PATCH /api/officer/facilities/[id]/maintenance` (under_maintenance ↔ active) — kolaborasi dengan A2.
-- [ ] Halaman `/officer/queue` tab Laporan + detail.
+- [x] `POST /api/reports` (`request.formData()`, 1 foto, 5MB, mime whitelist, simpan ke `public/uploads`) + `GET /api/reports/my`, `GET /api/reports/[id]`.
+- [x] Halaman form laporan + list laporan user.
+- [x] `GET /api/officer/reports`, `PATCH /api/officer/reports/[id]/status` (new→in_progress→resolved/rejected, resolved wajib notes).
+- [x] `PATCH /api/officer/facilities/[id]/maintenance` (under_maintenance ↔ active) — kolaborasi dengan A2.
+- [x] Halaman `/officer/queue` tab Laporan + detail.
 
 **Minggu 5–6 (setelah kontrak sidebar A1 siap)**
-- [ ] `OfficerDashboard.tsx` (role `officer`): counter antrian (`pending` reservasi + `new` laporan), tabel antrean + aksi approve/reject/cancel & proses laporan + tandai maintenance (FR-DASH-01).
-- [ ] Widget *Rekap* di `app/dashboard/_components/AdminDashboard.tsx` (bersama A2): preview tabel okupansi & kerusakan + **tombol Export PDF** langsung dari dashboard (reuse `pdfService.ts`, FR-DASH-03).
+- [x] `OfficerDashboard.tsx` (role `officer`): counter antrian (`pending` reservasi + `new` laporan), tabel antrean + aksi approve/reject/cancel & proses laporan + tandai maintenance (FR-DASH-01).
+- [x] Widget *Rekap* di `app/dashboard/_components/AdminDashboard.tsx` (bersama A2): preview tabel okupansi & kerusakan + **tombol Export PDF** langsung dari dashboard (reuse `pdfService.ts`, FR-DASH-03).
 
 **Minggu 5–6**
-- [ ] `GET /api/admin/recap/occupancy` & `.../damage` + query `from/to/facility_id/location`.
-- [ ] `GET .../export` → PDF via `pdfkit` di `lib/services/pdfService.ts` (`runtime = 'nodejs'`, header, tabel, footer halaman).
-- [ ] Halaman `/admin/recap` + tombol Export PDF.
+- [x] `GET /api/admin/recap/occupancy` & `.../damage` + query `from/to/facility_id/location`.
+- [x] `GET .../export` → PDF via `pdfkit` di `lib/services/pdfService.ts` (`runtime = 'nodejs'`, header, tabel, footer halaman).
+- [x] Halaman `/admin/recap` + tombol Export PDF.
 
 **Minggu 6–7**
 - [ ] Kumpulkan screenshot tiap fitur (US01–US17) + tulis **file Word** pengumpulan.

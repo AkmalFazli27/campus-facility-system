@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import PublicHeader from "@/components/custom/PublicHeader";
 import { getSessionUser } from "@/lib/session";
-import { headers } from "next/headers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,7 +16,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistem Reservasi & Pelaporan Fasilitas Kampus",
+  title: {
+    default: "KampusSpace | Portal Fasilitas Kampus",
+    template: "%s | KampusSpace",
+  },
   description:
     "Cek ketersediaan fasilitas kampus, ajukan reservasi, dan laporkan kerusakan dalam satu aplikasi.",
 };
@@ -37,22 +39,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     headerUser = null;
   }
 
-  const pathname = (await headers()).get("x-pathname") ?? "";
-  const hideHeader =
-    pathname === "/dashboard" ||
-    pathname.startsWith("/dashboard/") ||
-    pathname === "/reservations" ||
-    pathname.startsWith("/reservations/") ||
-    pathname === "/officer" ||
-    pathname.startsWith("/officer/");
-
   return (
     <html
       lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-canvas-public">
-        {hideHeader ? null : <PublicHeader user={headerUser} />}
+        <PublicHeader user={headerUser} />
         {children}
         <Toaster position="top-center" richColors />
       </body>

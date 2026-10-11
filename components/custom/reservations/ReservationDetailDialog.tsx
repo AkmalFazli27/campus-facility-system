@@ -205,7 +205,7 @@ export default function ReservationDetailDialog({
 
             {reservation.cancellationReason && (
               <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800">
-                <p className="text-xs font-medium tracking-wide uppercase">Alasan pembatalan</p>
+                <p className="text-xs font-medium tracking-wide uppercase">Alasan penolakan/pembatalan</p>
                 <p className="mt-2 text-sm leading-6">{reservation.cancellationReason}</p>
               </div>
             )}

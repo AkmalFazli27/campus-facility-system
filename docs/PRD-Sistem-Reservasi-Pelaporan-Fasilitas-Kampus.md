@@ -168,6 +168,7 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
 
 ### 7.1 Waktu reservasi
 
+- Pengajuan reservasi paling lambat **H-3 hari kalender Asia/Jakarta**: untuk penggunaan 10 Oktober, pengajuan terakhir 7 Oktober pukul 23.59 WIB. Aturan ini divalidasi di client dan server saat create; tidak dihitung sebagai 72 jam sebelum `start_time`.
 - Jam operasional: **07.00–20.00 Asia/Jakarta**, slot tetap **30 menit**: 07.00–07.30, 07.30–08.00, …, 19.30–20.00.
 - `start_time` dan `end_time` wajib di rentang operasional dan **kelipatan 30 menit**. Validasi di **server** (client hanya UX).
 - `end_time` > `start_time`. Tidak boleh lintas hari. `reservation_date` adalah 1 hari.
@@ -182,6 +183,8 @@ Keputusan tim: **Next.js 16 (App Router, fullstack) + MySQL**. Satu aplikasi Nex
   1. Saat **approve** (otoritatif — harus menolak jika bentrok).
   2. Saat **create** boleh memberi peringatan dini, tapi tidak menggantikan cek saat approve (karena race condition).
 - Transaksi approve harus `SELECT ... FOR UPDATE` atau unique constraint + retry untuk mencegah race.
+- Setelah satu reservasi di-approve, seluruh reservasi `pending` pada fasilitas dan tanggal yang sama dengan interval waktu tumpang tindih otomatis menjadi `rejected` dengan alasan bentrok dan tanpa petugas pemroses (keputusan sistem). Interval yang hanya bersentuhan di tepi tetap dapat diproses; persetujuan dan penolakan terjadi dalam satu transaksi. Riwayat pembatalan otomatis lama tetap sebagaimana tersimpan.
+- Mulai **H-1 pukul 00.00 WIB**, reservasi yang masih `pending` tidak boleh disetujui. Saat pengguna atau petugas membuka dashboard/daftar/detail reservasi, sistem menyinkronkan statusnya menjadi `cancelled_by_system` beserta alasan kedaluwarsa. Tanpa kunjungan, perubahan di database baru terjadi pada akses berikutnya.
 
 ### 7.3 Pembatalan
 
@@ -238,6 +241,7 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 - **AC1:** Pengguna login mengisi facility, tanggal, `start_time`, `end_time`, `purpose` → sukses `pending` bila valid.
 - **AC2:** `start/end` tidak kelipatan 30 menit atau di luar 07.00–20.00 → ditolak server 422 meski client di-bypass.
 - **AC3:** Fasilitas `inactive`/`maintenance` → ditolak.
+- **AC4:** Tanggal peminjaman lebih awal dari H-3 kalender WIB → ditolak server 422 meski batas tanggal di form di-bypass.
 
 ### US04 — Batalkan reservasi sendiri sebelum batas waktu
 
@@ -263,14 +267,16 @@ Format AC memakai Given/When/Then agar bisa jadi test case.
 
 ### US08 — Dashboard/antrian petugas (reservasi & laporan pending)
 
-- **AC1:** Petugas melihat antrian `pending`/`new` terurut (terlama dulu atau prioritas), dengan counter.
+- **AC1:** Petugas melihat antrian `pending` reservasi berdasarkan waktu pengajuan (`created_at` terlama dahulu, lalu `id`), serta antrian laporan `new`, dengan counter. Riwayat pengguna tetap diurutkan terbarunya dahulu.
 - **AC2:** Tidak ada yang terlewat: filter default menampilkan yang butuh aksi.
+- **AC3:** Petugas dapat membuka riwayat seluruh reservasi lintas petugas, memfilter status dan tanggal penggunaan, serta melihat alasan dan petugas pemroses.
 
 ### US09 — Setujui/tolak reservasi manual + cegah bentrok
 
 - **AC1:** Petugas approve `pending` yang tidak bentrok → `approved`.
 - **AC2:** Jika bentrok dengan `approved` lain di facility+tanggal yang overlap → approve ditolak 409.
 - **AC3:** Reject `pending` → `rejected` dengan alasan.
+- **AC4:** Saat satu `pending` di-approve, `pending` lain yang overlap pada fasilitas dan tanggal yang sama otomatis `rejected` dengan alasan bentrok; slot yang hanya bersentuhan tidak ikut ditolak.
 
 ### US10 — Batalkan reservasi yang sudah disetujui (kondisi mendesak)
 
@@ -441,7 +447,7 @@ Index: `INDEX(type)`, `INDEX(location)`, `INDEX(status)`, `INDEX(capacity)`
 | start_time | TIME | NOT NULL |
 | end_time | TIME | NOT NULL |
 | purpose | TEXT | NOT NULL |
-| status | ENUM('pending','approved','rejected','cancelled_by_user','cancelled_by_officer','completed') | NOT NULL, DEFAULT 'pending' |
+| status | ENUM('pending','approved','rejected','cancelled_by_user','cancelled_by_officer','cancelled_by_system','completed') | NOT NULL, DEFAULT 'pending' |
 | cancellation_reason | TEXT | NULL |
 | processed_by | BIGINT UNSIGNED | FK → users.id, NULL |
 | processed_at | DATETIME | NULL |
@@ -528,6 +534,7 @@ GET    /reservations/:id                (owner|officer|admin)
 PATCH  /reservations/:id/cancel         (owner, sebelum start_time)
 
 GET    /officer/reservations?status=pending|approved&facility_id=&date=
+GET    /officer/reservations/history?status=&from=&to=&page=  (officer|admin; semua pemohon, terbaru dahulu)
 PATCH  /officer/reservations/:id/approve   (officer) -> 409 jika bentrok
 PATCH  /officer/reservations/:id/reject    { reason }
 PATCH  /officer/reservations/:id/cancel    { reason } (dari approved)
@@ -665,6 +672,7 @@ campus-facility-system/          # root repo (Next.js app)
 - `/reservations` (user) — list + filter status + detail + cancel *(target link sidebar "Reservasi Saya")*
 - `/reports` (user) — list + detail + form buat laporan *(target link sidebar "Laporan Saya")*
 - `/officer/queue` — dua tab: Reservasi pending & Laporan new/in_progress + aksi *(target link "Antrian Petugas")*
+- `/officer/reservations/history` — riwayat reservasi lintas petugas dengan filter status/tanggal, detail, dan pagination *(target link "Riwayat Peminjaman")*
 - `/admin/facilities` — CRUD + status *(target link "Kelola Fasilitas")*
 - `/admin/users` — create officer/user + verify/reject pending
 - `/admin/recap` — filter + preview tabel + Export PDF *(target link "Rekap Admin"; preview juga muncul di dashboard admin)*
@@ -678,6 +686,7 @@ Setiap halaman wajib punya: loading, empty, error state; form punya inline error
 ### Client (Next.js Client Components)
 
 - Required, panjang, format email, kekuatan password, file type/size, jam 07.00–20.00, kelipatan 30 menit (UX).
+- Slot bar reservasi memakai dua klik: klik pertama menetapkan awal dan durasi 30 menit; klik kedua menetapkan slot terakhir yang ikut dipakai (termasuk klik mundur yang diurutkan otomatis). Klik berikutnya memulai pilihan baru. Rentang yang melewati slot tidak tersedia ditolak tanpa menghapus pilihan awal. Input jam manual dan tombol ±30 menit tetap tersedia.
 - Disable submit bila invalid, tampilkan pesan dekat field.
 
 ### Server (otoritatif — tidak bisa di-bypass)

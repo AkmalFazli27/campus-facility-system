@@ -10,7 +10,8 @@ import {
 } from "@/lib/reservation-ui";
 
 test("semua status reservasi memiliki label dan gaya visual", () => {
-  assert.equal(RESERVATION_STATUSES.length, 6);
+  assert.equal(RESERVATION_STATUSES.length, 7);
+  assert.equal(RESERVATION_STATUS_META.CANCELLED_BY_SYSTEM.label, "Batal otomatis");
 
   for (const status of RESERVATION_STATUSES) {
     assert.ok(RESERVATION_STATUS_META[status].label.length > 0);

@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { db } from "@/lib/db";
+import { expirePendingReservations } from "@/lib/services/reservationExpiryService";
 import {
   formatReservationDate,
   RESERVATION_STATUS_META,
@@ -63,6 +64,7 @@ export default async function UserDashboard({
   user: Pick<SessionUser, "id" | "name" | "userType" | "identityNumber">;
 }) {
   const now = new Date();
+  await expirePendingReservations(db, now);
   const [pendingCount, approvedReservations, completedCount, reportCount, reports] =
     await Promise.all([
       db.reservation.count({ where: { userId: user.id, status: "PENDING" } }),
@@ -174,7 +176,7 @@ export default async function UserDashboard({
             <CardTitle>Jadwal peminjaman terdekat</CardTitle>
             <CardDescription>Reservasi yang sudah disetujui dan belum selesai.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {upcoming ? (
               <div className="space-y-5">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -201,7 +203,7 @@ export default async function UserDashboard({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-start gap-4 py-6">
+              <div className="flex h-full flex-col items-center justify-center gap-4 py-10 text-center">
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-ink-400">
                   <CalendarCheck2 aria-hidden className="size-6" />
                 </span>
@@ -218,9 +220,14 @@ export default async function UserDashboard({
         </Card>
 
         <Card className="border-slate-200 bg-white shadow-sm">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle>Status laporan terkini</CardTitle>
-            <CardDescription>Tiga laporan terakhir yang kamu kirim.</CardDescription>
+          <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Status laporan terkini</CardTitle>
+              <CardDescription>Tiga laporan terakhir yang kamu kirim.</CardDescription>
+            </div>
+            <Link href="/reports" className="text-xs font-semibold text-brand-600 hover:text-brand-700">
+              Lihat semua →
+            </Link>
           </CardHeader>
           <CardContent className="space-y-3">
             {reports.length > 0 ? (

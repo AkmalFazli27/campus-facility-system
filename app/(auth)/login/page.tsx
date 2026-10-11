@@ -1,4 +1,10 @@
+import type { Metadata } from "next";
 import AuthShell from "@/components/custom/auth/AuthShell";
+
+export const metadata: Metadata = {
+  title: "Masuk",
+  description: "Masuk untuk mengelola reservasi dan laporan fasilitas kampus.",
+};
 
 export default async function LoginPage({
   searchParams,

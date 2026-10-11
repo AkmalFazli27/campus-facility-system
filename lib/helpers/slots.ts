@@ -16,7 +16,7 @@ export function withinOperatingHours(start: string, end: string): boolean {
 }
 
 // Durasi reservasi (fitur: pilih durasi kelipatan 30 menit, maks full day 07:00-20:00).
-// Helper murni dipakai stepper/drag bar di form dan bisa dipakai server kelak.
+// Helper murni dipakai stepper/slot bar di form dan bisa dipakai server kelak.
 
 export const SLOT_STEP_MINUTES = 30;
 export const DAY_START_MINUTES = 7 * 60; // 07:00

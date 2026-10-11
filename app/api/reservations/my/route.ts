@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
+import { expirePendingReservations } from "@/lib/services/reservationExpiryService";
 import { serializeReservation } from "@/lib/services/reservationService";
 import { getSessionUser } from "@/lib/session";
 import { listReservationsQuerySchema } from "@/lib/validations/reservation";
@@ -27,6 +28,7 @@ export async function GET(request: Request) {
   }
 
   try {
+    await expirePendingReservations(db);
     const reservations = await db.reservation.findMany({
       where: {
         userId: user.id,

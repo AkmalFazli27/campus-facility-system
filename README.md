@@ -50,6 +50,15 @@ Aturan DB bersama:
 * Perubahan skema lewat lokal → PR → `develop` → `migrate deploy` ke staging.
 * Kredensial staging hanya dibagikan via jalur private, tidak pernah di-commit.
 
+## Pembatalan otomatis reservasi
+
+Sejak H-1 pukul 00.00 WIB, reservasi `PENDING` tidak bisa lagi disetujui.
+Ketika pengguna atau petugas membuka dashboard atau data reservasi, sistem
+menyinkronkan pengajuan yang sudah kedaluwarsa menjadi `CANCELLED_BY_SYSTEM`
+dengan alasan. Tanpa kunjungan ke aplikasi, pembaruan status baru terjadi pada
+akses berikutnya. Jalankan migrasi status `CANCELLED_BY_SYSTEM` terlebih dahulu
+(di staging gunakan `prisma migrate deploy`).
+
 ## Getting Started
 
 First, run the development server:

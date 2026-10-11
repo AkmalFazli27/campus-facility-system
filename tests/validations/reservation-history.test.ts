@@ -16,6 +16,7 @@ test("listReservationsQuerySchema menerima semua status reservasi", () => {
     "REJECTED",
     "CANCELLED_BY_USER",
     "CANCELLED_BY_OFFICER",
+    "CANCELLED_BY_SYSTEM",
     "COMPLETED",
   ];
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Users } from "lucide-react";
 import ReservationForm from "@/components/custom/reservations/ReservationForm";
+import FacilityImage from "@/components/custom/facilities/FacilityImage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { statusCopy } from "@/lib/facilities/constants";
@@ -19,12 +20,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id: rawId } = await params;
   const parsedId = facilityIdSchema.safeParse(rawId);
-  if (!parsedId.success) return { title: "Fasilitas tidak ditemukan | KampusSpace" };
+  if (!parsedId.success) return { title: "Fasilitas tidak ditemukan" };
 
   const facility = await getFacilityById(parsedId.data);
 
   return {
-    title: facility ? `${facility.name} | KampusSpace` : "Fasilitas tidak ditemukan | KampusSpace",
+    title: facility ? facility.name : "Fasilitas tidak ditemukan",
     description: facility?.description ?? "Detail dan ketersediaan fasilitas kampus.",
   };
 }
@@ -55,13 +56,27 @@ export default async function FacilityDetailPage({
       </Link>
 
       <section className="space-y-6">
+        <FacilityImage
+          type={facility.type}
+          name={facility.name}
+          className="aspect-[21/9] rounded-3xl border border-orange-100"
+          sizes="100vw"
+        />
         <Card className="rounded-3xl border-orange-100">
           <CardHeader className="gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <Badge variant="outline" className="capitalize">
                 {facility.type}
               </Badge>
-              <Badge className={status.className}>{status.label}</Badge>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/reports/new?facility_id=${facility.id}`}
+                  className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition-colors"
+                >
+                  Laporkan Kerusakan
+                </Link>
+                <Badge className={status.className}>{status.label}</Badge>
+              </div>
             </div>
             <CardTitle className="text-3xl sm:text-4xl">{facility.name}</CardTitle>
             <p className="leading-7 text-muted-foreground">
