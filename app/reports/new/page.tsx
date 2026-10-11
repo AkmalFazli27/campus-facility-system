@@ -10,7 +10,7 @@ import { getSessionUser } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Formulir Laporan Kerusakan | KampusSpace",
+  title: "Formulir Laporan Kerusakan",
   description: "Laporkan kerusakan sarana dan prasarana kampus.",
 };
 

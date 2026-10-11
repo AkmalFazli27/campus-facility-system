@@ -176,7 +176,7 @@ export default async function UserDashboard({
             <CardTitle>Jadwal peminjaman terdekat</CardTitle>
             <CardDescription>Reservasi yang sudah disetujui dan belum selesai.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1">
             {upcoming ? (
               <div className="space-y-5">
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -203,7 +203,7 @@ export default async function UserDashboard({
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-start gap-4 py-6">
+              <div className="flex h-full flex-col items-center justify-center gap-4 py-10 text-center">
                 <span className="flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-ink-400">
                   <CalendarCheck2 aria-hidden className="size-6" />
                 </span>

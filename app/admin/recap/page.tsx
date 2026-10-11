@@ -13,7 +13,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Rekap Admin & Ekspor PDF | KampusSpace",
+  title: "Rekap Admin & Ekspor PDF",
   description: "Laporan rekapitulasi okupansi fasilitas dan frekuensi kerusakan kampus.",
 };
 
@@ -52,7 +52,6 @@ export default async function AdminRecapPage() {
               <Badge className="border-sky-200 bg-sky-50 text-sky-800">
                 Portal Administrator
               </Badge>
-              <span className="text-xs text-ink-400">• US17 &amp; FR-REKAP-01</span>
             </div>
             <h1 className="text-3xl font-bold tracking-tight text-ink-950 sm:text-4xl">
               Rekapitulasi &amp; Ekspor Laporan

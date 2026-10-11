@@ -19,7 +19,11 @@ test("pengguna hanya dapat nav pengguna", () => {
 
 test("petugas hanya dapat nav petugas", () => {
   const hrefs = getDashboardNav("OFFICER").map((i) => i.href);
-  assert.deepEqual(hrefs, ["/officer/queue", "/officer/reservations/history"]);
+  assert.deepEqual(hrefs, [
+    "/officer/queue",
+    "/officer/reports",
+    "/officer/reservations/history",
+  ]);
   assert.ok(!hrefs.includes("/reservations"));
   assert.ok(!hrefs.includes("/admin/users"));
 });
@@ -48,7 +52,7 @@ test("label peran dan seksi sesuai referensi", () => {
     const items = getDashboardNav(role);
     assert.ok(items.length > 0);
     assert.equal(items[0].href, "/dashboard");
-    assert.equal(items[0].label, "Dashboard");
+    assert.equal(items[0].label, "Ringkasan");
   }
   for (const role of ["USER", "OFFICER", "ADMIN"] as const) {
     const items = getDashboardNav(role);
@@ -65,12 +69,13 @@ test("item navigasi aktif mengikuti pathname", () => {
 });
 
 test("judul halaman mobile mengikuti pathname", () => {
-  assert.equal(getDashboardPageTitle("/dashboard"), "Dashboard");
-  assert.equal(getDashboardPageTitle("/dashboard/settings"), "Dashboard");
+  assert.equal(getDashboardPageTitle("/dashboard"), "Ringkasan");
+  assert.equal(getDashboardPageTitle("/dashboard/settings"), "Ringkasan");
   assert.equal(getDashboardPageTitle("/reservations"), "Reservasi saya");
   assert.equal(getDashboardPageTitle("/reservations/123"), "Reservasi saya");
   assert.equal(getDashboardPageTitle("/reports"), "Laporan saya");
   assert.equal(getDashboardPageTitle("/officer/queue"), "Antrian petugas");
+  assert.equal(getDashboardPageTitle("/officer/reports"), "Laporan kerusakan");
   assert.equal(getDashboardPageTitle("/officer/reservations/history"), "Riwayat peminjaman");
   assert.equal(getDashboardPageTitle("/admin/users"), "Admin");
 });

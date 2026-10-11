@@ -17,8 +17,10 @@ export default function DashboardLogoutButton({ className, iconOnly = false }: {
     try {
       const response = await fetch("/api/auth/logout", { method: "POST" });
       if (!response.ok) throw new Error("keluar gagal");
+      const json = (await response.json()) as { data?: { activeId?: number | null } };
+      const activeId = json?.data?.activeId ?? null;
       toast.success("Berhasil keluar");
-      router.push("/");
+      router.push(activeId != null ? "/dashboard" : "/");
       router.refresh();
     } catch {
       toast.error("Gagal keluar");

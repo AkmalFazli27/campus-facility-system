@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import { REPORT_CATEGORIES } from "@/lib/validations/report";
 import type {
   OccupancyRecapResult,
@@ -208,7 +208,7 @@ export default function RecapAdminView({
                 type="date"
                 value={from}
                 onChange={(e) => setFrom(e.target.value)}
-                className="rounded-xl border-slate-200 text-xs"
+                className="h-9 rounded-xl border-slate-200 bg-white text-xs shadow-2xs"
               />
             </div>
 
@@ -221,7 +221,7 @@ export default function RecapAdminView({
                 type="date"
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
-                className="rounded-xl border-slate-200 text-xs"
+                className="h-9 rounded-xl border-slate-200 bg-white text-xs shadow-2xs"
               />
             </div>
 
@@ -233,7 +233,7 @@ export default function RecapAdminView({
                 id="facility-sel"
                 value={facilityId}
                 onChange={(e) => setFacilityId(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="">Semua Fasilitas ({facilities.length})</option>
                 {facilities.map((f) => (
@@ -253,7 +253,7 @@ export default function RecapAdminView({
                 placeholder="Contoh: Gedung A, Lantai 2"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="rounded-xl border-slate-200 text-xs"
+                className="h-9 rounded-xl border-slate-200 bg-white text-xs shadow-2xs"
               />
             </div>
 
@@ -266,7 +266,7 @@ export default function RecapAdminView({
                   id="cat-sel"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full sm:w-72 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="h-9 w-full sm:w-72 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-900 shadow-2xs focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="">Semua Kategori</option>
                   {REPORT_CATEGORIES.map((cat) => (
@@ -285,7 +285,7 @@ export default function RecapAdminView({
                 size="sm"
                 onClick={applyFilter}
                 disabled={loading}
-                className="rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold"
+                className="h-9 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-4 shadow-xs"
               >
                 {loading ? (
                   <>
@@ -304,7 +304,7 @@ export default function RecapAdminView({
                 variant="outline"
                 onClick={handleReset}
                 disabled={loading}
-                className="rounded-xl text-xs font-medium"
+                className="h-9 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium px-4 shadow-2xs"
               >
                 Reset
               </Button>
@@ -315,7 +315,7 @@ export default function RecapAdminView({
               size="sm"
               onClick={handleExportPdf}
               disabled={exporting || loading}
-              className="rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-sm"
+              className="h-9 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 shadow-sm"
             >
               {exporting ? (
                 <>
@@ -333,44 +333,51 @@ export default function RecapAdminView({
         </CardContent>
       </Card>
 
-      {/* Tabs Section */}
-      <Tabs
-        value={activeTab}
-        onValueChange={(val) => setActiveTab(val as "occupancy" | "damage")}
-        className="space-y-6"
-      >
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          <TabsList className="grid grid-cols-2 w-full sm:w-80 rounded-2xl bg-slate-100 p-1">
-            <TabsTrigger
-              value="occupancy"
-              className="rounded-xl text-xs font-semibold data-state-active:bg-white data-state-active:shadow-xs"
-            >
-              <Layers className="size-3.5 mr-1.5 text-brand-600" />
-              Okupansi Fasilitas
-            </TabsTrigger>
-            <TabsTrigger
-              value="damage"
-              className="rounded-xl text-xs font-semibold data-state-active:bg-white data-state-active:shadow-xs"
-            >
-              <Wrench className="size-3.5 mr-1.5 text-rose-600" />
-              Kerusakan &amp; Servis
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Quick Search within current tab */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-ink-400" />
-            <Input
-              placeholder="Cari tabel di bawah..."
-              value={tableSearch}
-              onChange={(e) => setTableSearch(e.target.value)}
-              className="pl-9 rounded-full border-slate-200 bg-white text-xs"
-            />
-          </div>
+      {/* Tabs & Search Header */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="inline-flex w-full sm:w-auto rounded-2xl bg-slate-100 p-1 border border-slate-200/80 shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setActiveTab("occupancy")}
+            className={cn(
+              "flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+              activeTab === "occupancy"
+                ? "bg-white text-ink-950 shadow-xs"
+                : "text-ink-600 hover:text-ink-950"
+            )}
+          >
+            <Layers className="size-3.5 text-brand-600" />
+            Okupansi Fasilitas
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("damage")}
+            className={cn(
+              "flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all cursor-pointer",
+              activeTab === "damage"
+                ? "bg-white text-ink-950 shadow-xs"
+                : "text-ink-600 hover:text-ink-950"
+            )}
+          >
+            <Wrench className="size-3.5 text-rose-600" />
+            Kerusakan &amp; Servis
+          </button>
         </div>
 
-        {/* Tab 1: Okupansi Fasilitas */}
-        <TabsContent value="occupancy" className="space-y-6">
+        {/* Quick Search within current tab */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-ink-400" />
+          <Input
+            placeholder="Cari tabel di bawah..."
+            value={tableSearch}
+            onChange={(e) => setTableSearch(e.target.value)}
+            className="h-9 pl-9 rounded-full border-slate-200 bg-white text-xs shadow-2xs"
+          />
+        </div>
+      </div>
+
+      {activeTab === "occupancy" ? (
+        <div className="w-full space-y-6">
           {/* 4 Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <Card className="border-slate-200 shadow-2xs">
@@ -534,10 +541,9 @@ export default function RecapAdminView({
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* Tab 2: Kerusakan & Servis */}
-        <TabsContent value="damage" className="space-y-6">
+        </div>
+      ) : (
+        <div className="w-full space-y-6">
           {/* 4 Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <Card className="border-slate-200 shadow-2xs">
@@ -695,8 +701,8 @@ export default function RecapAdminView({
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }

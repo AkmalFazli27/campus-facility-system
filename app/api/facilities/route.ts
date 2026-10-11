@@ -1,7 +1,8 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
 import { buildFacilityAvailabilitySummary } from "@/lib/services/facilityAvailabilityService";
-import { availabilityQuerySchema } from "@/lib/validations/facility";
+import { availabilityQuerySchema, createFacilitySchema } from "@/lib/validations/facility";
+import { getSessionUser } from "@/lib/session";
 import { FacilityStatus } from "@prisma/client";
 import { NextRequest } from "next/server";
 
@@ -122,5 +123,50 @@ export async function GET(request: NextRequest) {
 
     console.error("GET /api/facilities failed", error);
     return fail(500, "Gagal mengambil data fasilitas");
+  }
+}
+
+export async function POST(request: Request) {
+  const admin = await getSessionUser();
+  if (!admin) return fail(401, "Belum login");
+  if (admin.role !== "ADMIN") return fail(403, "Akses ditolak: Hanya untuk admin");
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return fail(400, "Body harus berupa JSON yang valid");
+  }
+
+  const parsed = createFacilitySchema.safeParse(body);
+  if (!parsed.success) {
+    return fail(422, "Data fasilitas tidak valid", parsed.error.flatten().fieldErrors);
+  }
+
+  const { name, type, location, capacity, description, status } = parsed.data;
+
+  try {
+    const existing = await db.facility.findUnique({
+      where: { name },
+    });
+    if (existing) {
+      return fail(409, "Nama fasilitas sudah digunakan");
+    }
+
+    const facility = await db.facility.create({
+      data: {
+        name,
+        type,
+        location,
+        capacity,
+        description: description || null,
+        status,
+      },
+    });
+
+    return ok({ facility }, { status: 201 });
+  } catch (error) {
+    console.error("POST /api/facilities failed", error);
+    return fail(500, "Gagal membuat fasilitas baru");
   }
 }

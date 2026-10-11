@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { put } from "@vercel/blob";
 import { ReportStatus, type PrismaClient } from "@prisma/client";
 import { env } from "@/config/env";
 
@@ -12,9 +13,66 @@ export type UploadPhotoResult =
   | { success: false; message: string };
 
 /**
- * Validasi dan simpan file foto laporan ke disk lokal (public/uploads/reports).
+ * Abstraksi penyimpanan foto agar bisa diuji tanpa jaringan.
+ * Produksi memakai Vercel Blob; dev lokal memakai filesystem.
  */
-export async function saveReportPhoto(file: File): Promise<UploadPhotoResult> {
+export type ReportPhotoStorage = {
+  save(pathname: string, file: File): Promise<{ url: string }>;
+};
+
+function createBlobPhotoStorage(
+  token: string,
+  blobPut: typeof put = put
+): ReportPhotoStorage {
+  return {
+    async save(pathname, file) {
+      // Vercel serverless filesystem read-only, jadi foto disimpan ke Blob.
+      const blob = await blobPut(pathname, file, {
+        access: "public",
+        contentType: file.type,
+        addRandomSuffix: false,
+        token,
+      });
+      return { url: blob.url };
+    },
+  };
+}
+
+function createLocalPhotoStorage(): ReportPhotoStorage {
+  return {
+    async save(pathname, file) {
+      const filePath = path.join(process.cwd(), "public", pathname);
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, Buffer.from(await file.arrayBuffer()));
+      return { url: `/${pathname}` };
+    },
+  };
+}
+
+export function resolveReportPhotoStorage(
+  envVars: NodeJS.ProcessEnv = process.env,
+  blobPut: typeof put = put
+): ReportPhotoStorage {
+  const token = envVars.BLOB_READ_WRITE_TOKEN;
+  return token
+    ? createBlobPhotoStorage(token, blobPut)
+    : createLocalPhotoStorage();
+}
+
+function reportPhotoExtension(file: File): string {
+  if (file.type === "image/png") return ".png";
+  if (file.type === "image/webp") return ".webp";
+  return ".jpg";
+}
+
+/**
+ * Validasi file foto laporan, lalu simpan ke storage (Blob di produksi,
+ * filesystem di dev) dan kembalikan URL/path-nya.
+ */
+export async function saveReportPhoto(
+  file: File,
+  storage: ReportPhotoStorage = resolveReportPhotoStorage()
+): Promise<UploadPhotoResult> {
   if (!file || !(file instanceof File) || file.size === 0) {
     return { success: false, message: "Foto laporan wajib diunggah" };
   }
@@ -33,26 +91,13 @@ export async function saveReportPhoto(file: File): Promise<UploadPhotoResult> {
     };
   }
 
-  const extension =
-    file.type === "image/png"
-      ? ".png"
-      : file.type === "image/webp"
-      ? ".webp"
-      : ".jpg";
-
-  const filename = `${crypto.randomUUID()}${extension}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "reports");
+  const pathname = `uploads/reports/${crypto.randomUUID()}${reportPhotoExtension(
+    file
+  )}`;
 
   try {
-    await fs.mkdir(uploadDir, { recursive: true });
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const filePath = path.join(uploadDir, filename);
-    await fs.writeFile(filePath, buffer);
-
-    return {
-      success: true,
-      photoPath: `/uploads/reports/${filename}`,
-    };
+    const { url } = await storage.save(pathname, file);
+    return { success: true, photoPath: url };
   } catch (error) {
     console.error("Gagal menyimpan foto laporan:", error);
     return {

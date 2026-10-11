@@ -15,6 +15,9 @@ test("/officer untuk OFFICER dan ADMIN", () => {
   assert.equal(isAuthorized("/officer/reservations/history", "OFFICER"), true);
   assert.equal(isAuthorized("/officer/reservations/history", "ADMIN"), true);
   assert.equal(isAuthorized("/officer/reservations/history", "USER"), false);
+  assert.equal(isAuthorized("/officer/reports", "OFFICER"), true);
+  assert.equal(isAuthorized("/officer/reports", "ADMIN"), true);
+  assert.equal(isAuthorized("/officer/reports", "USER"), false);
 });
 
 test("/reservations hanya untuk USER", () => {

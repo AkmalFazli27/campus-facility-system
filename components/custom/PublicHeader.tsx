@@ -5,15 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  AlertTriangle,
-  CalendarCheck2,
   ChevronDown,
   LayoutDashboard,
   LogOut,
   Menu,
 } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/components/assets/logo.svg";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +29,9 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { isAuthRoute, isDashboardRoute } from "@/lib/landing";
+import { getHeaderDashboardHref } from "@/lib/dashboard-nav";
+import type { Role } from "@/lib/authorize";
+import AccountSwitcher from "@/components/custom/AccountSwitcher";
 
 export type HeaderUser = {
   name: string;
@@ -50,6 +50,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   if (isAuthRoute(pathname)) return null;
   if (isDashboardRoute(pathname)) return null;
@@ -60,8 +61,10 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (!res.ok) throw new Error("logout gagal");
+      const json = (await res.json()) as { data?: { activeId?: number | null } };
+      const activeId = json?.data?.activeId ?? null;
       setConfirmOpen(false);
-      router.push("/");
+      router.push(activeId != null ? "/dashboard" : "/");
       router.refresh();
     } catch {
       toast.error("Gagal keluar");
@@ -80,23 +83,18 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
       >
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
+          className="flex items-center gap-2 rounded-full focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
         >
           <Image
-            src={logo}
-            alt="Logo KampusSpace"
-            width={40}
-            height={40}
-            className="h-10 w-10"
-            priority
+            src="/kampusspace-logo.png"
+            alt=""
+            aria-hidden
+            width={28}
+            height={28}
+            className="h-7 w-7 shrink-0"
           />
-          <span className="flex flex-col leading-none">
-            <span className="text-lg font-bold tracking-tight text-ink-950">
-              Kampus<span className="text-brand-500">Space</span>
-            </span>
-            <span className="text-[10px] font-medium tracking-widest text-ink-400 uppercase">
-              Portal Fasilitas
-            </span>
+          <span className="text-lg font-bold tracking-tight text-ink-950">
+            Kampus<span className="text-brand-500">Space</span>
           </span>
         </Link>
 
@@ -119,7 +117,7 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
 
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
-            <Popover>
+            <Popover open={userMenuOpen} onOpenChange={setUserMenuOpen}>
               <PopoverTrigger
                 aria-haspopup="menu"
                 className="inline-flex max-h-11 min-h-11 items-center gap-1.5 rounded-full bg-brand-50 px-4 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-100 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
@@ -137,6 +135,11 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                 sideOffset={8}
                 className="w-64 rounded-2xl p-2"
               >
+                <AccountSwitcher
+                  onDone={() => setUserMenuOpen(false)}
+                  className="pb-1"
+                />
+                <div className="my-1 h-px bg-slate-100" />
                 <div className="px-3 py-2">
                   <p className="truncate text-sm font-semibold text-ink-950">
                     {user.name}
@@ -144,42 +147,19 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                   <p className="truncate text-xs text-ink-500">{user.email}</p>
                 </div>
                 <Link
-                  href="/dashboard"
+                  href={getHeaderDashboardHref(user.role as Role)}
+                  onClick={() => setUserMenuOpen(false)}
                   className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
                 >
                   <LayoutDashboard aria-hidden className="size-4 text-brand-600" />
                   Dashboard
                 </Link>
-                {user.role === "USER" && (
-                  <>
-                    <Link
-                      href="/reservations"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-                    >
-                      <CalendarCheck2 aria-hidden className="size-4 text-sky-600" />
-                      Reservasi Saya
-                    </Link>
-                    <Link
-                      href="/reports"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-                    >
-                      <AlertTriangle aria-hidden className="size-4 text-amber-600" />
-                      Laporan Kerusakan
-                    </Link>
-                  </>
-                )}
-                {user.role === "OFFICER" && (
-                  <Link
-                    href="/officer/queue"
-                    className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none"
-                  >
-                    <CalendarCheck2 aria-hidden className="size-4 text-sky-600" />
-                    Antrian Petugas
-                  </Link>
-                )}
                 <button
                   type="button"
-                  onClick={() => setConfirmOpen(true)}
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setConfirmOpen(true);
+                  }}
                   disabled={loggingOut}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-ink-700 transition-colors hover:bg-brand-50 hover:text-brand-700 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:outline-none disabled:opacity-60"
                 >
@@ -254,48 +234,29 @@ export default function PublicHeader({ user }: { user: HeaderUser }) {
                   </p>
                   <p className="truncate text-xs text-ink-500">{user.email}</p>
                 </div>
+                <AccountSwitcher className="rounded-2xl border border-slate-100 p-1" />
                 <DialogClose
                   render={
                     <Link
-                      href="/dashboard"
+                      href={getHeaderDashboardHref(user.role as Role)}
                       className={cn(buttonVariants(), "w-full rounded-full bg-brand-500 hover:bg-brand-600")}
                     >
                       Dashboard
                     </Link>
                   }
                 />
-                {user.role === "USER" && (
-                  <>
-                    <DialogClose
-                      render={
-                        <Link
-                          href="/reservations"
-                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
-                        >
-                          Reservasi Saya
-                        </Link>
-                      }
-                    />
-                    <DialogClose
-                      render={
-                        <Link
-                          href="/reports"
-                          className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-full")}
-                        >
-                          Laporan Kerusakan
-                        </Link>
-                      }
-                    />
-                  </>
-                )}
-                <Button
-                  variant="outline"
-                  onClick={() => setConfirmOpen(true)}
-                  disabled={loggingOut}
-                  className="w-full rounded-full"
-                >
-                  {loggingOut ? "Keluar..." : "Keluar"}
-                </Button>
+                <DialogClose
+                  render={
+                    <Button
+                      variant="outline"
+                      onClick={() => setConfirmOpen(true)}
+                      disabled={loggingOut}
+                      className="w-full rounded-full"
+                    >
+                      {loggingOut ? "Keluar..." : "Keluar"}
+                    </Button>
+                  }
+                />
               </div>
             ) : (
               <div className="flex gap-2 pt-2">

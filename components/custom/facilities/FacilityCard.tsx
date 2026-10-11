@@ -12,13 +12,21 @@ import {
 import { statusCopy } from "@/lib/facilities/constants";
 import type { Facility } from "@/lib/facilities/types";
 import FacilityAvailabilityBar from "@/components/custom/facilities/FacilityAvailabilityBar";
+import FacilityImage from "@/components/custom/facilities/FacilityImage";
 
 export default function FacilityCard({ facility }: { facility: Facility }) {
   const status = statusCopy[facility.status];
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden border-orange-100 transition-shadow hover:shadow-md">
-      <CardHeader className="gap-3">
+    <Card className="flex h-full flex-col gap-0 overflow-hidden border-orange-100 pt-0 transition-shadow hover:shadow-md">
+      <FacilityImage
+        type={facility.type}
+        name={facility.name}
+        imageUrl={facility.imageUrl}
+        className="aspect-[16/9]"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+      />
+      <CardHeader className="gap-3 pt-4">
         <div className="flex items-start justify-between gap-3">
           <Badge variant="outline" className="capitalize">
             {facility.type}
@@ -31,7 +39,7 @@ export default function FacilityCard({ facility }: { facility: Facility }) {
             "Fasilitas kampus untuk mendukung kegiatan akademik dan organisasi."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="mt-auto space-y-4">
+      <CardContent className="mt-auto space-y-4 pt-4">
         <div className="grid gap-2 text-sm text-muted-foreground">
           <span className="flex items-center gap-2">
             <MapPin className="size-4 text-orange-600" />
