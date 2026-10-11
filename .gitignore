@@ -49,3 +49,4 @@ next-env.d.ts
 
 # superpowers skill state (lokal, jangan commit)
 .superpowers/
+.opencode/
