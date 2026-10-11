@@ -6,8 +6,8 @@ import {
   validateSlot,
 } from "@/lib/services/reservationService";
 
-// Tabel keputusan approve petugas (US09): request kedua yang overlap
-// dengan APPROVED → konflik (route memetakan ke 409), selainnya lolos.
+// Tabel keputusan slot (US09, preempt Opsi A): checkConflict mendeteksi
+// overlap dengan APPROVED; approve sendiri menggantikan (bukan 409).
 // Mock menghormati where (status + id.not) agar excludeId teruji.
 
 type Row = {
@@ -37,7 +37,7 @@ function mockDb(rows: Row[]) {
 
 const DATE = new Date("2026-10-01T00:00:00.000Z");
 
-test("approve kedua yang overlap → konflik (409)", async () => {
+test("slot kedua yang overlap → terdeteksi konflik (approve menggantikan)", async () => {
   const db = mockDb([{ id: 1, status: "APPROVED", start: "10:00", end: "11:00" }]);
   assert.equal(
     await checkConflict(db, {

@@ -8,8 +8,8 @@ import { reservationIdSchema } from "@/lib/validations/reservation";
 export const runtime = "nodejs";
 
 // US09 / FR-RSV-04: petugas menyetujui reservasi PENDING.
-// Cek konflik di dalam transaksi: bentrok dengan APPROVED lain
-// di fasilitas+tanggal yang overlap → 409.
+// Preempt Opsi A: bentrok dengan APPROVED lain tidak lagi 409,
+// APPROVED lama digantikan (REJECTED, processedBy officer) dengan pesan transparan.
 export async function PATCH(
   _request: Request,
   context: { params: Promise<{ id: string }> },
@@ -40,8 +40,17 @@ export async function PATCH(
         return fail(422, result.message);
       case "conflict":
         return fail(409, "Jadwal bentrok dengan reservasi lain yang sudah disetujui");
-      case "approved":
-        return ok({ reservation: serializeReservation(result.reservation) });
+      case "approved": {
+        const message =
+          result.replacedIds.length > 0
+            ? `Reservasi disetujui, ${result.replacedIds.length} jadwal bentrok dibatalkan otomatis (${result.replacedIds.map((id) => `#${id}`).join(", ")})`
+            : "Reservasi disetujui";
+        return ok({
+          reservation: serializeReservation(result.reservation),
+          replacedIds: result.replacedIds,
+          message,
+        });
+      }
     }
   } catch (error) {
     console.error(`PATCH /api/officer/reservations/${parsedId.data}/approve failed`, error);
