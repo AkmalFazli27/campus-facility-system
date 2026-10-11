@@ -157,7 +157,7 @@ export default function ReservationQueue() {
         ? ` Akan membatalkan APPROVED ${target.conflicts
             .map(
               (conflict) =>
-                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${conflict.createdAt} oleh ${conflict.user.name})`,
+                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${formatReservationDateTime(conflict.createdAt)} oleh ${conflict.user.name})`,
             )
             .join(", ")}.`
         : "";
@@ -446,6 +446,9 @@ export default function ReservationQueue() {
                     <td className="max-w-56 px-4 py-4">
                       <p className="font-medium text-ink-950">{item.user.name}</p>
                       <p className="truncate text-xs text-ink-600">{item.user.email}</p>
+                      <p className="mt-1 text-xs text-ink-500">
+                        Diajukan {formatReservationDateTime(item.createdAt)}
+                      </p>
                     </td>
                     <td className="max-w-64 px-4 py-4">
                       <p className="font-medium text-ink-950">{item.facility.name}</p>
@@ -461,9 +464,9 @@ export default function ReservationQueue() {
                           Bentrok dengan {item.conflicts
                             .map(
                               (conflict) =>
-                                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${conflict.createdAt} oleh ${conflict.user.name})`,
-                            )
-                            .join(", ")} — setujui untuk gantikan
+                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${formatReservationDateTime(conflict.createdAt)} oleh ${conflict.user.name})`,
+            )
+            .join(", ")} — setujui untuk gantikan
                         </p>
                       )}
                     </td>
@@ -576,6 +579,10 @@ export default function ReservationQueue() {
                     <Clock3 className="size-4 text-sky-500" aria-hidden />
                     {item.startTime}-{item.endTime}
                   </span>
+                  <span className="flex items-center gap-2 text-xs">
+                    <Clock3 className="size-4 text-sky-500" aria-hidden />
+                    Diajukan {formatReservationDateTime(item.createdAt)}
+                  </span>
                 </div>
                 {item.conflicts.length > 0 && (
                   <div className="rounded-xl border border-red-200 bg-white/70 p-3 text-xs text-red-700">
@@ -584,10 +591,10 @@ export default function ReservationQueue() {
                       Bentrok dengan {item.conflicts
                         .map(
                           (conflict) =>
-                            `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${conflict.createdAt} oleh ${conflict.user.name})`,
-                        )
-                        .join(", ")}.
-                    </p>
+                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${formatReservationDateTime(conflict.createdAt)} oleh ${conflict.user.name})`,
+            )
+            .join(", ")}.
+          </p>
                   </div>
                 )}
                 <p className="line-clamp-2 text-sm leading-6 text-ink-600">{item.purpose}</p>
