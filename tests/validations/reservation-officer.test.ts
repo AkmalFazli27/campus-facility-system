@@ -52,9 +52,13 @@ test("officerQueueQuerySchema menerima filter kosong dan lowercase", () => {
   }
 });
 
-test("officerQueueQuerySchema menolak status di luar antrian", () => {
+test("officerQueueQuerySchema menerima REJECTED dan menolak status di luar antrian", () => {
   assert.equal(
     officerQueueQuerySchema.safeParse({ status: "REJECTED" }).success,
+    true,
+  );
+  assert.equal(
+    officerQueueQuerySchema.safeParse({ status: "CANCELLED_BY_USER" }).success,
     false,
   );
   assert.equal(

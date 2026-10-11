@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       where: {
         status:
           status === "ALL"
-            ? { in: ["PENDING", "APPROVED"] }
+            ? { in: ["PENDING", "APPROVED", "REJECTED"] }
             : status,
         ...(parsed.data.facility_id
           ? { facilityId: parsed.data.facility_id }
@@ -66,6 +66,7 @@ export async function GET(request: Request) {
         endTime: true,
         purpose: true,
         status: true,
+        cancellationReason: true,
         createdAt: true,
         user: {
           select: { id: true, name: true, email: true },
