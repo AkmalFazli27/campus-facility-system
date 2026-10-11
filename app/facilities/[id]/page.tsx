@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Users } from "lucide-react";
 import ReservationForm from "@/components/custom/reservations/ReservationForm";
+import FacilityImage from "@/components/custom/facilities/FacilityImage";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { statusCopy } from "@/lib/facilities/constants";
@@ -55,6 +56,12 @@ export default async function FacilityDetailPage({
       </Link>
 
       <section className="space-y-6">
+        <FacilityImage
+          type={facility.type}
+          name={facility.name}
+          className="aspect-[21/9] rounded-3xl border border-orange-100"
+          sizes="100vw"
+        />
         <Card className="rounded-3xl border-orange-100">
           <CardHeader className="gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
