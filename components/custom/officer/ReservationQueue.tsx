@@ -35,7 +35,7 @@ import {
 // approve/reject/cancel + dialog detail. Dipasang di
 // app/officer/queue/page.tsx tab Reservasi.
 
-type QueueStatus = "PENDING" | "APPROVED";
+type QueueStatus = "PENDING" | "APPROVED" | "REJECTED";
 type QueueStatusFilter = QueueStatus | "ALL";
 
 type QueueConflict = {
@@ -54,6 +54,7 @@ type QueueItem = {
   endTime: string;
   purpose: string;
   status: QueueStatus;
+  cancellationReason: string | null;
   createdAt: string;
   user: { id: number; name: string; email: string };
   facility: { id: number; name: string; type: string; location: string };
@@ -71,7 +72,7 @@ const EMPTY_FILTERS: Filters = { status: "PENDING", facilityId: "", date: "" };
 
 function buildQueueUrl(filters: Filters): string {
   const params = new URLSearchParams();
-  if (filters.status !== "ALL") params.set("status", filters.status);
+  params.set("status", filters.status);
   if (filters.facilityId) params.set("facility_id", filters.facilityId);
   if (filters.date) params.set("date", filters.date);
   const query = params.toString();
@@ -332,6 +333,7 @@ export default function ReservationQueue() {
             <SelectContent>
               <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="APPROVED">Approved</SelectItem>
+              <SelectItem value="REJECTED">Rejected</SelectItem>
               <SelectItem value="ALL">Semua</SelectItem>
             </SelectContent>
           </Select>
@@ -480,6 +482,11 @@ export default function ReservationQueue() {
                             Jadwal bentrok
                           </Badge>
                         )}
+                        {item.status === "REJECTED" && item.cancellationReason && (
+                          <p className="mt-1 line-clamp-3 max-w-56 text-xs leading-5 text-ink-600">
+                            {item.cancellationReason}
+                          </p>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 text-right">
@@ -598,6 +605,11 @@ export default function ReservationQueue() {
                   </div>
                 )}
                 <p className="line-clamp-2 text-sm leading-6 text-ink-600">{item.purpose}</p>
+                {item.status === "REJECTED" && item.cancellationReason && (
+                  <p className="line-clamp-3 text-xs leading-5 text-ink-600">
+                    Alasan: {item.cancellationReason}
+                  </p>
+                )}
                 <div className="grid gap-2">
                   <Button
                     variant="outline"
