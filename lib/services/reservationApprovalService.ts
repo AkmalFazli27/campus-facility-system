@@ -1,6 +1,9 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { isPendingReservationExpired } from "@/lib/services/reservationExpiryService";
-import { checkConflict, validateSlot } from "@/lib/services/reservationService";
+import {
+  findOverlappingApproved,
+  validateSlot,
+} from "@/lib/services/reservationService";
 
 const approvedReservationSelect = {
   id: true,
@@ -27,8 +30,12 @@ export type ApprovalResult =
   | { kind: "expired" }
   | { kind: "facility-unavailable" }
   | { kind: "invalid-slot"; message: string }
-  | { kind: "conflict" }
-  | { kind: "approved"; reservation: ApprovedReservation };
+  | { kind: "conflict"; conflictingIds?: number[] }
+  | {
+      kind: "approved";
+      reservation: ApprovedReservation;
+      replacedIds: number[];
+    };
 
 export type RejectionResult =
   | { kind: "not-found" }
@@ -39,6 +46,21 @@ type TransactionHost = Pick<PrismaClient, "$transaction">;
 
 function toHHmm(value: Date): string {
   return value.toISOString().slice(11, 16);
+}
+
+function toWib(value: Date): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(value);
+}
+
+function toDateOnly(value: Date): string {
+  return value.toISOString().slice(0, 10);
 }
 
 export async function approveReservation(
@@ -77,6 +99,8 @@ export async function approveReservation(
         startTime: true,
         endTime: true,
         status: true,
+        createdAt: true,
+        userId: true,
         facility: { select: { id: true, status: true } },
       },
     });
@@ -94,14 +118,15 @@ export async function approveReservation(
     const slot = validateSlot(startTime, endTime);
     if (!slot.valid) return { kind: "invalid-slot", message: slot.message };
 
-    const conflict = await checkConflict(tx, {
+    // Preempt Opsi A: ambil APPROVED yang overlap beserta bukti
+    // (id + waktu pengajuan + waktu persetujuan) untuk pesan transparan.
+    const overlappingApproved = await findOverlappingApproved(tx, {
       facilityId: reservation.facility.id,
       reservationDate: reservation.reservationDate,
       startTime,
       endTime,
       excludeId: reservation.id,
     });
-    if (conflict) return { kind: "conflict" };
 
     const decisionTime = now();
     if (isPendingReservationExpired(reservation.reservationDate, decisionTime)) {
@@ -118,6 +143,31 @@ export async function approveReservation(
       },
       select: approvedReservationSelect,
     });
+
+    // Batalkan APPROVED lama yang bentrok dengan pesan transparan.
+    // processedBy diisi officer penyetuju baru agar akuntabel.
+    const replacedIds: number[] = [];
+    const newDate = toDateOnly(reservation.reservationDate);
+    for (const old of overlappingApproved) {
+      replacedIds.push(old.id);
+      await tx.reservation.update({
+        where: { id: old.id },
+        data: {
+          status: "REJECTED",
+          cancellationReason:
+            `Dibatalkan otomatis karena jadwal bentrok dengan reservasi #${reservation.id} ` +
+            `yang disetujui petugas pada ${toWib(decisionTime)} WIB. ` +
+            `Reservasi ini (#${old.id}) tercatat lebih dulu pada ${toWib(old.createdAt)} WIB` +
+            (old.processedAt ? ` dan disetujui pada ${toWib(old.processedAt)} WIB` : "") +
+            `. Bukti: #${old.id} ${toDateOnly(old.reservationDate)} ${toHHmm(old.startTime)}-${toHHmm(old.endTime)} ` +
+            `(diajukan ${toWib(old.createdAt)} WIB) vs ` +
+            `#${reservation.id} ${newDate} ${startTime}-${endTime} ` +
+            `(diajukan ${toWib(reservation.createdAt)} WIB).`,
+          processedBy: officerId,
+          processedAt: decisionTime,
+        },
+      });
+    }
 
     // Hanya pengajuan PENDING pada fasilitas/tanggal yang sama dan benar-benar
     // overlap yang ditolak otomatis. Slot yang bersentuhan di tepi tetap bisa diproses.
@@ -138,7 +188,7 @@ export async function approveReservation(
       },
     });
 
-    return { kind: "approved", reservation: updated };
+    return { kind: "approved", reservation: updated, replacedIds };
   }, { isolationLevel: "ReadCommitted" });
 }
 

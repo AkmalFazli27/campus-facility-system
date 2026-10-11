@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { fail, ok } from "@/lib/http";
 import {
-  checkConflict,
+  findOverlappingApproved,
   hasMinimumReservationLeadTime,
   isPastStart,
   validateSlot,
@@ -60,19 +60,18 @@ export async function POST(request: Request) {
     const reservationDate = new Date(
       `${parsed.data.reservation_date}T00:00:00.000Z`,
     );
-    const conflict = await checkConflict(db, {
+    // Preempt Opsi A: pengajuan tetap dibuat PENDING walau overlap APPROVED.
+    // Keputusan akhir di tangan petugas saat approve (yang lama dibatalkan transparan).
+    const overlapping = await findOverlappingApproved(db, {
       facilityId: facility.id,
       reservationDate,
       startTime: parsed.data.start_time,
       endTime: parsed.data.end_time,
     });
-
-    if (conflict) {
-      return fail(
-        409,
-        "Jadwal bentrok dengan reservasi lain yang sudah disetujui",
-      );
-    }
+    const warning =
+      overlapping.length > 0
+        ? `Jadwal bentrok dengan ${overlapping.length} reservasi yang sudah disetujui (${overlapping.map((row) => `#${row.id}`).join(", ")}). Pengajuan tetap dicatat sebagai pending dan butuh keputusan petugas.`
+        : null;
 
     const reservation = await db.reservation.create({
       data: {
@@ -102,6 +101,7 @@ export async function POST(request: Request) {
           startTime: parsed.data.start_time,
           endTime: parsed.data.end_time,
         },
+        warning,
       },
       { status: 201 },
     );
