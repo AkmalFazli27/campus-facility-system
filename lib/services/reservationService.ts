@@ -77,6 +77,23 @@ type ConflictReader = {
   };
 };
 
+export type OverlappingApprovedReservation = {
+  id: number;
+  facilityId: number;
+  reservationDate: Date;
+  startTime: Date;
+  endTime: Date;
+  createdAt: Date;
+  processedAt: Date | null;
+  userId: number;
+};
+
+type OverlappingApprovedReader = {
+  reservation: {
+    findMany(args: unknown): Promise<OverlappingApprovedReservation[]>;
+  };
+};
+
 export async function checkConflict(
   database: ConflictReader,
   params: {
@@ -107,6 +124,50 @@ export async function checkConflict(
       })),
     ).length > 0
   );
+}
+
+export async function findOverlappingApproved(
+  database: OverlappingApprovedReader,
+  params: {
+    facilityId: number;
+    reservationDate: Date;
+    startTime: string;
+    endTime: string;
+    excludeId?: number;
+  },
+): Promise<OverlappingApprovedReservation[]> {
+  const existing = await database.reservation.findMany({
+    where: {
+      facilityId: params.facilityId,
+      reservationDate: params.reservationDate,
+      status: "APPROVED",
+      ...(params.excludeId ? { id: { not: params.excludeId } } : {}),
+    },
+    select: {
+      id: true,
+      facilityId: true,
+      reservationDate: true,
+      startTime: true,
+      endTime: true,
+      createdAt: true,
+      processedAt: true,
+      userId: true,
+    },
+  });
+
+  const overlappingIds = new Set(
+    findOverlappingRanges(
+      params.startTime,
+      params.endTime,
+      existing.map((row) => ({
+        id: row.id,
+        startTime: toHHmm(row.startTime),
+        endTime: toHHmm(row.endTime),
+      })),
+    ).map((row) => row.id),
+  );
+
+  return existing.filter((row) => overlappingIds.has(row.id));
 }
 
 // Input HH:mm dianggap waktu WIB (PRD §7). Dipakai cancel user: tolak jika sudah lewat start.

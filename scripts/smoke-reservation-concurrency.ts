@@ -79,13 +79,42 @@ async function main() {
     ]);
     const kinds = results.map((result) => result.kind).sort();
 
-    assert.deepEqual(kinds, ["approved", "conflict"]);
+    // Preempt Opsi A: pemenang approve, yang kalah sudah auto-REJECT sebagai
+    // PENDING overlap sehingga kembalian kedua = not-pending (bukan conflict).
+    assert.deepEqual(kinds, ["approved", "not-pending"]);
     assert.equal(
       await db.reservation.count({
         where: { facilityId: facility.id, status: "APPROVED" },
       }),
       1,
     );
+
+    // Preempt sekuensial: pending overlap approved tetap bisa di-approve
+    // dan menggantikan approved lama dengan pesan transparan.
+    const winnerId = [first.id, second.id][
+      results.findIndex((result) => result.kind === "approved")
+    ];
+    const challenger = await db.reservation.create({
+      data: {
+        ...base,
+        startTime: new Date("1970-01-01T10:15:00.000Z"),
+        endTime: new Date("1970-01-01T10:45:00.000Z"),
+      },
+    });
+    const preempt = await approveReservation(db, challenger.id, officer.id);
+    assert.equal(preempt.kind, "approved");
+    if (preempt.kind !== "approved") throw new Error("preempt harus approved");
+    assert.deepEqual(preempt.replacedIds, [winnerId]);
+    const replaced = await db.reservation.findUniqueOrThrow({
+      where: { id: winnerId },
+      select: { status: true, cancellationReason: true, processedBy: true },
+    });
+    assert.equal(replaced.status, "REJECTED");
+    assert.match(replaced.cancellationReason ?? "", /Dibatalkan otomatis karena jadwal bentrok/);
+    assert.match(replaced.cancellationReason ?? "", new RegExp(`#${challenger.id}`));
+    assert.match(replaced.cancellationReason ?? "", /tercatat lebih dulu/);
+    assert.match(replaced.cancellationReason ?? "", /Bukti:/);
+    assert.equal(replaced.processedBy, officer.id);
 
     const decisionRace = await db.reservation.create({
       data: {

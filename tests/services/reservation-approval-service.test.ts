@@ -11,7 +11,14 @@ const beforeExpiry = () => new Date("2026-09-29T16:59:59.000Z");
 function createDatabase(options?: {
   status?: "PENDING" | "APPROVED";
   facilityStatus?: "ACTIVE" | "UNDER_MAINTENANCE";
-  conflictingRanges?: Array<{ startTime: Date; endTime: Date }>;
+  conflictingRanges?: Array<{
+    id?: number;
+    startTime: Date;
+    endTime: Date;
+    createdAt?: Date;
+    processedAt?: Date | null;
+    userId?: number;
+  }>;
   pendingCandidates?: Array<{
     id: number;
     facilityId: number;
@@ -25,6 +32,7 @@ function createDatabase(options?: {
   let rawQueryCount = 0;
   let updated = false;
   let rejectedIds: number[] = [];
+  const replacedIds: number[] = [];
 
   const transaction = {
     $queryRaw: async () => {
@@ -42,6 +50,8 @@ function createDatabase(options?: {
           startTime: new Date("1970-01-01T10:00:00.000Z"),
           endTime: new Date("1970-01-01T11:00:00.000Z"),
           status: options?.status ?? "PENDING",
+          createdAt: new Date("2026-09-24T00:00:00.000Z"),
+          userId: 2,
           facility: {
             id: 9,
             status: options?.facilityStatus ?? "ACTIVE",
@@ -50,9 +60,30 @@ function createDatabase(options?: {
       },
       findMany: async () => {
         events.push("check-conflict");
-        return options?.conflictingRanges ?? [];
+        return (options?.conflictingRanges ?? []).map((row, index) => ({
+          id: row.id ?? 100 + index,
+          facilityId: 9,
+          reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+          startTime: row.startTime,
+          endTime: row.endTime,
+          createdAt: row.createdAt ?? new Date("2026-09-20T00:00:00.000Z"),
+          processedAt: row.processedAt ?? new Date("2026-09-21T00:00:00.000Z"),
+          userId: row.userId ?? 5,
+        }));
       },
-      update: async () => {
+      update: async (args?: { where?: { id?: number }; data?: { status?: string; cancellationReason?: string; processedBy?: number | null } }) => {
+        const targetId = args?.where?.id;
+        if (targetId !== undefined && targetId !== 21) {
+          events.push("replace-approved");
+          replacedIds.push(targetId);
+          assert.equal(args?.data?.status, "REJECTED");
+          assert.match(args?.data?.cancellationReason ?? "", /Dibatalkan otomatis karena jadwal bentrok/);
+          assert.match(args?.data?.cancellationReason ?? "", /#21/);
+          assert.match(args?.data?.cancellationReason ?? "", /tercatat lebih dulu/);
+          assert.match(args?.data?.cancellationReason ?? "", /Bukti:/);
+          assert.equal(args?.data?.processedBy, 3);
+          return { id: targetId };
+        }
         events.push("update");
         updated = true;
         return {
@@ -102,7 +133,13 @@ function createDatabase(options?: {
       callback(transaction),
   } as unknown as ApprovalDatabase;
 
-  return { database, events, wasUpdated: () => updated, rejectedIds: () => rejectedIds };
+  return {
+    database,
+    events,
+    wasUpdated: () => updated,
+    rejectedIds: () => rejectedIds,
+    replacedIds: () => replacedIds,
+  };
 }
 
 test("approve mengunci fasilitas sebelum reservasi dan menolak bentrok dalam transaksi", async () => {
@@ -158,20 +195,28 @@ test("approval hanya menolak pending yang overlap di fasilitas dan tanggal sama"
   assert.deepEqual(mock.rejectedIds(), [22, 23]);
 });
 
-test("approve tidak mengubah data ketika jadwal bentrok", async () => {
+test("approve menggantikan approved lama yang bentrok dengan pesan transparan", async () => {
   const mock = createDatabase({
     conflictingRanges: [
       {
+        id: 77,
         startTime: new Date("1970-01-01T10:30:00.000Z"),
         endTime: new Date("1970-01-01T11:30:00.000Z"),
+        createdAt: new Date("2026-09-20T00:00:00.000Z"),
+        processedAt: new Date("2026-09-21T00:00:00.000Z"),
+        userId: 5,
       },
     ],
   });
 
   const result = await approveReservation(mock.database, 21, 3, beforeExpiry);
 
-  assert.deepEqual(result, { kind: "conflict" });
-  assert.equal(mock.wasUpdated(), false);
+  assert.equal(result.kind, "approved");
+  if (result.kind !== "approved") throw new Error("expected approved");
+  assert.deepEqual(result.replacedIds, [77]);
+  assert.deepEqual(mock.replacedIds(), [77]);
+  assert.equal(mock.wasUpdated(), true);
+  assert.ok(mock.events.includes("replace-approved"));
 });
 
 test("approve memvalidasi ulang status reservasi dan fasilitas setelah lock", async () => {

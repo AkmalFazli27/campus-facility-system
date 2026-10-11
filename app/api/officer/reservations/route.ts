@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       where: {
         status:
           status === "ALL"
-            ? { in: ["PENDING", "APPROVED"] }
+            ? { in: ["PENDING", "APPROVED", "REJECTED"] }
             : status,
         ...(parsed.data.facility_id
           ? { facilityId: parsed.data.facility_id }
@@ -66,6 +66,7 @@ export async function GET(request: Request) {
         endTime: true,
         purpose: true,
         status: true,
+        cancellationReason: true,
         createdAt: true,
         user: {
           select: { id: true, name: true, email: true },
@@ -98,6 +99,9 @@ export async function GET(request: Request) {
               reservationDate: true,
               startTime: true,
               endTime: true,
+              createdAt: true,
+              processedAt: true,
+              user: { select: { id: true, name: true } },
             },
           });
 
@@ -121,6 +125,9 @@ export async function GET(request: Request) {
                     id: candidate.id,
                     startTime: candidate.startTime.toISOString().slice(11, 16),
                     endTime: candidate.endTime.toISOString().slice(11, 16),
+                    createdAt: candidate.createdAt.toISOString(),
+                    processedAt: candidate.processedAt?.toISOString() ?? null,
+                    user: candidate.user,
                   })),
               );
 

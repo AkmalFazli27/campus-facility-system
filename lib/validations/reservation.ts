@@ -89,7 +89,7 @@ export const officerQueueQuerySchema = z.object({
   status: z
     .preprocess(
       (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
-      z.enum(["PENDING", "APPROVED", "ALL"], {
+      z.enum(["PENDING", "APPROVED", "REJECTED", "ALL"], {
         error: "Status antrian tidak valid",
       }),
     )
