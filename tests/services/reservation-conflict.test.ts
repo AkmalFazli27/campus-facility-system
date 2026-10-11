@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   checkConflict,
+  findOverlappingApproved,
   hasOverlap,
   isPastStart,
 } from "@/lib/services/reservationService";
@@ -90,6 +91,52 @@ test("checkConflict hanya meminta reservasi APPROVED sebagai pengunci slot", asy
     reservationDate: new Date("2026-10-01T00:00:00.000Z"),
     status: "APPROVED",
   });
+});
+
+test("findOverlappingApproved mengembalikan bukti id + waktu pengajuan", async () => {
+  const rows = [
+    {
+      id: 1,
+      facilityId: 1,
+      reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+      startTime: new Date("1970-01-01T10:00:00.000Z"),
+      endTime: new Date("1970-01-01T11:00:00.000Z"),
+      createdAt: new Date("2026-09-20T00:00:00.000Z"),
+      processedAt: new Date("2026-09-21T00:00:00.000Z"),
+      userId: 5,
+    },
+    {
+      id: 2,
+      facilityId: 1,
+      reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+      startTime: new Date("1970-01-01T12:00:00.000Z"),
+      endTime: new Date("1970-01-01T13:00:00.000Z"),
+      createdAt: new Date("2026-09-22T00:00:00.000Z"),
+      processedAt: null,
+      userId: 6,
+    },
+  ];
+  const db = { reservation: { findMany: async () => rows } };
+
+  const hit = await findOverlappingApproved(db, {
+    facilityId: 1,
+    reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+    startTime: "10:30",
+    endTime: "11:30",
+    excludeId: 99,
+  });
+  assert.equal(hit.length, 1);
+  assert.equal(hit[0].id, 1);
+  assert.ok(hit[0].createdAt instanceof Date);
+  assert.equal(hit[0].userId, 5);
+
+  const edge = await findOverlappingApproved(db, {
+    facilityId: 1,
+    reservationDate: new Date("2026-10-01T00:00:00.000Z"),
+    startTime: "13:00",
+    endTime: "14:00",
+  });
+  assert.equal(edge.length, 0);
 });
 
 test("isPastStart menolak pembatalan setelah waktu mulai (WIB)", () => {
