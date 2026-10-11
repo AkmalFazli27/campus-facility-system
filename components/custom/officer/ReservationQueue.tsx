@@ -38,6 +38,15 @@ import {
 type QueueStatus = "PENDING" | "APPROVED";
 type QueueStatusFilter = QueueStatus | "ALL";
 
+type QueueConflict = {
+  id: number;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  processedAt: string | null;
+  user: { id: number; name: string };
+};
+
 type QueueItem = {
   id: number;
   reservationDate: string;
@@ -48,7 +57,7 @@ type QueueItem = {
   createdAt: string;
   user: { id: number; name: string; email: string };
   facility: { id: number; name: string; type: string; location: string };
-  conflicts: Array<{ id: number; startTime: string; endTime: string }>;
+  conflicts: QueueConflict[];
 };
 
 type QueueResponse = {
@@ -142,13 +151,27 @@ export default function ReservationQueue() {
   }
 
   async function handleApprove(id: number) {
-    if (!window.confirm("Setujui reservasi ini? Pastikan tidak bentrok.")) return;
+    const target = items.find((row) => row.id === id);
+    const conflictText =
+      target && target.conflicts.length > 0
+        ? ` Akan membatalkan APPROVED ${target.conflicts
+            .map(
+              (conflict) =>
+                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${conflict.createdAt} oleh ${conflict.user.name})`,
+            )
+            .join(", ")}.`
+        : "";
+    if (!window.confirm(`Setujui reservasi #${id}?${conflictText}`)) return;
     setActingId(id);
     try {
       const response = await fetch(`/api/officer/reservations/${id}/approve`, {
         method: "PATCH",
       });
-      const body = (await response.json()) as { success: boolean; message?: string };
+      const body = (await response.json()) as {
+        success: boolean;
+        message?: string;
+        data?: { message?: string; replacedIds?: number[] };
+      };
       if (response.status === 401) {
         router.push("/login?next=/officer/queue");
         throw new Error("Sesi telah berakhir");
@@ -156,7 +179,7 @@ export default function ReservationQueue() {
       if (!response.ok || !body.success) {
         throw new Error(body.message ?? "Gagal menyetujui reservasi");
       }
-      toast.success("Reservasi disetujui");
+      toast.success(body.data?.message ?? "Reservasi disetujui");
       reload();
     } catch (requestError: unknown) {
       toast.error(
@@ -438,9 +461,9 @@ export default function ReservationQueue() {
                           Bentrok dengan {item.conflicts
                             .map(
                               (conflict) =>
-                                `#${conflict.id} (${conflict.startTime}-${conflict.endTime})`,
+                                `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${conflict.createdAt} oleh ${conflict.user.name})`,
                             )
-                            .join(", ")}
+                            .join(", ")} — setujui untuk gantikan
                         </p>
                       )}
                     </td>
@@ -469,18 +492,18 @@ export default function ReservationQueue() {
                           <>
                             <Button
                               className="h-10"
-                              disabled={actingId === item.id || item.conflicts.length > 0}
+                              disabled={actingId === item.id}
                               title={
                                 item.conflicts.length > 0
-                                  ? "Tidak dapat disetujui karena jadwal bentrok"
+                                  ? `Menyetujui akan membatalkan ${item.conflicts.map((conflict) => `#${conflict.id}`).join(", ")}`
                                   : undefined
                               }
                               onClick={() => handleApprove(item.id)}
                             >
-                              {item.conflicts.length > 0
-                                ? "Bentrok"
-                                : actingId === item.id
-                                  ? "Memproses..."
+                              {actingId === item.id
+                                ? "Memproses..."
+                                : item.conflicts.length > 0
+                                  ? "Setujui & Gantikan"
                                   : "Setujui"}
                             </Button>
                             <Button
@@ -556,12 +579,12 @@ export default function ReservationQueue() {
                 </div>
                 {item.conflicts.length > 0 && (
                   <div className="rounded-xl border border-red-200 bg-white/70 p-3 text-xs text-red-700">
-                    <p className="font-semibold">Tidak dapat disetujui</p>
+                    <p className="font-semibold">Jadwal bentrok — setujui untuk gantikan</p>
                     <p className="mt-1">
                       Bentrok dengan {item.conflicts
                         .map(
                           (conflict) =>
-                            `#${conflict.id} (${conflict.startTime}-${conflict.endTime})`,
+                            `#${conflict.id} (${conflict.startTime}-${conflict.endTime}, diajukan ${conflict.createdAt} oleh ${conflict.user.name})`,
                         )
                         .join(", ")}.
                     </p>
@@ -580,15 +603,15 @@ export default function ReservationQueue() {
                     <div className="grid grid-cols-2 gap-2">
                       <Button
                         className="h-11"
-                        disabled={actingId === item.id || item.conflicts.length > 0}
+                        disabled={actingId === item.id}
                         title={
                           item.conflicts.length > 0
-                            ? "Tidak dapat disetujui karena jadwal bentrok"
+                            ? `Menyetujui akan membatalkan ${item.conflicts.map((conflict) => `#${conflict.id}`).join(", ")}`
                             : undefined
                         }
                         onClick={() => handleApprove(item.id)}
                       >
-                        {item.conflicts.length > 0 ? "Bentrok" : "Setujui"}
+                        {item.conflicts.length > 0 ? "Setujui & Gantikan" : "Setujui"}
                       </Button>
                       <Button
                         variant="outline"

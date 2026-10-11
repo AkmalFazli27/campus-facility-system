@@ -32,7 +32,7 @@ function createDatabase(options?: {
   let rawQueryCount = 0;
   let updated = false;
   let rejectedIds: number[] = [];
-  let replacedIds: number[] = [];
+  const replacedIds: number[] = [];
 
   const transaction = {
     $queryRaw: async () => {
