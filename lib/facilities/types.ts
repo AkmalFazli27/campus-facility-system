@@ -29,6 +29,9 @@ export type Facility = {
   description: string | null;
   status: FacilityStatus;
   availability?: FacilityAvailabilitySummary;
+  // Frontend-only (tanpa kolom DB): foto custom per fasilitas dari fase upload.
+  // Kosong → gambar per tipe → ikon fallback (lihat lib/facilities/images.ts).
+  imageUrl?: string | null;
 };
 
 export type FilterState = {
